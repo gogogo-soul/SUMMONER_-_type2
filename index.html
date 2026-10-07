@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0e13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SUMMONER">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<title>SUMMONER</title>
+<style>
+:root{
+  --bg:#0b0e13;--panel:#151a22;--line:#343c48;
+  --text:#eef2f7;--muted:#9aa5b4;--accent:#246e9f;--gold:#e8c66a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif}
+button,select{font:inherit;color:inherit}
+
+.title-container{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle at center, #1a2332 0%, #0b0e13 100%);
+  padding:20px;
+}
+
+.logo-area{
+  text-align:center;
+  margin-bottom:40px;
+}
+.logo-title{
+  font-size:48px;
+  font-weight:900;
+  letter-spacing:.15em;
+  color:#fff;
+  text-shadow:0 0 20px rgba(36, 110, 159, 0.6);
+  margin:0;
+}
+.logo-sub{
+  font-size:14px;
+  color:var(--gold);
+  letter-spacing:.2em;
+  margin-top:8px;
+}
+
+.user-card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  padding:16px 24px;
+  border-radius:12px;
+  width:100%;
+  max-width:360px;
+  margin-bottom:30px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.user-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.user-row label{font-size:12px;color:var(--muted)}
+.user-row select{
+  background:#1a202c;
+  border:1px solid #46505e;
+  padding:6px 12px;
+  border-radius:6px;
+  color:#fff;
+  font-size:14px;
+}
+.active-deck-info{
+  font-size:12px;
+  color:#b9c2ce;
+  border-top:1px solid var(--line);
+  padding-top:8px;
+  display:flex;
+  justify-content:space-between;
+}
+.active-deck-info span{
+  color:var(--gold);
+  font-weight:bold;
+}
+
+.menu-buttons{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  width:100%;
+  max-width:320px;
+}
+.menu-btn{
+  display:block;
+  text-align:center;
+  text-decoration:none;
+  padding:16px;
+  border-radius:8px;
+  font-size:16px;
+  font-weight:bold;
+  letter-spacing:.1em;
+  transition:.2s;
+  cursor:pointer;
+}
+.btn-start{
+  background:var(--accent);
+  color:#fff;
+  border:1px solid #5aade0;
+  box-shadow:0 4px 15px rgba(36, 110, 159, 0.4);
+}
+.btn-start:hover{
+  background:#3082ba;
+  transform:translateY(-2px);
+}
+.btn-builder{
+  background:#1f2633;
+  color:#fff;
+  border:1px solid var(--line);
+}
+.btn-builder:hover{
+  background:#2a3446;
+  transform:translateY(-2px);
+}
+
+.add-btn{
+  background:#242b35;
+  border:1px solid #46505e;
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:11px;
+  cursor:pointer;
+}
+
+.pwa-install{
+  display:none;width:100%;border:1px solid #7ec7ff;background:#173b55;color:#fff;
+  padding:13px;border-radius:8px;font-weight:800;cursor:pointer
+}
+.pwa-install.available{display:block}
+.mobile-install-note{
+  width:100%;max-width:360px;margin-top:16px;text-align:center;color:var(--muted);
+  font-size:11px;line-height:1.55
+}
+@media(max-width:600px){
+  html,body{height:auto;min-height:100%;overflow:auto}
+  .title-container{height:auto;min-height:100dvh;padding:24px 16px calc(24px + env(safe-area-inset-bottom))}
+  .logo-area{margin-bottom:24px}
+  .logo-title{font-size:34px;letter-spacing:.11em}
+  .logo-sub{font-size:11px}
+  .user-card{margin-bottom:22px;padding:14px 16px}
+  .user-row{align-items:stretch;flex-direction:column;gap:8px}
+  .user-row>div{width:100%}
+  .user-row select{flex:1;min-width:0;padding:9px 10px}
+  .add-btn{min-height:38px}
+  .menu-buttons{gap:12px}
+  .menu-btn{padding:15px 12px;min-height:52px;display:flex;align-items:center;justify-content:center}
+}
+
+</style>
+</head>
+<body>
+
+<div class="title-container">
+  <div class="logo-area">
+    <h1 class="logo-title">SUMMONER</h1>
+    <div class="logo-sub">TRADING CARD GAME</div>
+  </div>
+
+  <!-- ユーザー＆デッキ情報パネル -->
+  <div class="user-card">
+    <div class="user-row">
+      <label for="userSelect">プレイヤー:</label>
+      <div style="display:flex;gap:6px;">
+        <select id="userSelect" onchange="switchUser()"></select>
+        <button class="add-btn" onclick="addNewUser()">+ 新規</button>
+      </div>
+    </div>
+    <div class="active-deck-info">
+      <span>使用デッキ:</span>
+      <span id="activeDeckName">未設定</span>
+    </div>
+  </div>
+
+  <!-- メインメニュー -->
+  <div class="menu-buttons">
+    <a href="summoner.html" class="menu-btn btn-start">対戦開始 (DUEL)</a>
+    <a href="deckbuilder.html" class="menu-btn btn-builder">デッキ構築 (DECK BUILDER)</a>
+    <button id="installBtn" class="pwa-install" onclick="installSummoner()">SUMMONERを端末にインストール</button>
+  </div>
+  <div class="mobile-install-note">
+    スマホ対応版。iPhoneではSafariの共有メニュー →「ホーム画面に追加」でもインストールできます。
+  </div>
+</div>
+
+<script>
+const USERS_KEY = "arcana_duel_users";
+const CURRENT_USER_KEY = "arcana_duel_current_user";
+let currentUser = "ゲスト";
+
+function init() {
+  loadUsers();
+  updateDeckDisplay();
+}
+
+function loadUsers() {
+  let users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+  if (users.length === 0) {
+    users = ["ゲスト", "プレイヤー1"];
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+
+  currentUser = localStorage.getItem(CURRENT_USER_KEY) || users[0];
+
+  const select = document.getElementById("userSelect");
+  select.innerHTML = "";
+  users.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u;
+    opt.textContent = u;
+    if (u === currentUser) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function switchUser() {
+  currentUser = document.getElementById("userSelect").value;
+  localStorage.setItem(CURRENT_USER_KEY, currentUser);
+  updateDeckDisplay();
+}
+
+function addNewUser() {
+  const name = prompt("新しいユーザー名を入力してください:");
+  if (!name || !name.trim()) return;
+  const cleanName = name.trim();
+
+  let users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+  if (users.includes(cleanName)) {
+    return alert("同じ名前のユーザーが既に存在します。");
+  }
+
+  users.push(cleanName);
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  localStorage.setItem(CURRENT_USER_KEY, cleanName);
+
+  loadUsers();
+  updateDeckDisplay();
+}
+
+function updateDeckDisplay() {
+  const activeDeckKey = `arcana_duel_active_deck_${currentUser}_name`;
+  const deckName = localStorage.getItem(activeDeckKey) || "デフォルトデッキ";
+  document.getElementById("activeDeckName").textContent = deckName;
+}
+
+init();
+</script>
+
+<script src="pwa.js"></script>
+
+</body>
+</html>

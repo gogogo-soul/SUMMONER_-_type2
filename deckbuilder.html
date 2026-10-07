@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0e13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SUMMONER">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<title>SUMMONER — Deck Builder</title>
+<style>
+:root{
+  --bg:#0b0e13;--panel:#151a22;--line:#343c48;
+  --text:#eef2f7;--muted:#9aa5b4;--accent:#246e9f;--gold:#e8c66a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif}
+button,input,select{font:inherit;color:inherit}
+#app{height:100%;display:flex;flex-direction:column}
+.topbar{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#11151c;border-bottom:1px solid var(--line);flex:0 0 auto}
+.brand{font-weight:900;letter-spacing:.08em;font-size:18px}
+.user-bar{display:flex;align-items:center;gap:8px;font-size:12px}
+.user-bar select{background:#1a202c;border:1px solid #46505e;padding:4px 8px;border-radius:6px;color:#fff}
+.nav-btn{background:var(--accent);border:1px solid #5aade0;padding:6px 14px;border-radius:6px;cursor:pointer;text-decoration:none;font-size:12px;font-weight:bold}
+.nav-btn:hover{background:#3082ba}
+
+.main{min-height:0;flex:1;display:grid;grid-template-columns:1fr 320px;gap:12px;padding:12px}
+.pool-section,.deck-section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;min-height:0}
+h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center}
+
+/* カードプール */
+.card-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;padding-right:4px}
+.card{position:relative;height:136px;border-radius:8px;border:1px solid #66717f;background:linear-gradient(145deg,#303945,#171c23);padding:6px;cursor:pointer;user-select:none;transition:.1s;display:flex;flex-direction:column;justify-content:space-between}
+.card:hover{transform:translateY(-4px);border-color:#d8e3ee}
+.card.monster{background:linear-gradient(145deg,#4a3a2d,#1d1916);border-color:#a68764}
+.card.spell{background:linear-gradient(145deg,#3b385c,#191827);border-color:#8a82ca}
+.card.summoner{background:linear-gradient(145deg,#2c4937,#151d18);border-color:#6caa7a}
+/* 属性色：モンスター・魔法・召喚士をカード自身の色で表示 */
+.card.color-red{
+  background:linear-gradient(145deg,#b93a32,#4a1111)!important;
+  border-color:#ff766d!important;
+}
+.card.color-blue{
+  background:linear-gradient(145deg,#2f79b5,#102b46)!important;
+  border-color:#78c7ff!important;
+}
+.card.color-green{
+  background:linear-gradient(145deg,#33804e,#11351e)!important;
+  border-color:#78e39a!important;
+}
+.card.color-yellow{
+  background:linear-gradient(145deg,#b08e25,#4a3b0b)!important;
+  border-color:#ffe275!important;
+}
+.card.color-black{
+  background:linear-gradient(145deg,#4b4055,#141017)!important;
+  border-color:#d0adff!important;
+}
+.card.color-red .art{background:linear-gradient(135deg,#ff7d7044,#0008)}
+.card.color-blue .art{background:linear-gradient(135deg,#6fc5ff44,#0008)}
+.card.color-green .art{background:linear-gradient(135deg,#71eb9444,#0008)}
+.card.color-yellow .art{background:linear-gradient(135deg,#ffe87944,#0008)}
+.card.color-black .art{background:linear-gradient(135deg,#d7b7ff44,#0008)}
+
+.card .name{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:16px}
+.card .type{font-size:8px;color:#aeb7c3}
+.card .cost{position:absolute;right:4px;top:4px;background:#2b80b9;border-radius:50%;min-width:16px;text-align:center;padding:1px;font-size:9px;font-weight:900}
+.card .art{height:40px;margin:2px 0;border-radius:4px;background:linear-gradient(135deg,#ffffff12,#0005);display:flex;align-items:center;justify-content:center;font-size:16px}
+.card .stats{text-align:right;font-size:9px;font-weight:900}
+.card .count-badge{position:absolute;left:4px;bottom:4px;background:var(--gold);color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:4px}
+
+/* デッキコントロール */
+.deck-controls{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;background:#10151c;padding:10px;border-radius:8px;border:1px solid #303946}
+.deck-select-row{display:flex;gap:6px}
+.deck-select-row select{flex:1;background:#1a202c;border:1px solid #46505e;padding:6px;border-radius:6px;font-size:12px}
+.sort-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.sort-row select{flex:1;background:#1a202c;border:1px solid #46505e;padding:6px;border-radius:6px;font-size:12px;color:#fff}
+.deck-rule{font-size:10px;color:var(--muted);line-height:1.5}
+.deck-limit-warn{color:#ff8a80!important;font-weight:900}
+.input-row{display:flex;gap:6px}
+.input-row input{flex:1;background:#1a202c;border:1px solid #46505e;padding:6px 8px;border-radius:6px;font-size:12px}
+.btn{background:#242b35;border:1px solid #46505e;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:11px}
+.btn:hover{background:#303a47}
+.btn.primary{background:var(--accent);border-color:#5aade0}
+.btn.danger{background:#8c2d2d;border-color:#e05a5a}
+
+/* デッキ内リスト */
+.deck-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.deck-item{display:flex;align-items:center;justify-content:space-between;background:#10151c;padding:6px 10px;border-radius:6px;border:1px solid #2a323d;font-size:12px}
+.deck-item .info{display:flex;align-items:center;gap:8px}
+.deck-item .qty{font-weight:bold;color:var(--gold)}
+.deck-item .item-btn{background:#242b35;border:1px solid #46505e;width:22px;height:22px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* SUMMONER Deck Builder: 属性色 */
+.card.color-red{background:linear-gradient(145deg,#b93a32,#4a1111)!important;border-color:#ff766d!important}
+.card.color-blue{background:linear-gradient(145deg,#2f79b5,#102b46)!important;border-color:#78c7ff!important}
+.card.color-green{background:linear-gradient(145deg,#33804e,#11351e)!important;border-color:#78e39a!important}
+.card.color-yellow{background:linear-gradient(145deg,#b08e25,#4a3b0b)!important;border-color:#ffe275!important}
+.card.color-black{background:linear-gradient(145deg,#4b4055,#141017)!important;border-color:#d0adff!important}
+.card.color-red .art{background:linear-gradient(135deg,#ff7d7044,#0008)}
+.card.color-blue .art{background:linear-gradient(135deg,#6fc5ff44,#0008)}
+.card.color-green .art{background:linear-gradient(135deg,#71eb9444,#0008)}
+.card.color-yellow .art{background:linear-gradient(135deg,#ffe87944,#0008)}
+.card.color-black .art{background:linear-gradient(135deg,#d7b7ff44,#0008)}
+
+.card[draggable="true"]{cursor:grab}
+.card[draggable="true"]:active{cursor:grabbing}
+.card.dragging{opacity:.45;transform:scale(.96)}
+.deck-section.drag-over{outline:3px solid var(--gold);outline-offset:-5px;background:#1b2028}
+.drop-hint{font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none}
+.deck-empty{
+  min-height:100px;border:1px dashed #46505e;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  color:var(--muted);font-size:12px;padding:20px
+}
+
+/* カード詳細モーダル */
+.card-detail-modal{
+  position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;
+  z-index:1000;padding:20px
+}
+.card-detail-modal.open{display:flex}
+.card-detail{
+  width:min(520px,92vw);background:#171d26;border:1px solid #596575;border-radius:14px;
+  box-shadow:0 20px 60px #000c;overflow:hidden
+}
+.card-detail-head{padding:16px 18px;border-bottom:1px solid #343c48;display:flex;justify-content:space-between;gap:12px}
+.card-detail-name{font-size:20px;font-weight:900}
+.card-detail-close{background:#242b35;border:1px solid #46505e;border-radius:6px;cursor:pointer;padding:4px 10px}
+.card-detail-body{padding:18px}
+.detail-meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.detail-chip{background:#10151c;border:1px solid #3b4655;border-radius:99px;padding:4px 9px;font-size:11px}
+.detail-stats{font-size:24px;font-weight:900;margin:8px 0 14px}
+.detail-effect{background:#10151c;border:1px solid #303946;border-radius:9px;padding:13px;font-size:13px;line-height:1.65;white-space:pre-wrap}
+.detail-guide{margin-top:12px;color:var(--muted);font-size:11px}
+
+
+.detail-add{
+  width:100%;margin-top:12px;border:1px solid #5aade0;background:#246e9f;color:#fff;
+  border-radius:8px;padding:11px;font-weight:900;cursor:pointer
+}
+@media(max-width:760px){
+  html,body{height:auto;min-height:100%;overflow:auto}
+  #app{height:auto;min-height:100dvh}
+  .topbar{
+    height:auto;min-height:52px;flex-wrap:wrap;
+    padding:7px 8px;gap:7px;position:sticky;top:0;z-index:30
+  }
+  .brand{width:100%;font-size:13px}
+  .user-bar{flex:1;min-width:0;gap:5px}
+  .user-bar label{display:none}
+  .user-bar select{min-width:0;flex:1}
+  .nav-btn,.btn{min-height:38px}
+  .main{
+    display:flex;flex-direction:column;
+    min-height:auto;overflow:visible;padding:7px;gap:8px
+  }
+  .pool-section,.deck-section{
+    min-height:0;padding:8px;border-radius:8px
+  }
+  .pool-section{height:58dvh;flex:none}
+  .deck-section{min-height:420px}
+  h2{font-size:11px;gap:8px}
+  h2>span{font-size:9px}
+  .drop-hint{display:none}
+  .card-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;padding-right:2px
+  }
+  .card{
+    height:150px;padding:7px;
+    touch-action:manipulation
+  }
+  .card:hover{transform:none}
+  .card .name{font-size:11px}
+  .card .type{font-size:8px}
+  .card .art{height:50px;font-size:20px}
+  .deck-controls{padding:8px}
+  .deck-select-row,.input-row{flex-wrap:wrap}
+  .deck-select-row select,.input-row input{min-height:42px}
+  .input-row input{width:100%;flex-basis:100%}
+  .deck-item{min-height:44px;padding:7px 9px}
+  .deck-item .item-btn{width:32px;height:32px;font-size:16px}
+  .card-detail-modal{align-items:flex-end;padding:0}
+  .card-detail{
+    width:100%;max-height:88dvh;overflow:auto;
+    border-radius:16px 16px 0 0
+  }
+  .card-detail-head{position:sticky;top:0;background:#171d26;z-index:2}
+  .card-detail-body{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .detail-guide{font-size:10px}
+}
+@media(min-width:500px) and (max-width:760px){
+  .card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+  <div class="brand">SUMMONER — DECK BUILDER</div>
+  
+  <div class="user-bar">
+    <label for="userSelect">ユーザー:</label>
+    <select id="userSelect" onchange="switchUser()"></select>
+    <button class="btn" onclick="addNewUser()">+ 追加</button>
+  </div>
+
+  <div style="display:flex;gap:8px;">
+    <a href="index.html" class="nav-btn" style="background:#242b35;border-color:#46505e;">タイトルへ</a>
+    <a href="summoner.html" class="nav-btn">対戦へ</a>
+  </div>
+</header>
+
+  <main class="main">
+    <section class="pool-section">
+      <h2>カードプール <span>(クリックで詳細 / ドラッグで追加)</span></h2>
+      <div class="card-grid" id="cardPool"></div>
+    </section>
+
+    <section class="deck-section">
+      <h2>編集中のデッキ <span><span id="totalCards">0 / 50 枚</span> ・ 召喚士 <span id="summonerCards">0 枚</span> <span class="drop-hint">← カードをここへドラッグ</span></span></h2>
+      
+      <div class="deck-controls">
+        <div class="deck-select-row">
+          <select id="savedDecksSelect" onchange="loadSelectedDeck()"></select>
+          <button class="btn danger" onclick="deleteDeck()">削除</button>
+        </div>
+        <div class="input-row">
+          <input type="text" id="deckNameInput" placeholder="デッキ名を入力">
+          <button class="btn primary" onclick="saveDeck()">保存</button>
+          <button class="btn" onclick="clearDeck()">新規</button>
+        </div>
+        <div class="sort-row">
+          <span>デッキソート</span>
+          <select id="sortMode" onchange="setSortMode(this.value)">
+            <option value="default">基本順</option>
+            <option value="count">枚数順（多い順）</option>
+            <option value="cost">コスト順（低い順）</option>
+          </select>
+        </div>
+        <div class="deck-rule">デッキ：最大50枚 / カード種類を問わず同名カードは最大4枚（召喚士を含む）</div>
+        <button class="btn primary" style="margin-top:4px;" onclick="setActiveDeck()">このデッキを対戦で使用する</button>
+      </div>
+
+      <div class="deck-list" id="deckList"></div>
+    </section>
+  </main>
+</div>
+
+
+<div class="card-detail-modal" id="cardDetailModal" onclick="if(event.target===this)closeCardDetail()">
+  <div class="card-detail">
+    <div class="card-detail-head">
+      <div class="card-detail-name" id="detailName">CARD</div>
+      <button class="card-detail-close" onclick="closeCardDetail()">閉じる</button>
+    </div>
+    <div class="card-detail-body">
+      <div class="detail-meta" id="detailMeta"></div>
+      <div class="detail-stats" id="detailStats"></div>
+      <div class="detail-effect" id="detailEffect"></div>
+      <button class="detail-add" id="detailAddBtn" onclick="addDetailCard()">＋ デッキに追加</button>
+      <div class="detail-guide">PC：ドラッグで追加 / スマホ：上の「＋ デッキに追加」を使用できます。</div>
+    </div>
+  </div>
+</div>
+
+<script src="cards.js"></script>
+<script>
+let currentDeck = {};
+let currentUser = "ゲスト";
+let detailCardName = null;
+let sortMode = "default";
+
+const DECK_MAX = 50;
+const LEGACY_CARD_NAMES = {
+  "赤の流脈":"カイエン",
+  "青の流脈":"ルフナ",
+  "緑の流脈":"オニキス",
+  "黄の流脈":"サミュエル",
+  "黒の流脈":"ダイキリ",
+  "赤の召喚士":"カイエン",
+  "青の召喚士":"ルフナ",
+  "緑の召喚士":"オニキス",
+  "黄の召喚士":"サミュエル",
+  "黒の召喚士":"ダイキリ",
+  "アンダイング・ノーズ":"不死の巨像",
+  "ノーレッジ・アーム":"賢者の腕",
+  "ロング・ホーン":"英雄の角",
+  "親分狼":"親分",
+  "賢聖エリヤ":"インクイジター",
+  "クルセイダー":"モンク"
+};
+function normalizeCardName(name){ return LEGACY_CARD_NAMES[name] || name; }
+function normalizeDeckCounts(deck){
+  const out={};
+  Object.entries(deck||{}).forEach(([raw,count])=>{
+    const name=normalizeCardName(raw);
+    if(!DB[name])return;
+    out[name]=(out[name]||0)+Math.max(0,Number(count)||0);
+  });
+  return out;
+}
+function deckTotal(deck=currentDeck){ return Object.values(deck||{}).reduce((a,b)=>a+(Number(b)||0),0); }
+function summonerTotal(deck=currentDeck){
+  return Object.entries(deck||{}).reduce((sum,[name,count])=>sum+(DB[name]?.t==="summoner"?(Number(count)||0):0),0);
+}
+function validateDeck(deck=currentDeck){
+  const total=deckTotal(deck);
+  if(total>DECK_MAX)return {ok:false,msg:`デッキは最大 ${DECK_MAX} 枚です。現在 ${total} 枚あります。`};
+  for(const [name,count] of Object.entries(deck||{})){
+    const max=DB[name]?.n||4;
+    if(count>max)return {ok:false,msg:`《${name}》は最大 ${max} 枚までです。`};
+  }
+  return {ok:true};
+}
+function cardIcon(c){
+  if(c.timing==="instant")return "⚡";
+  if(c.t==="monster")return "△";
+  if(c.t==="spell")return "✦";
+  if(c.t==="summoner")return "◎";
+  return "?";
+}
+function colorIcon(c){
+  return ({red:"🔴",blue:"🔵",green:"🟢",yellow:"🟡",black:"🟣",colorless:"⚪",none:"⚪"})[c?.color] || "⚪";
+}
+function getSortedNames(names,forDeck=false){
+  const order=new Map(Object.keys(DB).map((n,i)=>[n,i]));
+  const a=[...names];
+  if(sortMode==="count"){
+    a.sort((x,y)=>((currentDeck[y]||0)-(currentDeck[x]||0)) || ((DB[x]?.c||0)-(DB[y]?.c||0)) || ((order.get(x)||0)-(order.get(y)||0)));
+  }else if(sortMode==="cost"){
+    a.sort((x,y)=>((DB[x]?.c||0)-(DB[y]?.c||0)) || ((order.get(x)||0)-(order.get(y)||0)));
+  }else{
+    a.sort((x,y)=>((order.get(x)||0)-(order.get(y)||0)));
+  }
+  return a;
+}
+function setSortMode(mode){ sortMode=mode||"default"; renderDeck(); }
+
+const USERS_KEY = "arcana_duel_users";
+const CURRENT_USER_KEY = "arcana_duel_current_user";
+
+// ユーザーごとの保存キーを取得
+function getDeckStorageKey() {
+  return `arcana_duel_decks_${currentUser}`;
+}
+function getActiveDeckKey() {
+  return `arcana_duel_active_deck_${currentUser}`;
+}
+
+function init() {
+  loadUsers();
+  renderPool();
+  loadCurrentUserData();
+  setupDeckDropZone();
+}
+
+// --- ユーザー管理処理 ---
+function loadUsers() {
+  let users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+  if (users.length === 0) {
+    users = ["ゲスト", "プレイヤー1"];
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+  
+  currentUser = localStorage.getItem(CURRENT_USER_KEY) || users[0];
+  
+  const select = document.getElementById("userSelect");
+  select.innerHTML = "";
+  users.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u;
+    opt.textContent = u;
+    if (u === currentUser) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function switchUser() {
+  currentUser = document.getElementById("userSelect").value;
+  localStorage.setItem(CURRENT_USER_KEY, currentUser);
+  clearDeck();
+  loadCurrentUserData();
+}
+
+function addNewUser() {
+  const name = prompt("新しいユーザー名を入力してください:");
+  if (!name || !name.trim()) return;
+  const cleanName = name.trim();
+
+  let users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+  if (users.includes(cleanName)) {
+    alert("同じ名前のユーザーが既に存在します。");
+    return;
+  }
+
+  users.push(cleanName);
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  localStorage.setItem(CURRENT_USER_KEY, cleanName);
+  
+  loadUsers();
+  clearDeck();
+  loadCurrentUserData();
+}
+
+function loadCurrentUserData() {
+  loadSavedDecksList();
+  
+  const activeDeckName = localStorage.getItem(getActiveDeckKey() + "_name");
+  if (activeDeckName) {
+    document.getElementById("savedDecksSelect").value = activeDeckName;
+    loadSelectedDeck();
+  } else {
+    renderDeck();
+  }
+}
+
+// --- カードプール・デッキ描写 ---
+function renderPool() {
+  const container = document.getElementById("cardPool");
+  container.innerHTML = "";
+
+  Object.keys(DB).forEach(name => {
+    const c = DB[name];
+    const inDeck = currentDeck[name] || 0;
+    const max = c.n || 4;
+    const colorClass = c.color && c.color !== "none" ? ` color-${c.color}` : "";
+
+    const cardEl = document.createElement("div");
+    cardEl.className = `card ${c.t}${colorClass}`;
+    cardEl.draggable = true;
+    cardEl.dataset.cardName = name;
+    cardEl.title = "クリック：効果を見る / ドラッグ：デッキへ追加";
+    cardEl.innerHTML = `
+      <div class="name">${colorIcon(c)} ${name}</div>
+      <div class="type">${c.code ? `${c.code} / ` : ""}${typeJP(c.t)}${c.race ? ` / ${c.race}` : ""}</div>
+      ${c.t !== 'summoner' ? `<div class="cost">${c.c}</div>` : ''}
+      <div class="art">${cardIcon(c)}</div>
+      ${c.t === 'monster' ? `<div class="stats">${c.a}/${c.h}</div>` : '<div></div>'}
+      <div class="count-badge">${inDeck}/${max}</div>
+    `;
+
+    cardEl.onclick = () => showCardDetail(name);
+    cardEl.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", name);
+      e.dataTransfer.effectAllowed = "copy";
+      cardEl.classList.add("dragging");
+    });
+    cardEl.addEventListener("dragend", () => cardEl.classList.remove("dragging"));
+    container.appendChild(cardEl);
+  });
+}
+
+function typeJP(t) {
+  return t === "monster" ? "モンスター" : t === "spell" ? "魔法" : t === "summoner" ? "召喚士" : t;
+}
+
+function colorJP(c) {
+  return ({red:"赤",blue:"青",green:"緑",yellow:"黄",black:"黒",colorless:"無色",none:"無色"})[c] || c || "無色";
+}
+
+function showCardDetail(name) {
+  detailCardName = name;
+  const c = DB[name];
+  if (!c) return;
+  document.getElementById("detailName").textContent = `${colorIcon(c)} ${name}`;
+
+  const chips = [
+    ...(c.code ? [c.code] : []),
+    colorJP(c.color),
+    typeJP(c.t)
+  ];
+  if (c.race) chips.push(c.race);
+  if (c.t !== "summoner") chips.push(`コスト ${c.c}`);
+  if (c.timing === "instant") chips.push("高速詠唱");
+
+  document.getElementById("detailMeta").innerHTML =
+    chips.map(x => `<span class="detail-chip">${x}</span>`).join("");
+
+  document.getElementById("detailStats").textContent =
+    c.t === "monster" ? `ATK ${c.a} / HP ${c.h}` : "";
+
+  document.getElementById("detailEffect").textContent =
+    c.txt || (c.t === "summoner" ? `${colorJP(c.color)}の陣を1つ生成する。` : "効果なし");
+
+  document.getElementById("cardDetailModal").classList.add("open");
+}
+
+function closeCardDetail() {
+  document.getElementById("cardDetailModal").classList.remove("open");
+}
+
+function addDetailCard() {
+  if (!detailCardName || !DB[detailCardName]) return;
+  addCard(detailCardName);
+}
+
+function setupDeckDropZone() {
+  const zone = document.querySelector(".deck-section");
+  if (!zone) return;
+
+  zone.addEventListener("dragover", e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    zone.classList.add("drag-over");
+  });
+
+  zone.addEventListener("dragleave", e => {
+    if (!zone.contains(e.relatedTarget)) zone.classList.remove("drag-over");
+  });
+
+  zone.addEventListener("drop", e => {
+    e.preventDefault();
+    zone.classList.remove("drag-over");
+    const name = e.dataTransfer.getData("text/plain");
+    if (name && DB[name]) addCard(name);
+  });
+}
+
+function renderDeck() {
+  const container = document.getElementById("deckList");
+  container.innerHTML = "";
+  const total = deckTotal();
+  const summoners = summonerTotal();
+
+  getSortedNames(Object.keys(currentDeck).filter(name=>(currentDeck[name]||0)>0),true).forEach(name => {
+    const count = currentDeck[name];
+    const c=DB[name];
+    if (!c) return;
+
+    const item = document.createElement("div");
+    item.className = "deck-item";
+    item.innerHTML = `
+      <div class="info">
+        <span class="qty">${count}x</span>
+        <span>${colorIcon(c)} ${cardIcon(c)} ${name}${c.code ? ` <small style="color:#8f9baa">${c.code}</small>` : ""}</span>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <button class="item-btn" onclick="addCard('${name.replace(/'/g,"\'")}')">+</button>
+        <button class="item-btn" onclick="removeCard('${name.replace(/'/g,"\'")}')">-</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+
+  if (total === 0) {
+    container.innerHTML = '<div class="deck-empty">左のカードをここへドラッグして<br>デッキに登録してください</div>';
+  }
+  const totalEl=document.getElementById("totalCards");
+  const sumEl=document.getElementById("summonerCards");
+  totalEl.textContent = `${total} / ${DECK_MAX} 枚`;
+  sumEl.textContent = `${summoners} 枚`;
+  totalEl.classList.toggle("deck-limit-warn",total>DECK_MAX);
+  sumEl.classList.remove("deck-limit-warn");
+  renderPool();
+}
+
+function addCard(name) {
+  name=normalizeCardName(name);
+  const c=DB[name];
+  if(!c)return;
+  const total=deckTotal();
+  if(total>=DECK_MAX)return alert(`デッキは最大 ${DECK_MAX} 枚です。`);
+  const max=c.n||4;
+  const current=currentDeck[name]||0;
+  if(current>=max)return alert(`《${name}》は最大 ${max} 枚までしか入れられません。`);
+  currentDeck[name]=current+1;
+  renderDeck();
+}
+
+function removeCard(name) {
+  if (currentDeck[name]) {
+    currentDeck[name]--;
+    if (currentDeck[name] <= 0) delete currentDeck[name];
+    renderDeck();
+  }
+}
+
+function clearDeck() {
+  currentDeck = {};
+  document.getElementById("deckNameInput").value = "";
+  renderDeck();
+}
+
+// --- 保存機能（ユーザー個別） ---
+function getSavedDecks() {
+  return JSON.parse(localStorage.getItem(getDeckStorageKey()) || "{}");
+}
+
+function loadSavedDecksList() {
+  const decks = getSavedDecks();
+  const select = document.getElementById("savedDecksSelect");
+  select.innerHTML = '<option value="">-- 保存済みデッキを選択 --</option>';
+  
+  Object.keys(decks).forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+}
+
+function saveDeck() {
+  const name = document.getElementById("deckNameInput").value.trim();
+  if (!name) return alert("デッキ名を入力してください。");
+  if (Object.keys(currentDeck).length === 0) return alert("カードが1枚も選ばれていません。");
+
+  const check = validateDeck();
+  if (!check.ok) return alert(check.msg);
+  const decks = getSavedDecks();
+  decks[name] = currentDeck;
+  localStorage.setItem(getDeckStorageKey(), JSON.stringify(decks));
+  
+  alert(`[${currentUser}] のデッキ「${name}」を保存しました！`);
+  loadSavedDecksList();
+  document.getElementById("savedDecksSelect").value = name;
+}
+
+function loadSelectedDeck() {
+  const name = document.getElementById("savedDecksSelect").value;
+  if (!name) return;
+  const decks = getSavedDecks();
+  if (decks[name]) {
+    currentDeck = normalizeDeckCounts(decks[name]);
+    document.getElementById("deckNameInput").value = name;
+    renderDeck();
+  }
+}
+
+function deleteDeck() {
+  const name = document.getElementById("savedDecksSelect").value;
+  if (!name) return alert("削除するデッキを選択してください。");
+  if (!confirm(`[${currentUser}] のデッキ「${name}」を削除してもよろしいですか？`)) return;
+
+  const decks = getSavedDecks();
+  delete decks[name];
+  localStorage.setItem(getDeckStorageKey(), JSON.stringify(decks));
+  
+  clearDeck();
+  loadSavedDecksList();
+}
+
+function setActiveDeck() {
+  const name = document.getElementById("deckNameInput").value.trim() || "カスタムデッキ";
+  if (Object.keys(currentDeck).length === 0) return alert("デッキが空です。");
+  const check = validateDeck();
+  if (!check.ok) return alert(check.msg);
+
+  let activeList = [];
+  Object.keys(currentDeck).forEach(cardName => {
+    for (let i = 0; i < currentDeck[cardName]; i++) {
+      activeList.push(cardName);
+    }
+  });
+
+  localStorage.setItem(getActiveDeckKey(), JSON.stringify(activeList));
+  localStorage.setItem(getActiveDeckKey() + "_name", name);
+  alert(`[${currentUser}] 用として「${name}」（計${activeList.length}枚）をセットしました！`);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeCardDetail();
+});
+
+init();
+</script>
+
+<script src="pwa.js"></script>
+
+</body>
+</html>

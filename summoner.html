@@ -90,6 +90,7 @@ button{font:inherit;color:inherit}
 .zone-row{min-height:140px;flex:1;display:grid;grid-template-columns:1fr 90px;grid-template-rows:1fr 1fr;gap:8px}
 .zonebox{min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center}
 .zone-label{font-size:10px;color:#7f8998;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.zone-count{font-size:10px;color:#d5dde8;font-weight:900;letter-spacing:0;text-transform:none;white-space:nowrap}
 .cards{display:flex;align-items:center;gap:7px;min-height:0;flex:1;overflow-x:auto;padding:2px 2px}
 .field-cards{min-height:0}
 .centerbar{display:flex;align-items:center;justify-content:center;gap:14px;background:#0d1117aa;border-top:1px solid #3b4450;border-bottom:1px solid #3b4450;padding:6px 0;flex:0 0 auto}
@@ -118,13 +119,19 @@ button{font:inherit;color:inherit}
 .card .cost{position:absolute;right:4px;top:4px;background:#2b80b9;border-radius:50%;min-width:18px;text-align:center;padding:1px 3px;font-size:9px;font-weight:900}
 .card .art{height:38px;margin:3px 0;border-radius:5px;background:linear-gradient(135deg,#ffffff12,#0005);border:1px solid #ffffff12;display:flex;align-items:center;justify-content:center;font-size:18px}
 .card .rules{font-size:8px;line-height:1.2;color:#d2d8df;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card .stats{position:absolute;right:4px;bottom:4px;font-size:9px;font-weight:900}
+.card .atk-stat,.card .hp-stat{position:absolute;bottom:4px;font-size:12px;font-weight:900;line-height:1;z-index:4;
+  -webkit-text-stroke:1px #000;
+  paint-order:stroke fill;
+  text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 2px #000
+}
+.card .atk-stat{left:5px}
+.card .hp-stat{right:5px}
 .card.selected{outline:3px solid var(--gold);transform:translateY(-8px)}
 .card.tapped{transform:rotate(90deg) translateY(-2px);opacity:.8}
 .card.affordable-red{box-shadow:0 0 8px rgba(105, 183, 255, 0.85); border-width:2px;}
 
 .card-controls{
-  position:absolute;left:4px;bottom:3px;display:flex;gap:3px;z-index:8;
+  position:absolute;left:50%;bottom:19px;transform:translateX(-50%);display:flex;gap:3px;z-index:8;
 }
 .card-controls button{
   width:20px;height:20px;padding:0;border-radius:50%;border:1px solid #d9e2ec;
@@ -154,6 +161,8 @@ button{font:inherit;color:inherit}
 .hand .card{flex-basis:112px;width:112px;height:149px;aspect-ratio:3/4}.hand .card .art{height:58px}.hand .card .rules{-webkit-line-clamp:4;font-size:9px}
 .toast{position:fixed;left:50%;top:60px;transform:translateX(-50%);background:#171c24;border:1px solid #687585;border-radius:99px;padding:10px 18px;display:none;z-index:50;box-shadow:0 10px 30px #0009;font-size:12px}
 .modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:40}.modalbox{width:min(620px,92vw);background:#1a2029;border:1px solid #596575;border-radius:12px;padding:18px}.modalbox h3{margin:0 0 12px}.targets{display:flex;gap:8px;flex-wrap:wrap}.targets button{border:1px solid #596575;background:#252e39;border-radius:8px;padding:9px 12px;cursor:pointer}
+#modalCancelBtn{color:#000!important;background:#f2f2f2;border:1px solid #aab2bd;border-radius:8px;padding:9px 14px;font-weight:800;cursor:pointer}
+#modalCancelBtn:disabled{color:#555!important;background:#c9cdd2;cursor:not-allowed}
 @media(max-width:900px){.main{grid-template-columns:1fr}.side{display:none}.handbar{height:170px}.hand{height:154px}.hand .card{height:136px;width:102px}.card{flex-basis:82px;width:82px;height:109px}}
 
 .resource-col{display:flex;flex-direction:column;gap:6px;justify-content:center}
@@ -207,7 +216,9 @@ button{font:inherit;color:inherit}
 }
 .start-battle-btn:hover{background:#3082ba}
 @media(max-width:650px){.deck-choice-grid{grid-template-columns:1fr}}
-
+.first-player-choice{margin-top:14px;background:#10151c;border:1px solid #303946;border-radius:10px;padding:14px}
+.first-player-choice label{display:block;font-size:13px;font-weight:900;margin-bottom:8px}
+.first-player-choice select{width:100%;background:#1a202c;border:1px solid #46505e;color:#fff;border-radius:7px;padding:9px}
 
 .stack-box{
   background:#0d1117;border:1px solid #303946;border-radius:8px;padding:7px;
@@ -282,7 +293,7 @@ button{font:inherit;color:inherit}
   .card .cost{min-width:16px;font-size:8px}
   .card .art{height:31px;font-size:15px}
   .card .rules{font-size:7px;-webkit-line-clamp:2}
-  .card .stats{font-size:8px}
+  .card .atk-stat,.card .hp-stat{font-size:11px}
   .card-controls button{width:24px;height:24px;font-size:13px}
 
   .opponent-hand-wrap{padding:4px 0 1px}
@@ -387,7 +398,7 @@ button{font:inherit;color:inherit}
   .deck-setup-box{margin-top:20px;padding:16px}
   .deck-setup-title{font-size:20px}
   .deck-choice-grid{grid-template-columns:1fr}
-  .deck-choice select,.start-battle-btn{min-height:44px}
+  .deck-choice select,.first-player-choice select,.start-battle-btn{min-height:44px}
 }
 
 @media(max-width:900px) and (max-height:520px){
@@ -428,7 +439,7 @@ button{font:inherit;color:inherit}
     </div>
     <div class="zone-row">
       <div class="zonebox">
-        <div class="zone-label">召喚士ゾーン <span id="cpuManaPool" class="mana-pool-container"></span></div>
+        <div class="zone-label">召喚士ゾーン <span class="zone-count">(<span id="cpuLandCount">0</span>枚)</span> <span id="cpuManaPool" class="mana-pool-container"></span></div>
         <div class="cards" id="cpuLands"></div>
       </div>
       <div class="resource-col">
@@ -457,7 +468,7 @@ button{font:inherit;color:inherit}
         <div class="resource-zone" id="youDeckZone"><b>DECK</b><span id="youDeck">50</span></div>
       </div>
       <div class="zonebox">
-        <div class="zone-label">召喚士ゾーン <span id="youManaPool" class="mana-pool-container"></span></div>
+        <div class="zone-label">召喚士ゾーン <span class="zone-count">(<span id="youLandCount">0</span>枚)</span> <span id="youManaPool" class="mana-pool-container"></span></div>
         <div class="cards" id="youLands"></div>
       </div>
       <div class="resource-col">
@@ -518,6 +529,13 @@ button{font:inherit;color:inherit}
         <select id="p2DeckSelect" onchange="updateDeckSelectInfo()"></select>
         <div class="deck-info" id="p2DeckInfo"></div>
       </div>
+    </div>
+    <div class="first-player-choice">
+      <label for="firstPlayerSelect">先攻プレイヤー</label>
+      <select id="firstPlayerSelect">
+        <option value="you">PLAYER 1 先攻 / PLAYER 2 後攻</option>
+        <option value="cpu">PLAYER 2 先攻 / PLAYER 1 後攻</option>
+      </select>
     </div>
     <button class="start-battle-btn" onclick="startBattleWithSelectedDecks()">このデッキで対戦開始</button>
   </div>
@@ -589,7 +607,7 @@ function card(name){
   const d=DB[name];
   if(!d) return null;
   return {
-    name,code:d.code||"",t:d.t,color:d.color||"none",race:d.race||"",timing:d.timing||"normal",c:d.c||0,
+    name,code:d.code||"",t:d.t,color:d.color||"none",race:d.race||"",timing:d.timing||"normal",c:d.c||0,lpCost:Number(d.lpCost)||0,
     a:d.a||0,h:d.h||0,max:d.h||0,baseA:d.a||0,baseH:d.h||0,txt:d.txt||"",effectKey:d.effectKey||"vanilla",
     summonerAbilityKey:d.summonerAbilityKey||null,summonerAbilityText:d.summonerAbilityText||"",summonerAbilityCost:Number(d.summonerAbilityCost)||0,
     summonerTrigger:d.summonerTrigger||null,summonerTriggerRace:d.summonerTriggerRace||"",
@@ -690,28 +708,30 @@ function startBattleWithSelectedDecks(){
   const e1=validateBattleDeck(p1,"PLAYER 1");
   const e2=validateBattleDeck(p2,"PLAYER 2");
   if(e1||e2){alert([e1,e2].filter(Boolean).join("\n"));return;}
+  const firstSide=el("firstPlayerSelect")?.value==="cpu"?"cpu":"you";
   el("deckSetup").classList.add("hidden");
-  init(p1,p2);
+  init(p1,p2,firstSide);
 }
 function openDeckSetup(){
   fillDeckSelectors();
   el("deckSetup").classList.remove("hidden");
 }
-function init(p1Names=null,p2Names=null){
+function init(p1Names=null,p2Names=null,firstSide="you"){
   const p1=p1Names || selectedDeckNames("p1DeckSelect");
   const p2=p2Names || selectedDeckNames("p2DeckSelect");
+  firstSide=firstSide==="cpu"?"cpu":"you";
   G={
     you:{hp:20,deck:buildDeckFromNames(p1,"you"),hand:[],field:[],lands:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
     cpu:{hp:20,deck:buildDeckFromNames(p2,"cpu"),hand:[],field:[],lands:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
-    turn:"you",turnNo:1,phase:"MAIN PHASE",selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:"you",passCount:0,resolvingStack:false,
+    turn:firstSide,turnNo:1,phase:"MAIN PHASE",selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:firstSide,passCount:0,resolvingStack:false,
     pendingSummonerTriggers:[],processingSummonerTrigger:false,triggerTargetPending:false,endingTurnSide:null
   };
   el("log").innerHTML="";
   for(let i=0;i<7;i++){draw("you");draw("cpu");}
-  begin("you",true);
-  log(`ゲーム開始。PLAYER 1「${el("p1DeckSelect").options[el("p1DeckSelect").selectedIndex]?.textContent || ""}」 / PLAYER 2「${el("p2DeckSelect").options[el("p2DeckSelect").selectedIndex]?.textContent || ""}」`);
+  begin(firstSide,true);
+  log(`ゲーム開始。PLAYER 1「${el("p1DeckSelect").options[el("p1DeckSelect").selectedIndex]?.textContent || ""}」 / PLAYER 2「${el("p2DeckSelect").options[el("p2DeckSelect").selectedIndex]?.textContent || ""}」 / 先攻：${sideLabel(firstSide)}`);
   render();
 }
 function begin(w,first=false){
@@ -756,6 +776,11 @@ function canPayCost(player,c){
   if(c.color&&c.color!=="none"&&!pool.some(m=>manaColorOf(m)===c.color))return false;
   return true;
 }
+function canPayLpCost(player,c){
+  const lpCost=Math.max(0,Number(c?.lpCost)||0);
+  return lpCost<=0 || player.hp>lpCost;
+}
+function canPayAllPlayCosts(player,c){return canPayCost(player,c)&&canPayLpCost(player,c);}
 function payCost(player,c){
   if(c.t==="summoner")return;
   let pool=[...player.manaPool],req=c.c;
@@ -783,18 +808,18 @@ function makeCard(c,where,index){
   let affordable=false;
   if((where==="hand"||where==="cpuHand")&&c.t!=="summoner"){
     const instant=c.timing==="instant"; const valid=instant|| (G.turn===owner&&G.phase==="MAIN PHASE");
-    affordable=valid&&canPayCost(G[owner],c);
+    affordable=valid&&canPayAllPlayCosts(G[owner],c);
   }
   if(isField&&c.t==="spell") affordable=(c.timing==="instant"||G.turn===owner);
   const d=document.createElement("div"); d.dataset.id=c.id;
   const colorClass=c.color&&c.color!=="none"?" color-"+c.color:"";
   d.className="card "+c.t+colorClass+(G.selected===c.id?" selected":"")+(c.tapped?" tapped":"")+(affordable?" affordable-red":"");
-  const stats=c.t==="monster"?`<div class="stats">${attackPower(c,owner)}/${Math.max(0,c.h)}</div>`:"";
-  d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div><div class="rules">${c.txt}</div>${stats}`;
+  const stats=c.t==="monster"?`<div class="atk-stat" title="ATK">${attackPower(c,owner)}</div><div class="hp-stat" title="HP">${Math.max(0,c.h)}</div>`:"";
+  d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div>${stats}`;
 
   if(c.isFaceDown){
     d.className="card back"+(G.selected===c.id?" selected":"")+(c.tapped?" tapped":"");
-    d.innerHTML=`<div class="name" style="font-size:9px;color:#cbd5e1">裏向き召喚士</div><div class="art">◎</div><div class="rules" style="font-size:8px;text-align:center">無色の陣 1</div>`;
+    d.innerHTML=`<div class="name" style="font-size:9px;color:#cbd5e1">裏向き召喚士</div><div class="art">◎</div>`;
   }
 
   const isLandZone=(where==="youLand"||where==="cpuLand");
@@ -851,6 +876,7 @@ function render(){
   el("youHp").textContent=Math.max(0,G.you.hp)+" LP"; el("cpuHp").textContent=Math.max(0,G.cpu.hp)+" LP";
   el("youDeck").textContent=G.you.deck.length;el("cpuDeck").textContent=G.cpu.deck.length;el("cpuHand").textContent=G.cpu.hand.length;el("cpuHandCount").textContent=G.cpu.hand.length+" cards";
   el("youGrave").textContent=G.you.grave.length;el("cpuGrave").textContent=G.cpu.grave.length;
+  el("youLandCount").textContent=G.you.lands.length;el("cpuLandCount").textContent=G.cpu.lands.length;
   el("handCount").textContent=G.you.hand.length+" cards";
   renderManaPool("you");renderManaPool("cpu");renderStack();
   el("drawBtn").textContent="DRAW "+sideLabel(G.turn);el("drawBtn").disabled=G.over||G[G.turn].drawPending<=0;
@@ -1124,7 +1150,7 @@ function tapAsUsed(c){if(!c)return;c.tapped=true;c.tapLocked=true;}
 function untapByEffect(c){if(!c)return;c.tapped=false;c.tapLocked=false;}
 function openPlayModal(i,c,w){
   const box=el("targets");box.innerHTML="";el("modalTitle").textContent="《"+c.name+"》のプレイ方法を選択";
-  const canNormal=canAddToStack(c,w)&&canPayCost(G[w],c);
+  const canNormal=canAddToStack(c,w)&&canPayAllPlayCosts(G[w],c);
   const b1=document.createElement("button");b1.textContent=`通常プレイ (コスト ${c.c})`;b1.disabled=!canNormal;if(!b1.disabled)b1.onclick=()=>{closeModal(true);playCard(i,w);};box.appendChild(b1);
   const b2=document.createElement("button");b2.textContent="裏向きで召喚士ゾーンのカードとして置く";b2.disabled=G.stack.length>0||G.turn!==w||G.phase!=="MAIN PHASE"||G[w].land||G[w].mainActionStarted;b2.onclick=()=>{closeModal(true);playLand(i,true,w);};box.appendChild(b2);
   el("modal").style.display="flex";syncModalCancelButton();
@@ -1424,11 +1450,14 @@ function playCard(i,w=activeSide(),free=false){
     return toast(sideLabel(w)+"のターンのメインフェイズでのみプレイできます");
   }
   if(!free&&!canPayCost(p,c))return toast("《"+c.name+"》のプレイに必要な陣が足りません");
+  if(!free&&!canPayLpCost(p,c))return toast("《"+c.name+"》はLPを"+c.lpCost+"支払うため、支払い後にLPが1以上残る場合のみプレイできます");
 
   const commitPlay=(selection=null)=>{
     const currentIndex=p.hand.indexOf(c);if(currentIndex<0)return;
     if(!free&&!canPayCost(p,c))return toast("対象選択中に陣状態が変わったためプレイできません");
+    if(!free&&!canPayLpCost(p,c))return toast("対象選択中にLPが変化したためプレイできません");
     if(!free)payCost(p,c);
+    if(!free&&c.lpCost>0)payLP(w,c.lpCost,c.name);
     if(G.turn===w&&!free&&c.timing!=="instant")p.mainActionStarted=true;
     if(G.turn===w&&!free)p.playedNonSummonerThisTurn=true;
     p.hand.splice(currentIndex,1);
@@ -1616,7 +1645,7 @@ function activateSpell(c,w=activeSide(),entry=null){
     case "destroyOneEach": destroyOneEach(c,w);break;
     case "teamDeathtouch": simpleSpell(c,w,()=>{G[w].teamDeathtouch=true;G[w].field.filter(x=>x.t==="monster").forEach(x=>x.deathtouch=true);});break;
     case "soulDrain": soulDrain(c,w);break;
-    case "sixColorless": simpleSpell(c,w,()=>{payLP(w,3,c.name);for(let i=0;i<6;i++)G[w].manaPool.push({color:"colorless",sourceId:null});});break;
+    case "sixColorless": simpleSpell(c,w,()=>{for(let i=0;i<6;i++)G[w].manaPool.push({color:"colorless",sourceId:null});});break;
     case "hpMinus2AllEOT": simpleSpell(c,w,()=>G[opponentSide(w)].field.filter(x=>x.t==="monster").forEach(x=>changeTempHP(x,-2)));break;
     default: simpleSpell(c,w,()=>{});break;
   }

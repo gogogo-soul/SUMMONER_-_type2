@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v7-summoner-timing-lp-cardno";
+const CACHE_NAME = "summoner-pwa-v11-ui";
 const CORE_ASSETS = [
   "./",
   "./index.html",

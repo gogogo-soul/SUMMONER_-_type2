@@ -127,6 +127,16 @@ button,select{font:inherit;color:inherit}
   transform:translateY(-2px);
 }
 
+.btn-feedback{
+  background:#27221a;
+  color:#f4df9c;
+  border:1px solid #9d8545;
+}
+.btn-feedback:hover{
+  background:#342d20;
+  transform:translateY(-2px);
+}
+
 .add-btn{
   background:#242b35;
   border:1px solid #46505e;
@@ -189,6 +199,7 @@ button,select{font:inherit;color:inherit}
   <div class="menu-buttons">
     <a href="summoner.html" class="menu-btn btn-start">対戦開始 (DUEL)</a>
     <a href="deckbuilder.html" class="menu-btn btn-builder">デッキ構築 (DECK BUILDER)</a>
+    <button type="button" class="menu-btn btn-feedback" onclick="openFeedbackForm()">意見・感想を送る (FEEDBACK)</button>
     <button id="installBtn" class="pwa-install" onclick="installSummoner()">SUMMONERを端末にインストール</button>
   </div>
   <div class="mobile-install-note">
@@ -199,7 +210,17 @@ button,select{font:inherit;color:inherit}
 <script>
 const USERS_KEY = "arcana_duel_users";
 const CURRENT_USER_KEY = "arcana_duel_current_user";
+// GoogleフォームのURLをここに設定してください。
+const FEEDBACK_FORM_URL = "https://forms.gle/VAPvBfLs4dyyBEw88";
 let currentUser = "ゲスト";
+
+function openFeedbackForm() {
+  if (!FEEDBACK_FORM_URL) {
+    alert("意見・感想フォームのURLがまだ設定されていません。");
+    return;
+  }
+  window.open(FEEDBACK_FORM_URL, "_blank", "noopener,noreferrer");
+}
 
 function init() {
   loadUsers();

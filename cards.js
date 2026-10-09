@@ -104,7 +104,7 @@ const DB = {
   "キリング・フィールド": { code:"BS01-101", t:"spell", color:"black", race:"戦術", c:3, a:0, h:0, txt:"自分の場のモンスターすべてに、ターン終了時まで「接死」を与える。", n:4, effectKey:"teamDeathtouch" },
   "ソウル・ドレイン": { code:"BS01-102", t:"spell", color:"black", race:"黒魔術", c:4, a:0, h:0, txt:"【高速詠唱】（このカードはプレイ可能なら、いつでも発動できる） 自分のモンスターを好きな枚数対象に発動できる。そのモンスターを破壊し、その枚数1枚につきライフを2回復する。", n:4, effectKey:"soulDrain", timing:"instant" },
   "魔神拳": { code:"BS01-103", t:"spell", color:"black", race:"黒魔術", c:4, a:0, h:0, txt:"【高速詠唱】（このカードはプレイ可能なら、いつでも発動できる） 相手の戦場のモンスター1体を対象にとる。そのモンスターを破壊する。", n:4, effectKey:"destroyOppMonster", timing:"instant" },
-  "わが命を懸けて": { code:"BS01-104", t:"spell", color:"black", race:"黒魔術", c:4, a:0, h:0, txt:"自分のLPから3支払う。ターン終了時まで召喚士ゾーンに無色の陣を6追加する。", n:4, effectKey:"sixColorless" },
+  "わが命を懸けて": { code:"BS01-104", t:"spell", color:"black", race:"黒魔術", c:4, a:0, h:0, txt:"自分のLPから3支払う。ターン終了時まで召喚士ゾーンに無色の陣を6追加する。", n:4, effectKey:"sixColorless", lpCost:3 },
   "瘴気の風": { code:"BS01-105", t:"spell", color:"black", race:"黒魔術", c:5, a:0, h:0, txt:"相手の戦場のモンスター全ては、ターン終了時までHPを-2する。", n:4, effectKey:"hpMinus2AllEOT" },
 
   // --- 召喚士（各色5種 / 計25種） ---

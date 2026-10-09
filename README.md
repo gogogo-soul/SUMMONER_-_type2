@@ -90,3 +90,27 @@ PLAYER 1 / PLAYER 2 は従来通り同じ端末上で操作します。
 
 ## ローカルテスト v6
 召喚士起動効果のメインフェイズ制限、LP支払い/回復ポップ、攻撃宣言カウント、閃光/ドロー不具合、BS01カード番号を反映。
+
+
+## Beta2 更新メモ v8
+- モンスターカードのATKを左下、HPを右下に分離して表示。数値を拡大。
+- タイトル画面に「意見・感想を送る (FEEDBACK)」ボタンを追加。
+- タイトル画面の「意見・感想を送る (FEEDBACK)」からGoogleフォームを開けます。
+
+
+## Beta2 更新メモ v9
+- FEEDBACKボタンにGoogleフォームURLを設定。
+
+## Beta2 更新メモ v10
+- 対戦開始時に PLAYER 1 / PLAYER 2 のどちらを先攻にするか自由に選択可能。
+- 先攻に選ばれたプレイヤーは最初のターンのみ開始ドローなし。
+- LP支払いを必要とするカードは、支払い後にLPが1以上残る場合のみプレイ可能。
+  - 例：LP2でLP2支払いは不可。LP3でLP2支払いは可能。
+- LP支払いはカードをスタックへ置く際のコストとして支払います。
+
+
+## Beta2 v11 UI update
+- ATK / HP numbers now use a dark outline for readability.
+- Cancel button text is black for visibility.
+- Both players' Summoner Zones display the current number of cards in the zone.
+- Card faces no longer print effect text; use Card Inspector for effect details.

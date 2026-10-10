@@ -161,8 +161,15 @@ button{font:inherit;color:inherit}
 .hand .card{flex-basis:112px;width:112px;height:149px;aspect-ratio:3/4}.hand .card .art{height:58px}.hand .card .rules{-webkit-line-clamp:4;font-size:9px}
 .toast{position:fixed;left:50%;top:60px;transform:translateX(-50%);background:#171c24;border:1px solid #687585;border-radius:99px;padding:10px 18px;display:none;z-index:50;box-shadow:0 10px 30px #0009;font-size:12px}
 .modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:40}.modalbox{width:min(620px,92vw);background:#1a2029;border:1px solid #596575;border-radius:12px;padding:18px}.modalbox h3{margin:0 0 12px}.targets{display:flex;gap:8px;flex-wrap:wrap}.targets button{border:1px solid #596575;background:#252e39;border-radius:8px;padding:9px 12px;cursor:pointer}
+.modal-footer{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 #modalCancelBtn{color:#000!important;background:#f2f2f2;border:1px solid #aab2bd;border-radius:8px;padding:9px 14px;font-weight:800;cursor:pointer}
 #modalCancelBtn:disabled{color:#555!important;background:#c9cdd2;cursor:not-allowed}
+#modalPeekBtn{display:none;color:#fff;background:#245d88;border:1px solid #5ba7dc;border-radius:8px;padding:9px 14px;font-weight:800;cursor:pointer}
+.effect-peek-return{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;display:none;align-items:center;gap:10px;background:#121923;border:1px solid #6da8d0;border-radius:999px;padding:8px 10px 8px 16px;box-shadow:0 8px 28px #000b;font-size:12px}
+.effect-peek-return b{white-space:nowrap}.effect-peek-return button{border:1px solid #6da8d0;background:#245d88;color:#fff;border-radius:999px;padding:9px 15px;font-weight:900;cursor:pointer}
+body.effect-peek-mode .card-controls{display:none!important}
+body.effect-peek-mode .actions button,body.effect-peek-mode .mobile-actions button,body.effect-peek-mode .resource-zone{pointer-events:none;opacity:.55}
+body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cursor:default}
 @media(max-width:900px){.main{grid-template-columns:1fr}.side{display:none}.handbar{height:170px}.hand{height:154px}.hand .card{height:136px;width:102px}.card{flex-basis:82px;width:82px;height:109px}}
 
 .resource-col{display:flex;flex-direction:column;gap:6px;justify-content:center}
@@ -542,7 +549,8 @@ button{font:inherit;color:inherit}
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="modal" id="modal"><div class="modalbox"><h3 id="modalTitle">対象を選択</h3><div class="targets" id="targets"></div><br><button id="modalCancelBtn" onclick="closeModal()">キャンセル</button></div></div>
+<div class="modal" id="modal"><div class="modalbox"><h3 id="modalTitle">対象を選択</h3><div class="targets" id="targets"></div><br><div class="modal-footer"><button id="modalPeekBtn" onclick="peekBoardDuringEffect()">盤面を見る</button><button id="modalCancelBtn" onclick="closeModal()">キャンセル</button></div></div></div>
+<div class="effect-peek-return" id="effectPeekReturn"><b>効果処理中：盤面確認モード</b><button onclick="returnToEffectSelection()">効果処理に戻る</button></div>
 
 <script src="cards.js"></script>
 
@@ -2038,6 +2046,7 @@ function noBlock(){
 function clickCard(where,i,c){
   if(G.over)return;
   showInspector(c);
+  if(G.effectPeekMode)return;
   const controllable=((where==="youField"||where==="cpuField")&&c.t==="monster")||where==="youLand"||where==="cpuLand";
   G.uiSelected=controllable?c.id:null;
   const owner=(where==="hand"||where==="youField"||where==="youLand")?"you":"cpu";
@@ -2070,16 +2079,39 @@ function clickCard(where,i,c){
 function modalCancelLocked(){
   return !!(G&&(G.resolvingStack||G.processingSummonerTrigger||G.triggerTargetPending));
 }
+function exitEffectPeekMode(){
+  if(!G)return;
+  G.effectPeekMode=false;
+  document.body.classList.remove("effect-peek-mode");
+  const bar=el("effectPeekReturn");if(bar)bar.style.display="none";
+}
+function peekBoardDuringEffect(){
+  if(!modalCancelLocked())return;
+  G.effectPeekMode=true;
+  el("modal").style.display="none";
+  document.body.classList.add("effect-peek-mode");
+  const bar=el("effectPeekReturn");if(bar)bar.style.display="flex";
+  G.uiSelected=null;
+  render();
+}
+function returnToEffectSelection(){
+  if(!G?.effectPeekMode)return;
+  exitEffectPeekMode();
+  el("modal").style.display="flex";
+  syncModalCancelButton();
+}
 function closeModal(force=false){
   if(!force&&modalCancelLocked()){toast("効果処理中の選択はキャンセルできません");return false;}
+  exitEffectPeekMode();
   const resumeTrigger=!!G?.triggerTargetPending;
   el("modal").style.display="none";G.action=null;if(G)G.triggerTargetPending=false;render();
   if(resumeTrigger)setTimeout(processPendingSummonerTriggers,0);
   return true;
 }
 function syncModalCancelButton(){
-  const b=el("modalCancelBtn");if(!b)return;
+  const b=el("modalCancelBtn"),p=el("modalPeekBtn");if(!b)return;
   const locked=modalCancelLocked();b.disabled=locked;b.style.display=locked?"none":"inline-block";
+  if(p)p.style.display=locked?"inline-block":"none";
 }
 
 function addTarget(label,fn){const b=document.createElement("button");b.textContent=label;b.onclick=fn;el("targets").appendChild(b);}

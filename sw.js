@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v11-ui";
+const CACHE_NAME = "summoner-pwa-v12-deckcode";
 const CORE_ASSETS = [
   "./",
   "./index.html",

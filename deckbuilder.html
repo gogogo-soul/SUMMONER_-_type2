@@ -85,6 +85,11 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
 .sort-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
 .sort-row select{flex:1;background:#1a202c;border:1px solid #46505e;padding:6px;border-radius:6px;font-size:12px;color:#fff}
 .deck-rule{font-size:10px;color:var(--muted);line-height:1.5}
+.deck-code-box{display:flex;flex-direction:column;gap:6px;padding-top:8px;margin-top:2px;border-top:1px solid #303946}
+.deck-code-label{font-size:10px;color:var(--muted);line-height:1.4}
+.deck-code-input{width:100%;min-height:58px;resize:vertical;background:#0b0e13;border:1px solid #46505e;border-radius:6px;padding:7px 8px;font-size:11px;line-height:1.4;color:#fff;word-break:break-all}
+.deck-code-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.deck-code-status{min-height:16px;font-size:10px;color:#9fd3f4;line-height:1.4}
 .deck-limit-warn{color:#ff8a80!important;font-weight:900}
 .input-row{display:flex;gap:6px}
 .input-row input{flex:1;background:#1a202c;border:1px solid #46505e;padding:6px 8px;border-radius:6px;font-size:12px}
@@ -187,6 +192,9 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
   .deck-controls{padding:8px}
   .deck-select-row,.input-row{flex-wrap:wrap}
   .deck-select-row select,.input-row input{min-height:42px}
+  .deck-code-input{min-height:82px;font-size:12px}
+  .deck-code-actions{grid-template-columns:1fr}
+  .deck-code-actions .btn{width:100%}
   .input-row input{width:100%;flex-basis:100%}
   .deck-item{min-height:44px;padding:7px 9px}
   .deck-item .item-btn{width:32px;height:32px;font-size:16px}
@@ -250,6 +258,16 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
           </select>
         </div>
         <div class="deck-rule">デッキ：最大50枚 / カード種類を問わず同名カードは最大4枚（召喚士を含む）</div>
+        <div class="deck-code-box">
+          <div class="deck-code-label">デッキコード共有：現在のデッキをコード化して送るか、受け取ったコードを貼り付けて復元できます。</div>
+          <textarea id="deckCodeInput" class="deck-code-input" spellcheck="false" autocomplete="off" placeholder="ここにデッキコードを表示 / 貼り付け"></textarea>
+          <div class="deck-code-actions">
+            <button class="btn primary" onclick="generateDeckCode()">デッキコード発行</button>
+            <button class="btn" onclick="copyDeckCode()">コードをコピー</button>
+            <button class="btn" onclick="importDeckCode()">コードから読み込む</button>
+          </div>
+          <div class="deck-code-status" id="deckCodeStatus"></div>
+        </div>
         <button class="btn primary" style="margin-top:4px;" onclick="setActiveDeck()">このデッキを対戦で使用する</button>
       </div>
 
@@ -283,6 +301,8 @@ let detailCardName = null;
 let sortMode = "default";
 
 const DECK_MAX = 50;
+const DECK_CODE_PREFIX = "SMN2-";
+const DECK_CODE_FORMAT_VERSION = 2;
 const LEGACY_CARD_NAMES = {
   "赤の流脈":"カイエン",
   "青の流脈":"ルフナ",
@@ -323,6 +343,138 @@ function validateDeck(deck=currentDeck){
     if(count>max)return {ok:false,msg:`《${name}》は最大 ${max} 枚までです。`};
   }
   return {ok:true};
+}
+function setDeckCodeStatus(message,isError=false){
+  const el=document.getElementById("deckCodeStatus");
+  if(!el)return;
+  el.textContent=message||"";
+  el.style.color=isError?"#ff8a80":"#9fd3f4";
+}
+function cardNumberFromDbCard(card){
+  const m=String(card?.code||"").match(/^BS01-(\d{3})$/);
+  return m?Number(m[1]):null;
+}
+function cardNameByNumber(number){
+  for(const [name,card] of Object.entries(DB)){
+    if(cardNumberFromDbCard(card)===number)return name;
+  }
+  return null;
+}
+function checksumBytes(bytes){
+  let sum=0x5a;
+  for(const b of bytes)sum=((sum*33)^b)&0xff;
+  return sum;
+}
+function bytesToBase64Url(bytes){
+  let binary="";
+  for(const b of bytes)binary+=String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");
+}
+function base64UrlToBytes(text){
+  if(!/^[A-Za-z0-9_-]+$/.test(text))throw new Error("デッキコードに使用できない文字が含まれています。");
+  const padded=text.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-text.length%4)%4);
+  let binary;
+  try{ binary=atob(padded); }catch(_){ throw new Error("デッキコードを読み取れませんでした。"); }
+  return Array.from(binary,ch=>ch.charCodeAt(0));
+}
+function encodeDeckCode(deck=currentDeck){
+  const check=validateDeck(deck);
+  if(!check.ok)throw new Error(check.msg);
+  const total=deckTotal(deck);
+  if(total<=0)throw new Error("デッキが空です。");
+  const entries=[];
+  for(const [name,rawCount] of Object.entries(deck||{})){
+    const count=Number(rawCount)||0;
+    if(count<=0)continue;
+    const card=DB[name];
+    const number=cardNumberFromDbCard(card);
+    if(!number || number>255)throw new Error(`《${name}》の識別番号をコード化できません。`);
+    if(!Number.isInteger(count) || count<1 || count>(card?.n||4))throw new Error(`《${name}》の枚数が不正です。`);
+    entries.push([number,count]);
+  }
+  entries.sort((a,b)=>a[0]-b[0]);
+  const bytes=[DECK_CODE_FORMAT_VERSION,total,entries.length];
+  for(const [number,count] of entries)bytes.push(number,count);
+  bytes.push(checksumBytes(bytes));
+  return DECK_CODE_PREFIX+bytesToBase64Url(bytes);
+}
+function decodeDeckCode(rawCode){
+  const code=String(rawCode||"").trim().replace(/\s+/g,"");
+  if(!code)throw new Error("デッキコードを入力してください。");
+  if(!code.startsWith(DECK_CODE_PREFIX))throw new Error(`このコードはSUMMONER Beta2用ではありません。先頭が ${DECK_CODE_PREFIX} のコードを使用してください。`);
+  const bytes=base64UrlToBytes(code.slice(DECK_CODE_PREFIX.length));
+  if(bytes.length<4)throw new Error("デッキコードが短すぎます。");
+  const storedChecksum=bytes[bytes.length-1];
+  const body=bytes.slice(0,-1);
+  if(checksumBytes(body)!==storedChecksum)throw new Error("デッキコードが壊れているか、入力に誤りがあります。");
+  const [version,declaredTotal,entryCount]=body;
+  if(version!==DECK_CODE_FORMAT_VERSION)throw new Error("このデッキコードの形式には現在対応していません。");
+  if(body.length!==3+entryCount*2)throw new Error("デッキコードのデータ長が不正です。");
+  const deck={};
+  let actualTotal=0;
+  for(let i=0;i<entryCount;i++){
+    const number=body[3+i*2];
+    const count=body[4+i*2];
+    const name=cardNameByNumber(number);
+    if(!name)throw new Error(`BS01-${String(number).padStart(3,"0")} は現在のカードプールに存在しません。`);
+    if(count<1 || count>(DB[name]?.n||4))throw new Error(`《${name}》の枚数データが不正です。`);
+    if(deck[name])throw new Error(`《${name}》が重複して記録されています。`);
+    deck[name]=count;
+    actualTotal+=count;
+  }
+  if(actualTotal!==declaredTotal)throw new Error("デッキコードの合計枚数が一致しません。");
+  const check=validateDeck(deck);
+  if(!check.ok)throw new Error(check.msg);
+  return deck;
+}
+function generateDeckCode(){
+  try{
+    const code=encodeDeckCode();
+    const field=document.getElementById("deckCodeInput");
+    field.value=code;
+    setDeckCodeStatus(`デッキコードを発行しました（${deckTotal()}枚）。このコードだけでデッキを復元できます。`);
+    field.focus();
+    field.select();
+  }catch(err){
+    setDeckCodeStatus(err.message||String(err),true);
+    alert(err.message||String(err));
+  }
+}
+async function copyDeckCode(){
+  const field=document.getElementById("deckCodeInput");
+  let code=field.value.trim();
+  if(!code){
+    try{ code=encodeDeckCode(); field.value=code; }
+    catch(err){ setDeckCodeStatus(err.message||String(err),true); return alert(err.message||String(err)); }
+  }
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(code);
+    }else{
+      field.focus();field.select();
+      if(!document.execCommand("copy"))throw new Error("copy failed");
+    }
+    setDeckCodeStatus("デッキコードをコピーしました。");
+  }catch(_){
+    field.focus();field.select();
+    setDeckCodeStatus("自動コピーできませんでした。選択されたコードを手動でコピーしてください。",true);
+  }
+}
+function importDeckCode(){
+  const field=document.getElementById("deckCodeInput");
+  try{
+    const imported=decodeDeckCode(field.value);
+    const total=deckTotal(imported);
+    if(deckTotal()>0 && !confirm(`現在編集中のデッキを、コードから読み込んだ ${total} 枚のデッキに置き換えますか？`))return;
+    currentDeck=imported;
+    document.getElementById("deckNameInput").value="";
+    document.getElementById("savedDecksSelect").value="";
+    renderDeck();
+    setDeckCodeStatus(`${total}枚のデッキを読み込みました。必要ならデッキ名を付けて保存してください。`);
+  }catch(err){
+    setDeckCodeStatus(err.message||String(err),true);
+    alert(err.message||String(err));
+  }
 }
 function cardIcon(c){
   if(c.timing==="instant")return "⚡";
@@ -590,6 +742,9 @@ function removeCard(name) {
 function clearDeck() {
   currentDeck = {};
   document.getElementById("deckNameInput").value = "";
+  const codeField=document.getElementById("deckCodeInput");
+  if(codeField)codeField.value="";
+  setDeckCodeStatus("");
   renderDeck();
 }
 

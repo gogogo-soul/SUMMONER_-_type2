@@ -114,3 +114,10 @@ PLAYER 1 / PLAYER 2 は従来通り同じ端末上で操作します。
 - Cancel button text is black for visibility.
 - Both players' Summoner Zones display the current number of cards in the zone.
 - Card faces no longer print effect text; use Card Inspector for effect details.
+
+
+## Beta2 v12 Deck Code update
+- デッキ構築画面に「デッキコード発行 / コピー / コードから読み込む」を追加。
+- デッキコードにはカード名ではなく BS01 識別番号と枚数を格納するため、カード名を後から変更しても同じ識別番号なら復元可能。
+- サーバーやデータベースは不要。コード自体にデッキ内容を保持し、別端末でも貼り付けるだけで復元できます。
+- 読み込んだデッキは通常どおり編集・保存・対戦用デッキ設定が可能。

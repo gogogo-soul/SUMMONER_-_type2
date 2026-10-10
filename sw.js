@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v13-boardpeek";
+const CACHE_NAME = "summoner-pwa-v14-field-priority";
 const CORE_ASSETS = [
   "./",
   "./index.html",

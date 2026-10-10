@@ -141,6 +141,9 @@ button{font:inherit;color:inherit}
 .card-controls button:hover{background:#2d3947}
 .card-controls .ability-btn{border-color:#ffd166;background:#4b3b13}
 .card.tapped .card-controls{opacity:.95}
+.card.pending-play{outline:2px dashed #e8c66a;box-shadow:0 0 0 2px #e8c66a33,0 4px 10px #0008}
+.card .pending-badge{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);padding:2px 5px;border-radius:5px;background:#111d;color:#ffe59a;border:1px solid #c39b3c;font-size:7px;font-weight:900;white-space:nowrap;z-index:7}
+.card-controls .place-btn{border-color:#79d69a;background:#163d24;color:#dfffea}
 
 
 .back{background:repeating-linear-gradient(45deg,#17283c 0 6px,#1e3852 6px 12px)!important;border-color:#50789c!important;}
@@ -488,8 +491,8 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
 <aside class="side" id="sidePanel">
   <h2>Card Inspector</h2>
   <div class="inspector" id="inspector"><div class="big">No card selected</div><div class="sub">カードを選択してください</div><p>手札や戦場のカードをクリックすると、ここに詳細が表示されます。</p></div>
-  <h2>Stack</h2>
-  <div class="stack-box" id="stackBox"><div class="stack-empty">スタックは空です</div></div>
+  <h2>解決待ち / Priority</h2>
+  <div class="stack-box" id="stackBox"><div class="stack-empty">解決待ちのカードはありません</div></div>
   <div class="priority-line" id="priorityLine">優先権：-</div>
   <h2>Action Log</h2>
   <div class="log" id="log"></div>
@@ -511,7 +514,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   <button class="primary" onclick="document.getElementById('battleBtn').click()">BATTLE</button>
   <button onclick="document.getElementById('noBlockBtn').click()">NO<br>BLOCK</button>
   <button class="primary" onclick="document.getElementById('endBtn').click()">END</button>
-  <button onclick="document.getElementById('sidePanel').scrollIntoView({behavior:'smooth',block:'start'})">STACK<br>LOG</button>
+  <button onclick="document.getElementById('sidePanel').scrollIntoView({behavior:'smooth',block:'start'})">解決<br>ログ</button>
 </div>
 
 <div class="handbar">
@@ -733,7 +736,7 @@ function init(p1Names=null,p2Names=null,firstSide="you"){
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
     cpu:{hp:20,deck:buildDeckFromNames(p2,"cpu"),hand:[],field:[],lands:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
-    turn:firstSide,turnNo:1,phase:"MAIN PHASE",selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:firstSide,passCount:0,resolvingStack:false,
+    turn:firstSide,turnNo:1,phase:"MAIN PHASE",selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:firstSide,passCount:0,resolvingStack:false,pendingPlayDraft:null,
     pendingSummonerTriggers:[],processingSummonerTrigger:false,triggerTargetPending:false,endingTurnSide:null
   };
   el("log").innerHTML="";
@@ -831,26 +834,38 @@ function makeCard(c,where,index){
   }
 
   const isLandZone=(where==="youLand"||where==="cpuLand");
-  if(G.uiSelected===c.id && ((isField&&c.t==="monster")||isLandZone)){
+  const isHandSummoner=(where==="hand"||where==="cpuHand")&&c.t==="summoner";
+  if(G.uiSelected===c.id && ((isField&&c.t==="monster")||isLandZone||isHandSummoner)){
     const controls=document.createElement("div");
     controls.className="card-controls";
 
-    const tapBtn=document.createElement("button");
-    tapBtn.className="tap-btn";
-    if(isLandZone){
-      const locked=c.tapped&&c.usedThisTurn;
-      tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"未使用陣を取り消してアンタップ":"タップして陣生成");
-      tapBtn.textContent=locked?"🔒":(c.tapped?"↶":"↷");
-      if(locked){tapBtn.disabled=true;tapBtn.classList.add("locked-btn");}
-      tapBtn.onclick=(e)=>{e.stopPropagation();toggleLandMana(c,owner);};
+    if(isHandSummoner){
+      const placeBtn=document.createElement("button");
+      placeBtn.className="place-btn";
+      placeBtn.textContent="置";
+      placeBtn.title="召喚士ゾーンに置く";
+      placeBtn.disabled=G.turn!==owner||G.phase!=="MAIN PHASE"||G[owner].mainActionStarted||G[owner].land||G.stack.length>0||G.resolvingStack;
+      if(placeBtn.disabled)placeBtn.classList.add("locked-btn");
+      placeBtn.onclick=(e)=>{e.stopPropagation();playLand(index,false,owner);};
+      controls.appendChild(placeBtn);
     }else{
-      const locked=c.tapped&&c.tapLocked;
-      tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"アンタップ":"タップ");
-      tapBtn.textContent=locked?"🔒":(c.tapped?"↶":"↷");
-      if(locked){tapBtn.disabled=true;tapBtn.classList.add("locked-btn");}
-      tapBtn.onclick=(e)=>{e.stopPropagation();toggleTap(c,owner);};
+      const tapBtn=document.createElement("button");
+      tapBtn.className="tap-btn";
+      if(isLandZone){
+        const locked=c.tapped&&c.usedThisTurn;
+        tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"未使用陣を取り消してアンタップ":"タップして陣生成");
+        tapBtn.textContent=locked?"🔒":(c.tapped?"↶":"↷");
+        if(locked){tapBtn.disabled=true;tapBtn.classList.add("locked-btn");}
+        tapBtn.onclick=(e)=>{e.stopPropagation();toggleLandMana(c,owner);};
+      }else{
+        const locked=c.tapped&&c.tapLocked;
+        tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"アンタップ":"タップ");
+        tapBtn.textContent=locked?"🔒":(c.tapped?"↶":"↷");
+        if(locked){tapBtn.disabled=true;tapBtn.classList.add("locked-btn");}
+        tapBtn.onclick=(e)=>{e.stopPropagation();toggleTap(c,owner);};
+      }
+      controls.appendChild(tapBtn);
     }
-    controls.appendChild(tapBtn);
 
     if(isLandZone&&!c.isFaceDown&&c.t==="summoner"){
       const abilityBtn=document.createElement("button");
@@ -879,6 +894,24 @@ function makeCard(c,where,index){
   d.onclick=()=>clickCard(where,index,c);
   return d;
 }
+function makePendingCard(c,owner,label="解決待ち"){
+  const d=document.createElement("div");d.dataset.id=c.id;
+  const colorClass=c.color&&c.color!=="none"?" color-"+c.color:"";
+  d.className="card "+c.t+colorClass+" pending-play";
+  const stats=c.t==="monster"?`<div class="atk-stat" title="ATK">${attackPower(c,owner)}</div><div class="hp-stat" title="HP">${Math.max(0,c.h)}</div>`:"";
+  d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div><div class="pending-badge">${label}</div>${stats}`;
+  d.title="相手の対応待ち。クリックでCard Inspectorに効果を表示します";
+  d.onclick=()=>{G.uiSelected=null;showInspector(c,owner);};
+  return d;
+}
+function appendPendingFieldCards(owner){
+  const host=el(owner==="you"?"youField":"cpuField");if(!host)return;
+  const entries=G.stack.filter(e=>e.kind==="card"&&e.owner===owner&&e.card&&(e.card.t==="monster"||e.card.t==="spell"));
+  entries.forEach(e=>host.appendChild(makePendingCard(e.card,owner,"対応待ち")));
+  if(G.pendingPlayDraft&&G.pendingPlayDraft.owner===owner){
+    host.appendChild(makePendingCard(G.pendingPlayDraft.card,owner,"対象選択中"));
+  }
+}
 function render(){
   if(!G)return;
   el("youHp").textContent=Math.max(0,G.you.hp)+" LP"; el("cpuHp").textContent=Math.max(0,G.cpu.hp)+" LP";
@@ -889,17 +922,17 @@ function render(){
   renderManaPool("you");renderManaPool("cpu");renderStack();
   el("drawBtn").textContent="DRAW "+sideLabel(G.turn);el("drawBtn").disabled=G.over||G[G.turn].drawPending<=0;
   el("topTurn").textContent="TURN "+G.turnNo;el("turnPill").textContent=G.over?(G.you.hp>0?"PLAYER 1 WINS":"PLAYER 2 WINS"):sideLabel(G.turn)+" TURN";el("phase").textContent=G.phase;
-  fill("hand",G.you.hand,"hand");fill("cpuHandCards",G.cpu.hand,"cpuHand");fill("youField",G.you.field,"youField");fill("cpuField",G.cpu.field,"cpuField");fill("youLands",G.you.lands,"youLand");fill("cpuLands",G.cpu.lands,"cpuLand");
+  fill("hand",G.you.hand,"hand");fill("cpuHandCards",G.cpu.hand,"cpuHand");fill("youField",G.you.field,"youField");fill("cpuField",G.cpu.field,"cpuField");appendPendingFieldCards("you");appendPendingFieldCards("cpu");fill("youLands",G.you.lands,"youLand");fill("cpuLands",G.cpu.lands,"cpuLand");
   if(G.selected){const s=findById(G.selected);if(s)showInspector(s);}
   el("endBtn").disabled=G.over||G.stack.length>0||G.resolvingStack||!!G.endingTurnSide;el("battleBtn").disabled=G.over||G.phase!=="MAIN PHASE"||G.stack.length>0||!!G.endingTurnSide;el("noBlockBtn").disabled=G.over||!G.blockPending;
   syncModalCancelButton();
 }
 function fill(id,list,where){const x=el(id);x.innerHTML="";list.forEach((c,i)=>x.appendChild(makeCard(c,where,i)));}
 function findById(id){for(const w of ["you","cpu"])for(const z of ["hand","field","lands","grave"])for(const c of G[w][z])if(c.id===id)return c;return null;}
-function showInspector(c){
+function showInspector(c,ownerHint=null){
   if(!c){el("inspector").innerHTML="<div class='big'>No card selected</div><div class='sub'>カードを選択してください</div><p>カードをクリックすると詳細が表示されます。</p>";return;}
   if(c.isFaceDown){el("inspector").innerHTML=`<div class="big">裏向き召喚士</div><div class="sub">召喚士ゾーンの裏向きカード（無色）</div><p>元カード：${c.name}<br>タップで無色の陣を1つ生成。</p>`;return;}
-  const owner=G.you.field.includes(c)||G.you.hand.includes(c)||G.you.lands.includes(c)?"you":"cpu";
+  const owner=ownerHint||(G.you.field.includes(c)||G.you.hand.includes(c)||G.you.lands.includes(c)?"you":"cpu");
   const timing=c.timing==="instant"?"【高速詠唱】":"";
   el("inspector").innerHTML=`<div class="big">${c.name}</div><div class="sub">${c.code?c.code+" / ":""}${typeJP(c.t)} ${c.race?" / "+c.race:""} ${c.t!=="summoner"?"コスト "+c.c:""} ${c.color!=="none"?"【"+colorJP(c.color)+"】":""} ${timing}</div><p>${c.txt}</p>${c.t==="monster"?`<p style="margin-top:12px;font-weight:800">ATK ${attackPower(c,owner)} HP ${Math.max(0,c.h)}/${c.max}</p>`:""}`;
 }
@@ -1257,8 +1290,8 @@ function renderStack(){
   if(!box||!line||!btn)return;
   box.innerHTML="";
   if(!G.stack.length){
-    box.innerHTML='<div class="stack-empty">スタックは空です</div>';
-    line.textContent=G.resolvingStack?"スタックを連続解決中":"優先権：通常進行";
+    box.innerHTML='<div class="stack-empty">解決待ちのカードはありません</div>';
+    line.textContent=G.resolvingStack?"解決待ちを連続処理中":"優先権：通常進行";
     btn.disabled=true;
     btn.textContent="PASS / 解決";
     return;
@@ -1287,9 +1320,10 @@ function canAddToStack(c,w){
 function pushCardToStack(c,w,selection=null){
   const entry={id:crypto.randomUUID?.()||Math.random().toString(36),card:c,owner:w,kind:"card",selection};
   G.stack.push(entry);
+  if(G.pendingPlayDraft&&G.pendingPlayDraft.card===c)G.pendingPlayDraft=null;
   G.priority=opponentSide(w);
   G.passCount=0;
-  log(sideLabel(w)+"が《"+c.name+"》をスタックに置きました。"+sideLabel(G.priority)+"が優先権を得ます。"+(selection?selectionLabel(entry):""));
+  log(sideLabel(w)+"が《"+c.name+"》をプレイ。カードを戦場に公開し、"+sideLabel(G.priority)+"が優先権を得ます。"+(selection?selectionLabel(entry):""));
   render();
 }
 function showPreStackSingle(list,title,zone,done,ownerFn=null){
@@ -1386,7 +1420,7 @@ function passPriority(){
     G.passCount=0;
     G.resolvingStack=true;
     G.priority=null;
-    log("両プレイヤーが優先権を放棄。スタックを上から最後まで連続解決します。");
+    log("両プレイヤーが優先権を放棄。解決待ちのカードを後からプレイされた順に連続解決します。");
     render();
     setTimeout(resolveStackTop,0);
   }else{
@@ -1407,7 +1441,7 @@ function finishStackResolution(){
   G.resolvingStack=false;
   G.priority=G.turn;
   G.passCount=0;
-  log("スタックの連続解決が完了しました。");
+  log("解決待ちのカードの連続処理が完了しました。");
   render();check();
   setTimeout(processPendingSummonerTriggers,0);
 }
@@ -1440,10 +1474,12 @@ function resolveStackTop(){
   if(c.t==="monster"){
     G[w].field.push(c);c.summon=!c.haste;noteMonsterSummoned(c,w);
     log(sideLabel(w)+"の《"+c.name+"》が解決され、戦場に登場しました。");
+    render();
     onSummon(c,w,entry);return;
   }
   if(c.t==="spell"){
     G[w].field.push(c);
+    render();
     activateSpell(c,w,entry);return;
   }
   continueStackResolution();
@@ -1452,31 +1488,48 @@ function resolveStackTop(){
 function playCard(i,w=activeSide(),free=false){
   const p=G[w],c=p.hand[i];if(!c)return;
   if(!free&&!canAddToStack(c,w)){
-    if(G.resolvingStack)return toast("スタック解決中は新しいカードを積めません");
-    if(G.stack.length&&c.timing!=="instant")return toast("スタックに対応できるのは【高速詠唱】を持つカードだけです");
+    if(G.resolvingStack)return toast("解決処理中は新しいカードをプレイできません");
+    if(G.stack.length&&c.timing!=="instant")return toast("対応してプレイできるのは【高速詠唱】を持つカードだけです");
     if(G.stack.length&&G.priority!==w)return toast(sideLabel(w)+"は現在優先権を持っていません");
     return toast(sideLabel(w)+"のターンのメインフェイズでのみプレイできます");
   }
   if(!free&&!canPayCost(p,c))return toast("《"+c.name+"》のプレイに必要な陣が足りません");
   if(!free&&!canPayLpCost(p,c))return toast("《"+c.name+"》はLPを"+c.lpCost+"支払うため、支払い後にLPが1以上残る場合のみプレイできます");
 
-  const commitPlay=(selection=null)=>{
-    const currentIndex=p.hand.indexOf(c);if(currentIndex<0)return;
-    if(!free&&!canPayCost(p,c))return toast("対象選択中に陣状態が変わったためプレイできません");
-    if(!free&&!canPayLpCost(p,c))return toast("対象選択中にLPが変化したためプレイできません");
+  const finalizeCostsAndRemove=()=>{
+    const currentIndex=p.hand.indexOf(c);if(currentIndex<0)return false;
+    if(!free&&!canPayCost(p,c)){toast("対象選択中に陣状態が変わったためプレイできません");return false;}
+    if(!free&&!canPayLpCost(p,c)){toast("対象選択中にLPが変化したためプレイできません");return false;}
     if(!free)payCost(p,c);
     if(!free&&c.lpCost>0)payLP(w,c.lpCost,c.name);
     if(G.turn===w&&!free&&c.timing!=="instant")p.mainActionStarted=true;
     if(G.turn===w&&!free)p.playedNonSummonerThisTurn=true;
     p.hand.splice(currentIndex,1);
-    if(free){
-      p.field.push(c);c.summon=!c.haste;noteMonsterSummoned(c,w);log(sideLabel(w)+"が《"+c.name+"》をコストなしで召喚。");onSummon(c,w,null);
-    }else pushCardToStack(c,w,selection);
+    return true;
   };
 
-  if(free){commitPlay(null);return;}
-  const opened=selectTargetsBeforeStack(c,w,selection=>commitPlay(selection));
-  if(!opened)commitPlay(null);
+  if(free){
+    if(!finalizeCostsAndRemove())return;
+    p.field.push(c);c.summon=!c.haste;noteMonsterSummoned(c,w);log(sideLabel(w)+"が《"+c.name+"》をコストなしで召喚。");onSummon(c,w,null);return;
+  }
+
+  // 魔法は従来どおり、対象を決めてからプレイする。
+  // 登場時効果を持つモンスターは、先に戦場へカードを公開してから対象を選ぶ。
+  if(c.t==="monster"){
+    if(!finalizeCostsAndRemove())return;
+    G.pendingPlayDraft={card:c,owner:w};
+    render();
+    const opened=selectTargetsBeforeStack(c,w,selection=>pushCardToStack(c,w,selection));
+    if(!opened)pushCardToStack(c,w,null);
+    return;
+  }
+
+  const commitSpell=(selection=null)=>{
+    if(!finalizeCostsAndRemove())return;
+    pushCardToStack(c,w,selection);
+  };
+  const opened=selectTargetsBeforeStack(c,w,selection=>commitSpell(selection));
+  if(!opened)commitSpell(null);
 }
 
 function onSummon(c,w,entry=null,done=null){
@@ -1486,7 +1539,7 @@ function onSummon(c,w,entry=null,done=null){
   const many=()=>sel?.targets?.map(resolveTargetRef).filter(Boolean)||[];
   const invalid=()=>log("《"+c.name+"》：指定した対象が解決時に存在しないため、その対象への効果は不発になりました。");
 
-  // プレイ宣言時に選ばれた対象を使って登場時効果を解決する。
+  // モンスターを戦場に公開した後、優先権を渡す前に選ばれた対象を使って登場時効果を解決する。
   if(sel){
     switch(k){
       case "destroyOppLand": {const x=one();if(x)destroyLand(x,opp);else invalid();complete();return;}
@@ -2047,7 +2100,7 @@ function clickCard(where,i,c){
   if(G.over)return;
   showInspector(c);
   if(G.effectPeekMode)return;
-  const controllable=((where==="youField"||where==="cpuField")&&c.t==="monster")||where==="youLand"||where==="cpuLand";
+  const controllable=((where==="youField"||where==="cpuField")&&c.t==="monster")||where==="youLand"||where==="cpuLand"||((where==="hand"||where==="cpuHand")&&c.t==="summoner");
   G.uiSelected=controllable?c.id:null;
   const owner=(where==="hand"||where==="youField"||where==="youLand")?"you":"cpu";
   if(G.blockPending){
@@ -2056,9 +2109,12 @@ function clickCard(where,i,c){
   }
   const ownTurn=G.turn===owner,instant=c.timing==="instant";
   if(where==="hand"||where==="cpuHand"){
+    if(c.t==="summoner"){
+      // 1クリック目はCard Inspectorで効果確認のみ。選択したカードに出る「置」ボタンで配置する。
+      render();return;
+    }
     if(!ownTurn&&!instant)return toast(sideLabel(owner)+"のターンでは操作できません");
-    if(c.t==="summoner"){if(!ownTurn)return toast("相手の召喚士カードは相手ターンにのみ置けます");playLand(i,false,owner);}
-    else if(ownTurn&&G.phase==="MAIN PHASE"&&!G[owner].land&&!G.stack.length)openPlayModal(i,c,owner);
+    if(ownTurn&&G.phase==="MAIN PHASE"&&!G[owner].land&&!G.stack.length)openPlayModal(i,c,owner);
     else playCard(i,owner);
   } else if(where==="youField"||where==="cpuField"){
     if(c.t==="spell"){
@@ -2077,7 +2133,7 @@ function clickCard(where,i,c){
   } else if(where==="youLand"||where==="cpuLand"){render();}
 }
 function modalCancelLocked(){
-  return !!(G&&(G.resolvingStack||G.processingSummonerTrigger||G.triggerTargetPending));
+  return !!(G&&(G.resolvingStack||G.processingSummonerTrigger||G.triggerTargetPending||G.pendingPlayDraft));
 }
 function exitEffectPeekMode(){
   if(!G)return;
@@ -2101,7 +2157,7 @@ function returnToEffectSelection(){
   syncModalCancelButton();
 }
 function closeModal(force=false){
-  if(!force&&modalCancelLocked()){toast("効果処理中の選択はキャンセルできません");return false;}
+  if(!force&&modalCancelLocked()){toast(G?.pendingPlayDraft?"このモンスターはすでにプレイされています。登場時効果の対象選択はキャンセルできません":"効果処理中の選択はキャンセルできません");return false;}
   exitEffectPeekMode();
   const resumeTrigger=!!G?.triggerTargetPending;
   el("modal").style.display="none";G.action=null;if(G)G.triggerTargetPending=false;render();

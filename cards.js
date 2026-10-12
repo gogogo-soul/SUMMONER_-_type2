@@ -139,3 +139,7 @@ const DB = {
   "スプモーニ": { code:"BS01-130", t:"summoner", color:"black", race:"召喚士", c:0, a:0, h:0, txt:"タップ：黒の陣＋1　タップ：自分が種族にゴーストを含むモンスターを召喚したとき発動できる。1枚引く", n:4, effectKey:"mana", summonerAbilityKey:"tribeSummonDraw", summonerAbilityCost:0, summonerTrigger:"summonRace", summonerTriggerRace:"ゴースト" }
 };
 const CARD_ORDER = Object.keys(DB);
+
+
+// External pages (DECK LIBRARY etc.) can read the same card master.
+if (typeof window !== "undefined") window.SUMMONER_DB = DB;

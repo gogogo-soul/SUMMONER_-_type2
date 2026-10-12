@@ -134,3 +134,12 @@ PLAYER 1 / PLAYER 2 は従来通り同じ端末上で操作します。
 - モンスター／魔法をプレイした際、相手の優先権中でも戦場上に「対応待ち」としてカードを表示。Card Inspectorから効果を確認可能。
 - 登場時に対象を取るモンスターは、戦場へカードを公開してから対象を選び、その後相手へ優先権を渡す。
 - 内部の解決順管理は維持しつつ、UI表現を「Stack」から「解決待ち / Priority」中心に変更。
+
+
+## DECK LIBRARY (v15)
+
+- Firebase Cloud Firestore + Anonymous Authentication を利用した共有デッキ置き場を追加。
+- `decklibrary.html` でデッキを構築し、デッキ名・投稿者名・コメント・SMN2デッキコードを投稿できます。
+- 一覧からデッキコードをコピー、または「このデッキを使う」で Deck Builder に直接読み込めます。
+- 自分が同じ匿名Firebaseユーザーで投稿したデッキは削除できます。
+- GitHub Pages更新時に旧版が残りにくいよう、Service Worker は同一オリジンの最新版をネットワーク優先で取得します。

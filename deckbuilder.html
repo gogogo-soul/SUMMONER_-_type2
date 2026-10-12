@@ -226,6 +226,7 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
 
   <div style="display:flex;gap:8px;">
     <a href="index.html" class="nav-btn" style="background:#242b35;border-color:#46505e;">タイトルへ</a>
+    <a href="decklibrary.html" class="nav-btn" style="background:#1d493d;border-color:#4c8f77;">デッキ置き場</a>
     <a href="summoner.html" class="nav-btn">対戦へ</a>
   </div>
 </header>
@@ -303,6 +304,7 @@ let sortMode = "default";
 const DECK_MAX = 50;
 const DECK_CODE_PREFIX = "SMN2-";
 const DECK_CODE_FORMAT_VERSION = 2;
+const DECK_LIBRARY_IMPORT_KEY = "summoner_deck_library_import";
 const LEGACY_CARD_NAMES = {
   "赤の流脈":"カイエン",
   "青の流脈":"ルフナ",
@@ -515,7 +517,27 @@ function init() {
   loadUsers();
   renderPool();
   loadCurrentUserData();
+  loadDeckFromLibrary();
   setupDeckDropZone();
+}
+
+
+function loadDeckFromLibrary(){
+  const raw=localStorage.getItem(DECK_LIBRARY_IMPORT_KEY);
+  if(!raw)return;
+  localStorage.removeItem(DECK_LIBRARY_IMPORT_KEY);
+  try{
+    const payload=JSON.parse(raw);
+    const imported=decodeDeckCode(payload.code||"");
+    currentDeck=imported;
+    document.getElementById("deckNameInput").value=(payload.name||"ライブラリデッキ").slice(0,60);
+    document.getElementById("savedDecksSelect").value="";
+    document.getElementById("deckCodeInput").value=payload.code||"";
+    renderDeck();
+    setDeckCodeStatus(`DECK LIBRARYから「${payload.name||"デッキ"}」を読み込みました。保存または対戦用に設定できます。`);
+  }catch(err){
+    setDeckCodeStatus(`DECK LIBRARYのデッキを読み込めませんでした: ${err.message||err}`,true);
+  }
 }
 
 // --- ユーザー管理処理 ---

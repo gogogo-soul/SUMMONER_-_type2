@@ -713,6 +713,240 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
 }
 @media(max-width:900px){#infoToggleBtn{display:none}.desktop-actions{display:none}}
 
+
+
+/* ===== Beta2 v21: smartphone tabletop layout unified with desktop ===== */
+@media(max-width:900px){
+  html,body{
+    width:100%;height:100%;min-height:100%;overflow:hidden!important;
+    background:#171712!important;color:#171712;
+  }
+  body{padding:0!important}
+  body.hand-collapsed{padding:0!important}
+  #app{height:100dvh;min-height:100dvh;position:relative;background:#171712;overflow:hidden}
+
+  .topbar{
+    position:absolute;top:6px;left:8px;right:8px;z-index:95;
+    height:auto;min-height:40px;padding:0;background:transparent;border:0;
+    display:flex;justify-content:flex-end;pointer-events:none
+  }
+  .brand,.top-info{display:none!important}
+  .topbar>div:nth-child(2){margin-left:auto;display:flex;gap:5px;flex-wrap:nowrap;pointer-events:auto}
+  .nav-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:38px;padding:8px 10px;border-radius:6px;border:1px solid #777267;
+    background:rgba(32,31,27,.88);color:#f2efe5!important;
+    font-size:10px;font-weight:900;box-shadow:0 2px 7px #0008;white-space:nowrap
+  }
+  .nav-btn.btn-sub{background:rgba(32,31,27,.88);border-color:#777267}
+  #infoToggleBtn{display:inline-flex!important}
+
+  .main{position:relative;display:block;height:100dvh;min-height:0;padding:0;overflow:hidden}
+  .table{
+    position:absolute;inset:0;display:block;overflow:hidden;min-height:0;border:8px solid #45443e;border-radius:11px;
+    box-shadow:inset 0 0 0 1px #181814,inset 0 0 32px rgba(54,52,44,.42),0 0 18px #0009;
+    background:
+      linear-gradient(to bottom,
+        transparent 24.82%,rgba(91,89,80,.30) 24.95%,rgba(91,89,80,.30) 25.08%,transparent 25.2%,
+        transparent 49.82%,rgba(91,89,80,.35) 49.94%,rgba(91,89,80,.35) 50.08%,transparent 50.2%,
+        transparent 74.82%,rgba(91,89,80,.28) 74.94%,rgba(91,89,80,.28) 75.08%,transparent 75.2%),
+      radial-gradient(circle at 17% 18%,rgba(255,255,255,.24) 0 1px,transparent 1.7px),
+      radial-gradient(circle at 73% 61%,rgba(47,45,39,.10) 0 1px,transparent 1.5px),
+      repeating-linear-gradient(8deg,rgba(50,48,42,.018) 0 1px,transparent 1px 5px),
+      linear-gradient(135deg,#d9d6c9 0%,#c9c6b9 46%,#dedbd0 100%);
+    background-size:auto,31px 31px,41px 41px,auto,auto
+  }
+  .table::after{
+    content:"";position:absolute;inset:6px;border:1px solid rgba(47,46,40,.45);border-radius:6px;
+    box-shadow:inset 0 0 22px rgba(41,39,34,.18);pointer-events:none;z-index:1
+  }
+
+  .half{position:absolute;left:0;right:0;padding:0;gap:0;display:block;border:0;min-height:0;z-index:3;background:transparent}
+  .cpu-half{top:0;height:50%;border:0}
+  .you-half{top:50%;height:50%;border:0}
+
+  .player-head{position:absolute;z-index:32;width:auto;display:flex;align-items:center;gap:5px;justify-content:flex-start;color:#292822}
+  .cpu-half .player-head{top:150px;left:10px}
+  .you-half .player-head{bottom:166px;left:10px}
+  .player-head .who{font:800 10px/1.1 Georgia,"Yu Mincho",serif;color:#24231f;letter-spacing:.03em}
+  .hp{font:900 15px/1 Georgia,"Yu Mincho",serif;color:#22211d;background:rgba(236,232,217,.82);border:1px solid rgba(65,63,55,.42);padding:5px 7px;border-radius:4px;box-shadow:0 2px 4px #0003}
+  .dmg-pop{right:-50px;top:-5px}
+
+  .zone-row{position:absolute;inset:0;display:block;min-height:0}
+  .zonebox,.resource-col{position:absolute;display:block;min-width:0;min-height:0}
+  .zonebox{justify-content:initial}
+  .zone-label{
+    position:absolute;left:0;top:-15px;margin:0;color:#36352f;font:700 8px/1 Georgia,"Yu Mincho",serif;
+    letter-spacing:.04em;text-transform:none;text-shadow:0 1px rgba(255,255,255,.45);white-space:nowrap
+  }
+  .zone-count{font-size:8px;color:#36352f}
+  .mana-pool-container{margin-left:3px;vertical-align:middle}
+  .mana-icon{width:13px;height:13px;font-size:7px;box-shadow:0 1px 2px #0005}
+
+  /* PLAYER 2: hand -> summoner -> battlefield */
+  .cpu-half .zonebox:nth-child(1){top:45%;left:16%;right:16%;height:62px}
+  .cpu-half .zonebox:nth-child(3){top:70%;left:9%;right:9%;height:72px}
+  .cpu-half .resource-col:nth-child(2){top:47%;left:2.5%;width:46px;height:116px}
+  .cpu-half .resource-col:nth-child(4){display:none}
+
+  /* PLAYER 1: battlefield -> summoner -> hand */
+  .you-half .zonebox:nth-child(1){top:4%;left:9%;right:9%;height:72px}
+  .you-half .zonebox:nth-child(3){top:30%;left:16%;right:16%;height:62px}
+  .you-half .resource-col:nth-child(2){top:6%;right:2.5%;width:46px;height:116px}
+
+  .cards{display:flex;align-items:center;justify-content:center;gap:5px;overflow-x:auto;overflow-y:visible;padding:3px 1px;height:100%;scrollbar-width:none}
+  .cards::-webkit-scrollbar{display:none}
+  .field-cards{min-height:0}
+
+  .resource-zone{
+    width:44px;height:52px;max-height:none;padding:0 0 5px;border:1px solid rgba(54,52,45,.38);border-radius:4px;
+    background:rgba(224,221,208,.42);box-shadow:inset 0 0 8px rgba(38,36,31,.08),0 1px 3px #0002;
+    color:#272620;display:flex;flex-direction:column;align-items:center;justify-content:flex-end
+  }
+  .resource-zone b{font:800 5.5px/1 Georgia,"Yu Mincho",serif;color:#35342d;letter-spacing:.02em}
+  .resource-zone span{font:900 10px/1 Georgia,"Yu Mincho",serif;color:#1d1c19;margin-top:2px}
+  .resource-col{display:flex;flex-direction:column;gap:5px;justify-content:flex-start}
+  .deck-grave-stack{gap:5px}
+
+  .card{
+    flex:0 0 54px;width:54px;height:72px;padding:4px;border-radius:3px;border-width:1px;
+    box-shadow:0 2px 4px #0007;transition:transform .12s,filter .12s,box-shadow .12s
+  }
+  .card:hover{transform:none}
+  .card.selected{outline:2px solid #f06427;transform:translateY(-3px)}
+  .card.tapped{transform:rotate(90deg);z-index:6}
+  .card .name{font-size:6.4px;line-height:1.05;padding-right:11px}
+  .card .type{font-size:5px}
+  .card .cost{right:2px;top:2px;min-width:12px;font-size:6px;padding:1px 2px}
+  .card .art{height:22px;margin:2px 0;border-radius:2px;font-size:11px}
+  .card .atk-stat,.card .hp-stat{font-size:11px;min-width:19px;padding:2px 3px;bottom:2px;-webkit-text-stroke:1.3px #000}
+  .card .atk-stat{left:2px}.card .hp-stat{right:2px}
+  .card-controls{bottom:12px}
+  .card-controls button{width:20px;height:20px;font-size:10px}
+  .card .pending-badge{bottom:12px;font-size:5px;padding:1px 2px}
+  .card.selected .name,.card.selected .type,.card.selected .atk-stat,.card.selected .hp-stat{color:#fff!important;text-shadow:0 1px 2px #000,0 0 3px #000}
+
+  .opponent-hand-wrap{
+    position:absolute;top:48px;left:50%;transform:translateX(-50%);z-index:28;
+    margin:0;padding:0;background:transparent;border:0;border-radius:0;width:calc(100% - 22px);height:112px
+  }
+  .opponent-hand-title{display:none}
+  .opponent-hand{height:112px;padding:0 2px;overflow:visible;justify-content:center;gap:0;align-items:flex-start}
+  .opponent-hand .card{
+    flex:0 0 clamp(78px,23vw,110px);width:clamp(78px,23vw,110px);height:clamp(100px,29vw,140px);
+    margin-left:-40px;padding:5px;border-radius:4px;box-shadow:0 5px 9px #0007
+  }
+  .opponent-hand .card:first-child{margin-left:0}
+  .opponent-hand .card .name{font-size:8px;line-height:1.1;padding-right:15px}
+  .opponent-hand .card .type{font-size:6px}
+  .opponent-hand .card .cost{min-width:16px;font-size:8px}
+  .opponent-hand .card .art{height:38px;font-size:16px}
+  .opponent-hand .card .atk-stat,.opponent-hand .card .hp-stat{font-size:14px;min-width:23px;padding:2px 4px}
+
+  .centerbar{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:36;
+    display:flex;align-items:center;gap:6px;background:rgba(38,37,32,.84);border:1px solid rgba(240,236,220,.45);
+    border-radius:999px;padding:5px 9px;box-shadow:0 2px 6px #0007;white-space:nowrap
+  }
+  .turn-pill{padding:0;background:transparent;border:0;color:#f2efe3;font-size:9px}
+  .phase{color:#d1cdc0;font-size:8px}
+
+  .handbar{
+    position:absolute;left:50%;bottom:52px;transform:translateX(-50%);z-index:48;
+    width:calc(100% - 18px);height:126px;padding:0;background:transparent;border:0;display:block;overflow:visible;box-shadow:none
+  }
+  .hand-info{display:none!important}
+  .hand{height:126px;overflow:visible;display:flex;justify-content:center;align-items:flex-end;gap:0;padding:0 2px}
+  .hand .card{
+    flex:0 0 clamp(78px,23vw,110px);width:clamp(78px,23vw,110px);height:clamp(100px,29vw,140px);
+    margin-left:-40px;padding:5px;border-radius:4px;
+    transform:rotate(var(--fan-angle,0deg)) translateY(var(--fan-y,0px));transform-origin:50% 118%;box-shadow:0 6px 11px #0008
+  }
+  .hand .card:first-child{margin-left:0}
+  .hand .card .name{font-size:8px;line-height:1.1;padding-right:15px}
+  .hand .card .type{font-size:6px}
+  .hand .card .cost{min-width:16px;font-size:8px}
+  .hand .card .art{height:38px;font-size:16px}
+  .hand .card .atk-stat,.hand .card .hp-stat{font-size:14px;min-width:23px;padding:2px 4px}
+  .hand .card.selected{outline:2px solid #f06427;transform:rotate(var(--fan-angle,0deg)) translateY(calc(var(--fan-y,0px) - 10px))}
+  .mobile-hand-toggle{display:none!important}
+  body.hand-collapsed .handbar{height:126px}
+  body.hand-collapsed .hand{display:flex}
+
+  /* INFO is now a slide-over panel on mobile too */
+  .side{
+    display:flex!important;position:fixed;right:7px;top:52px;bottom:66px;z-index:110;width:min(320px,88vw);min-height:0;
+    padding:8px;gap:6px;border:1px solid #777267;border-radius:8px;background:rgba(24,24,21,.96);color:#eef2f7;
+    box-shadow:0 10px 28px #000b;backdrop-filter:blur(8px);transform:translateX(calc(100% + 20px));transition:transform .18s ease
+  }
+  body.info-open .side{transform:translateX(0)}
+  .side h2{font-size:10px}
+  .inspector,.stack-box,.log{background:rgba(12,13,12,.88)}
+  .inspector{min-height:90px}
+  .stack-box{max-height:110px}
+  .log{min-height:80px;max-height:none;font-size:10px;flex:1}
+  .side .actions{display:none}
+
+  .mobile-actions{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:4px;position:fixed;left:6px;right:6px;bottom:5px;z-index:105;
+    min-height:46px;padding:5px;background:rgba(31,30,26,.9);border:1px solid rgba(119,114,103,.75);border-radius:8px;box-shadow:0 3px 9px #0008
+  }
+  .mobile-actions button{
+    min-width:0;min-height:38px;border:1px solid #777267;background:#34332d;color:#f3f0e5;border-radius:5px;
+    padding:6px 2px;font-size:8px;font-weight:900;line-height:1.05
+  }
+  .mobile-actions .primary{background:#596b72;border-color:#8ca1a7}
+  .mobile-actions .pass{background:#665329;border-color:#9d8246}
+
+  .modal{align-items:center;z-index:6000}
+  .modalbox{width:min(94vw,680px);max-height:82dvh;overflow:auto;border-radius:12px;padding:16px 14px}
+  .modalbox h3,#modalTitle{color:#fff!important;text-shadow:0 1px 2px #000}
+  .targets{display:grid;grid-template-columns:1fr;gap:7px}
+  .targets button{min-height:44px;text-align:left;color:#fff}
+  #modalCancelBtn,#modalPeekBtn{min-height:42px;padding:10px 14px}
+
+  .deck-setup{padding:10px;align-items:flex-start;overflow:auto;z-index:5000}
+  .deck-setup-box{margin-top:20px;padding:16px}
+  .deck-setup-title{font-size:20px}
+  .deck-choice-grid{grid-template-columns:1fr}
+  .deck-choice select,.first-player-choice select,.start-battle-btn{min-height:44px}
+}
+
+/* portrait phones need more overlap so names/stats stay visible while the hand still fits */
+@media(max-width:900px) and (orientation:portrait){
+  .opponent-hand .card,.hand .card{margin-left:-42px}
+  .opponent-hand .card:first-child,.hand .card:first-child{margin-left:0}
+}
+
+/* landscape phones keep the same tabletop but compress vertically */
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+  .topbar{top:4px;left:6px;right:6px}
+  .nav-btn{min-height:32px;padding:6px 8px;font-size:9px}
+  .opponent-hand-wrap{top:8px;height:92px;width:68%}
+  .opponent-hand{height:92px}
+  .opponent-hand .card,.hand .card{flex-basis:74px;width:74px;height:96px;margin-left:-18px;padding:4px}
+  .opponent-hand .card .art,.hand .card .art{height:30px}
+  .opponent-hand .card .name,.hand .card .name{font-size:7px}
+  .opponent-hand .card .atk-stat,.opponent-hand .card .hp-stat,.hand .card .atk-stat,.hand .card .hp-stat{font-size:12px;min-width:20px}
+  .cpu-half .player-head{top:92px}
+  .cpu-half .zonebox:nth-child(1){top:45%;height:48px}
+  .cpu-half .zonebox:nth-child(3){top:72%;height:52px}
+  .you-half .zonebox:nth-child(1){top:5%;height:52px}
+  .you-half .zonebox:nth-child(3){top:34%;height:48px}
+  .card{flex-basis:46px;width:46px;height:61px;padding:3px}
+  .card .art{height:18px}
+  .card .name{font-size:5.8px}
+  .card .atk-stat,.card .hp-stat{font-size:9px;min-width:17px;padding:1px 2px}
+  .resource-zone{width:38px;height:42px}
+  .cpu-half .resource-col:nth-child(2),.you-half .resource-col:nth-child(2){width:40px;height:92px}
+  .handbar{bottom:50px;height:104px;width:72%}
+  .hand{height:104px}
+  .you-half .player-head{bottom:112px}
+  .mobile-actions{min-height:42px}
+  .mobile-actions button{min-height:32px;padding:4px 2px;font-size:7px}
+  .side{top:42px;bottom:58px;width:min(300px,72vw)}
+}
+
 </style>
 </head>
 <body>
@@ -809,7 +1043,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   <button class="primary" onclick="document.getElementById('battleBtn').click()">BATTLE</button>
   <button onclick="document.getElementById('noBlockBtn').click()">NO<br>BLOCK</button>
   <button class="primary" onclick="document.getElementById('endBtn').click()">END</button>
-  <button onclick="document.getElementById('sidePanel').scrollIntoView({behavior:'smooth',block:'start'})">解決<br>ログ</button>
+  <button onclick="document.body.classList.toggle('info-open')">INFO</button>
 </div>
 
 <div class="handbar">

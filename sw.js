@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v20-hand-forward";
+const CACHE_NAME = "summoner-pwa-v21-mobile-tabletop";
 const CORE_ASSETS = [
   "./",
   "./index.html",

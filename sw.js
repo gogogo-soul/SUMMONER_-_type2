@@ -1,10 +1,11 @@
-const CACHE_NAME = "summoner-pwa-v21-mobile-tabletop";
+const CACHE_NAME = "summoner-pwa-v17-update-notes-r2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./summoner.html",
   "./deckbuilder.html",
   "./decklibrary.html",
+  "./updates.html",
   "./cards.js",
   "./firebase-config.js",
   "./pwa.js",

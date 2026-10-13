@@ -152,14 +152,14 @@ button,select{font:inherit;color:inherit}
   cursor:pointer;
 }
 
-.pwa-install{
-  display:none;width:100%;border:1px solid #7ec7ff;background:#173b55;color:#fff;
-  padding:13px;border-radius:8px;font-weight:800;cursor:pointer
+.btn-updates{
+  background:#1f2330;
+  color:#dce8ff;
+  border:1px solid #6b7fa8;
 }
-.pwa-install.available{display:block}
-.mobile-install-note{
-  width:100%;max-width:360px;margin-top:16px;text-align:center;color:var(--muted);
-  font-size:11px;line-height:1.55
+.btn-updates:hover{
+  background:#2a3142;
+  transform:translateY(-2px);
 }
 @media(max-width:600px){
   html,body{height:auto;min-height:100%;overflow:auto}
@@ -207,10 +207,7 @@ button,select{font:inherit;color:inherit}
     <a href="deckbuilder.html" class="menu-btn btn-builder">デッキ構築 (DECK BUILDER)</a>
     <a href="decklibrary.html" class="menu-btn btn-library">デッキ置き場 (DECK LIBRARY)</a>
     <button type="button" class="menu-btn btn-feedback" onclick="openFeedbackForm()">意見・感想を送る (FEEDBACK)</button>
-    <button id="installBtn" class="pwa-install" onclick="installSummoner()">SUMMONERを端末にインストール</button>
-  </div>
-  <div class="mobile-install-note">
-    スマホ対応版。iPhoneではSafariの共有メニュー →「ホーム画面に追加」でもインストールできます。
+    <a href="updates.html" class="menu-btn btn-updates">更新内容 (UPDATE NOTES)</a>
   </div>
 </div>
 

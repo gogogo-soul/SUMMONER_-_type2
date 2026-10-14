@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v17-update-notes-r2";
+const CACHE_NAME = "summoner-pwa-v17-custom-field-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",

@@ -1,16 +1,15 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
-<meta content="#0b0e13" name="theme-color"/>
-<meta content="yes" name="apple-mobile-web-app-capable"/>
-<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
-<meta content="SUMMONER" name="apple-mobile-web-app-title"/>
-<link href="manifest.json" rel="manifest"/>
-<link href="icons/icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
-<link href="icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0e13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SUMMONER">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <title>SUMMONER - UPDATE NOTES</title>
 <style>
 :root{
@@ -40,83 +39,99 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
 </head>
 <body>
 <header class="topbar">
-<div class="brand">SUMMONER<span>UPDATE NOTES</span></div>
-<a class="back" href="index.html">タイトルへ戻る</a>
+  <div class="brand">SUMMONER<span>UPDATE NOTES</span></div>
+  <a class="back" href="index.html">タイトルへ戻る</a>
 </header>
 <main class="wrap">
-<section class="hero">
-<div class="eyebrow">PLAYTEST CHANGELOG</div>
-<h1>更新内容</h1>
-<p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-<div class="latest">LATEST · Beta2 v17</div>
-</section>
-<section class="timeline">
+  <section class="hero">
+    <div class="eyebrow">PLAYTEST CHANGELOG</div>
+    <h1>更新内容</h1>
+    <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
+    <div class="latest">LATEST · Beta2 v17</div>
+  </section>
 
+  <section class="timeline">
+    <article class="release latest-release">
+      <div class="release-head"><div><div class="version">Beta2 v17</div><div class="release-title">対戦UI刷新・スマホ統一・更新内容ページ追加</div></div><div class="tag">LATEST</div></div>
+      <ul>
+        <li>PC版の対戦画面を白いプレイマット風の卓上レイアウトへ刷新。</li>
+        <li>PLAYER 2を上、PLAYER 1を下に配置した上下対称レイアウトへ変更。</li>
+        <li>スマホ版もPC版と同じ白い卓上レイアウトへ統一し、縦画面・横画面の両方に対応。</li>
+        <li>PLAYER 1 / PLAYER 2 の手札カードを110×140へ統一し、カード名・ATK・HPが見えやすい位置と重なり方へ調整。</li>
+        <li>ATK / HP表示の視認性を改善し、上部ナビゲーション・各種ボタン・操作ドックを大型化。</li>
+        <li>墓地をデッキの上へ配置し、Card Inspector / 解決待ち / Action Logを右側INFOパネルへ集約。</li>
+        <li>《ルフナ》など効果解決時の案内・対象選択モーダルの見出し文字を白色へ変更。</li>
+        <li>タイトル画面の「端末にインストール」ボタンを「更新内容 (UPDATE NOTES)」へ変更。</li>
+        <li>更新履歴専用ページを新設。今後の変更内容はこのページへ追記する形式に変更。</li>
+        <li>対戦画面に「フィールド」を追加。v17標準盤面を維持したまま、端末内の好きな画像を背景に設定・保存・初期化できるように変更（推奨1920×1080 / 16:9）。</li>
+        <li>PWAとしてのホーム画面追加・Service Worker機能自体は引き続き利用可能。</li>
+      </ul>
+    </article>
 
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v16</div><div class="release-title">DECK LIBRARYでデッキ内容を閲覧可能に</div></div><div class="tag">DECK LIBRARY</div></div>
+      <ul>
+        <li>投稿されたデッキの採用カード・枚数・識別番号・色・コストなどを閲覧可能に。</li>
+        <li>一覧内のカードを選ぶとカード詳細・効果を確認可能。</li>
+      </ul>
+    </article>
 
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v15</div><div class="release-title">DECK LIBRARY / Firebase連携</div></div><div class="tag">ONLINE</div></div>
+      <ul>
+        <li>Firebase Firestoreを利用した共有デッキ置き場を追加。</li>
+        <li>デッキ名・投稿者名・コメント・デッキコードを投稿可能。</li>
+        <li>「このデッキを使う」からDECK BUILDERへ直接デッキを展開可能。</li>
+        <li>Service Workerをオンライン時は最新版優先、オフライン時はキャッシュ利用へ変更。</li>
+      </ul>
+    </article>
 
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v14</div><div class="release-title">カード公開後に優先権を渡す形式へ変更</div></div><div class="tag">RULE / UI</div></div>
+      <ul>
+        <li>手札の召喚士は1クリックで置かず、まずCard Inspectorで確認してから配置する方式へ変更。</li>
+        <li>モンスター・魔法は対応待ち中も盤面に公開し、相手が効果を確認してから対応できるよう変更。</li>
+        <li>登場時効果を持つモンスターは場に出た後で対象を選ぶ処理へ変更。</li>
+      </ul>
+    </article>
 
-<article class="release latest-release">
-<div class="release-head"><div><div class="version">Beta2 v17</div><div class="release-title">卓上レイアウト統一・更新内容ページを追加</div></div><div class="tag">LATEST</div></div>
-<ul><li>対戦画面を白いプレイマット風の卓上レイアウトへ刷新し、PLAYER 2を上、PLAYER 1を下に配置。</li><li>PC・スマホの両方で同じ卓上レイアウトを使用し、縦画面・横画面にも対応。</li><li>PLAYER 1 / PLAYER 2 の手札カードを110×140へ統一し、盤面側へ寄せてカード名・ATK・HPを見やすく調整。</li><li>ATK / HP表示、各種ボタン、操作ドックを大型化。墓地をデッキの上へ配置し、INFOパネルの占有範囲を調整。</li><li>選択中の文字と、《ルフナ》など効果解決中の案内・対象選択モーダル見出しを白文字へ変更。</li><li>Card Inspector / 解決待ち / Action Logを右側INFOパネルへ集約。</li><li>タイトル画面の「端末にインストール」ボタンを「更新内容 (UPDATE NOTES)」へ変更し、更新履歴専用ページを新設。</li><li>PWA / Service Worker機能自体は引き続き利用可能。</li></ul>
-</article>
-<article class="release">
-<div class="release-head"><div><div class="version">Beta2 v16</div><div class="release-title">DECK LIBRARYでデッキ内容を閲覧可能に</div></div><div class="tag">DECK LIBRARY</div></div>
-<ul>
-<li>投稿されたデッキの採用カード・枚数・識別番号・色・コストなどを閲覧可能に。</li>
-<li>一覧内のカードを選ぶとカード詳細・効果を確認可能。</li>
-</ul>
-</article>
-<article class="release">
-<div class="release-head"><div><div class="version">Beta2 v15</div><div class="release-title">DECK LIBRARY / Firebase連携</div></div><div class="tag">ONLINE</div></div>
-<ul>
-<li>Firebase Firestoreを利用した共有デッキ置き場を追加。</li>
-<li>デッキ名・投稿者名・コメント・デッキコードを投稿可能。</li>
-<li>「このデッキを使う」からDECK BUILDERへ直接デッキを展開可能。</li>
-<li>Service Workerをオンライン時は最新版優先、オフライン時はキャッシュ利用へ変更。</li>
-</ul>
-</article>
-<article class="release">
-<div class="release-head"><div><div class="version">Beta2 v14</div><div class="release-title">カード公開後に優先権を渡す形式へ変更</div></div><div class="tag">RULE / UI</div></div>
-<ul>
-<li>手札の召喚士は1クリックで置かず、まずCard Inspectorで確認してから配置する方式へ変更。</li>
-<li>モンスター・魔法は対応待ち中も盤面に公開し、相手が効果を確認してから対応できるよう変更。</li>
-<li>登場時効果を持つモンスターは場に出た後で対象を選ぶ処理へ変更。</li>
-</ul>
-</article>
-<article class="release">
-<div class="release-head"><div><div class="version">Beta2 v13</div><div class="release-title">効果解決中の盤面確認</div></div><div class="tag">DUEL</div></div>
-<ul>
-<li>《ルフナ》《深緑のシャーマン》など、必須選択中に「盤面を見る」を追加。</li>
-<li>盤面確認中は誤操作を防ぎ、確認後に効果処理へ戻れるように変更。</li>
-</ul>
-</article>
-<article class="release">
-<div class="release-head"><div><div class="version">Beta2 v12</div><div class="release-title">デッキコード共有</div></div><div class="tag">DECK</div></div>
-<ul>
-<li>DECK BUILDERにデッキコード発行・コピー・読み込み機能を追加。</li>
-<li>カード名ではなくBS01識別番号と枚数でデッキ構成を保存。</li>
-<li>サーバー不要で別端末へデッキを共有可能。</li>
-</ul>
-</article>
-<article class="release">
-<div class="release-head"><div><div class="version">Beta2 v11</div><div class="release-title">カード表示と召喚士ゾーン表示を整理</div></div><div class="tag">UI</div></div>
-<ul>
-<li>ATK / HPへ縁取りを追加し、キャンセル文字を黒色へ変更。</li>
-<li>召喚士ゾーンに現在のカード枚数を表示。</li>
-<li>カード本体から効果テキストを外し、Card Inspectorで確認する形式へ整理。</li>
-</ul>
-</article>
-<article class="release">
-<div class="release-head"><div><div class="version">Beta2 v10</div><div class="release-title">先攻選択・LP支払いルール</div></div><div class="tag">RULE</div></div>
-<ul>
-<li>ゲーム開始時にPLAYER 1 / PLAYER 2のどちらを先攻にするか選択可能に。</li>
-<li>先攻プレイヤーは最初のターンのみ開始ドローなし。</li>
-<li>LP支払いカードは、支払い後にLPが1以上残る場合のみ使用可能。</li>
-</ul>
-</article>
-</section>
-<div class="note">このページはプレイテスト版の更新履歴です。ルール・カード効果・UIは今後も変更される場合があります。</div>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v13</div><div class="release-title">効果解決中の盤面確認</div></div><div class="tag">DUEL</div></div>
+      <ul>
+        <li>《ルフナ》《深緑のシャーマン》など、必須選択中に「盤面を見る」を追加。</li>
+        <li>盤面確認中は誤操作を防ぎ、確認後に効果処理へ戻れるように変更。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v12</div><div class="release-title">デッキコード共有</div></div><div class="tag">DECK</div></div>
+      <ul>
+        <li>DECK BUILDERにデッキコード発行・コピー・読み込み機能を追加。</li>
+        <li>カード名ではなくBS01識別番号と枚数でデッキ構成を保存。</li>
+        <li>サーバー不要で別端末へデッキを共有可能。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v11</div><div class="release-title">カード表示と召喚士ゾーン表示を整理</div></div><div class="tag">UI</div></div>
+      <ul>
+        <li>ATK / HPへ縁取りを追加し、キャンセル文字を黒色へ変更。</li>
+        <li>召喚士ゾーンに現在のカード枚数を表示。</li>
+        <li>カード本体から効果テキストを外し、Card Inspectorで確認する形式へ整理。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v10</div><div class="release-title">先攻選択・LP支払いルール</div></div><div class="tag">RULE</div></div>
+      <ul>
+        <li>ゲーム開始時にPLAYER 1 / PLAYER 2のどちらを先攻にするか選択可能に。</li>
+        <li>先攻プレイヤーは最初のターンのみ開始ドローなし。</li>
+        <li>LP支払いカードは、支払い後にLPが1以上残る場合のみ使用可能。</li>
+      </ul>
+    </article>
+  </section>
+
+  <div class="note">このページはプレイテスト版の更新履歴です。ルール・カード効果・UIは今後も変更される場合があります。</div>
 </main>
 <script src="pwa.js"></script>
 </body>

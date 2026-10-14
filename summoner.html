@@ -595,7 +595,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   .desktop-actions button.pass{background:#665329;border-color:#9d8246}
   .desktop-actions button:hover{filter:brightness(1.12)}
 
-  /* ===== Beta2 v18: larger cards / controls / stacked grave+deck ===== */
+  /* ===== Tabletop UI: larger cards / controls / stacked grave+deck ===== */
   .nav-btn{padding:8px 13px;font-size:12px;font-weight:850}
 
   .cpu-half .zonebox:nth-child(1){top:27%;left:18%;right:18%;height:102px}
@@ -643,7 +643,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   .desktop-actions{right:16px;bottom:16px;gap:6px;padding:8px;border-radius:8px}
   .desktop-actions button{padding:10px 12px;min-height:40px;font-size:11px;border-radius:6px}
 
-  /* ===== Beta2 v19: equal hand sizes / stronger stats / larger navigation & dock ===== */
+  /* ===== Tabletop UI: equal hand sizes / stronger stats / larger navigation & dock ===== */
   .topbar{height:52px}
   .topbar>div:nth-child(2){gap:9px}
   .nav-btn{padding:12px 18px;min-height:46px;font-size:14px;font-weight:900;border-width:2px}
@@ -682,7 +682,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   .targets button:disabled{color:#fff!important;opacity:1;background:#4a5563;border-color:#8e9bab}
   #modalCancelBtn,#modalPeekBtn{padding:12px 18px;font-size:13px;min-height:44px}
 
-  /* ===== Beta2 v20: hand readability / forward placement ===== */
+  /* ===== Tabletop UI: hand readability / forward placement ===== */
   #modalTitle{color:#fff!important;text-shadow:0 1px 2px #000}
 
   /* 両プレイヤーの手札を110×140に統一し、盤面側へ少し前に出す */
@@ -715,7 +715,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
 
 
 
-/* ===== Beta2 v21: smartphone tabletop layout unified with desktop ===== */
+/* ===== Smartphone tabletop layout unified with desktop ===== */
 @media(max-width:900px){
   html,body{
     width:100%;height:100%;min-height:100%;overflow:hidden!important;
@@ -947,6 +947,61 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   .side{top:42px;bottom:58px;width:min(300px,72vw)}
 }
 
+
+
+/* ===== Beta2 v17: custom field image ===== */
+.field-settings{
+  position:fixed;inset:0;z-index:7000;display:none;align-items:center;justify-content:center;
+  padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)
+}
+.field-settings.open{display:flex}
+.field-settings-box{
+  width:min(520px,94vw);max-height:90dvh;overflow:auto;padding:20px;border-radius:14px;
+  border:1px solid #626d7b;background:#171d25;color:#eef2f7;box-shadow:0 22px 70px #000c
+}
+.field-settings-title{font-size:20px;font-weight:950;letter-spacing:.05em;margin-bottom:8px}
+.field-settings-text{font-size:12px;line-height:1.7;color:#c5ced9;margin-bottom:14px}
+.field-image-guide{
+  margin:12px 0;padding:12px 14px;border-radius:9px;border:1px solid #465564;background:#10161e;
+  font-size:12px;line-height:1.7;color:#dce4ec
+}
+.field-image-guide b{color:#fff}
+.field-image-status{margin:10px 0 14px;min-height:18px;font-size:11px;color:#9fb4c7}
+.field-settings-actions{display:flex;flex-wrap:wrap;gap:8px}
+.field-settings-actions button,.field-upload-label{
+  display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 14px;
+  border-radius:7px;border:1px solid #536174;background:#252e3a;color:#fff;font:800 12px/1 system-ui,-apple-system,"Segoe UI",sans-serif;
+  cursor:pointer;text-decoration:none
+}
+.field-settings-actions button:hover,.field-upload-label:hover{background:#344253}
+.field-upload-label{background:#246e9f;border-color:#5aade0}
+.field-settings-actions .field-reset{background:#5b342f;border-color:#936159}
+.field-settings-actions .field-close{margin-left:auto}
+#fieldImageInput{display:none}
+
+/* Custom image replaces only the v17 tabletop surface. All game UI remains unchanged. */
+body.custom-field-active .table{
+  background-image:var(--custom-field-image)!important;
+  background-size:cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+  background-color:#171712!important;
+}
+body.custom-field-active .zone-label{
+  color:#fff!important;text-shadow:0 1px 3px #000,0 0 5px #000!important;
+  background:rgba(0,0,0,.38);padding:3px 5px;border-radius:4px
+}
+body.custom-field-active .zone-count{color:#fff!important}
+body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1px 3px #000,0 0 5px #000!important}
+
+@media(max-width:650px){
+  .field-settings{padding:10px}
+  .field-settings-box{padding:16px}
+  .field-settings-title{font-size:17px}
+  .field-settings-actions{display:grid;grid-template-columns:1fr 1fr}
+  .field-settings-actions .field-close{margin-left:0}
+}
+
 </style>
 </head>
 <body>
@@ -955,6 +1010,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   <div class="brand">SUMMONER — BATTLE</div>
   <div style="display:flex; gap:8px;">
     <button class="nav-btn btn-sub" id="infoToggleBtn" type="button" onclick="document.body.classList.toggle('info-open')">情報</button>
+    <button class="nav-btn btn-sub" id="fieldSettingBtn" type="button" onclick="openFieldSettings()">フィールド</button>
     <a href="deckbuilder.html" class="nav-btn btn-sub">デッキ編集</a>
     <a href="index.html" class="nav-btn">タイトルへ</a>
   </div>
@@ -1077,6 +1133,28 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
       </select>
     </div>
     <button class="start-battle-btn" onclick="startBattleWithSelectedDecks()">このデッキで対戦開始</button>
+  </div>
+</div>
+
+
+<div class="field-settings" id="fieldSettings" role="dialog" aria-modal="true" aria-labelledby="fieldSettingsTitle">
+  <div class="field-settings-box">
+    <div class="field-settings-title" id="fieldSettingsTitle">フィールド画像</div>
+    <div class="field-settings-text">v17の白い卓上フィールドを標準として、好きな画像を盤面背景に設定できます。画像はこの端末のブラウザ内に保存されます。</div>
+    <div class="field-image-guide">
+      <b>推奨サイズ：1920 × 1080 px（16:9）</b><br>
+      最低目安：1280 × 720 px<br>
+      推奨形式：JPG / WebP / PNG<br>
+      推奨容量：5MB以下（最大10MB）<br>
+      ※画面いっぱいに表示するため、端末の縦横比によって画像の上下または左右が少し切れる場合があります。
+    </div>
+    <div class="field-image-status" id="fieldImageStatus">現在：v17標準フィールド</div>
+    <div class="field-settings-actions">
+      <label class="field-upload-label" for="fieldImageInput">画像を選ぶ</label>
+      <input id="fieldImageInput" type="file" accept="image/jpeg,image/png,image/webp">
+      <button type="button" class="field-reset" onclick="resetCustomFieldImage()">v17標準に戻す</button>
+      <button type="button" class="field-close" onclick="closeFieldSettings()">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -2783,6 +2861,127 @@ if(mobileHandToggle){
     mobileHandToggle.textContent=document.body.classList.contains("hand-collapsed")?"手札を開く":"手札を縮小";
   });
 }
+
+
+/* ===== Custom field image (stored in IndexedDB) ===== */
+const FIELD_DB_NAME="summoner_ui_v1";
+const FIELD_STORE_NAME="settings";
+const FIELD_IMAGE_KEY="customFieldImage";
+let customFieldObjectUrl=null;
+
+function openFieldDb(){
+  return new Promise((resolve,reject)=>{
+    if(!window.indexedDB){reject(new Error("IndexedDB unavailable"));return;}
+    const req=indexedDB.open(FIELD_DB_NAME,1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(FIELD_STORE_NAME))db.createObjectStore(FIELD_STORE_NAME);
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error||new Error("DB open failed"));
+  });
+}
+function fieldDbGet(key){
+  return openFieldDb().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(FIELD_STORE_NAME,"readonly");
+    const req=tx.objectStore(FIELD_STORE_NAME).get(key);
+    req.onsuccess=()=>resolve(req.result||null);
+    req.onerror=()=>reject(req.error);
+    tx.oncomplete=()=>db.close();
+  }));
+}
+function fieldDbPut(key,value){
+  return openFieldDb().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(FIELD_STORE_NAME,"readwrite");
+    tx.objectStore(FIELD_STORE_NAME).put(value,key);
+    tx.oncomplete=()=>{db.close();resolve();};
+    tx.onerror=()=>{db.close();reject(tx.error);};
+  }));
+}
+function fieldDbDelete(key){
+  return openFieldDb().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(FIELD_STORE_NAME,"readwrite");
+    tx.objectStore(FIELD_STORE_NAME).delete(key);
+    tx.oncomplete=()=>{db.close();resolve();};
+    tx.onerror=()=>{db.close();reject(tx.error);};
+  }));
+}
+function setFieldImageStatus(text){
+  const node=document.getElementById("fieldImageStatus");
+  if(node)node.textContent=text;
+}
+function applyCustomFieldBlob(blob,meta={}){
+  if(customFieldObjectUrl)URL.revokeObjectURL(customFieldObjectUrl);
+  customFieldObjectUrl=URL.createObjectURL(blob);
+  document.documentElement.style.setProperty("--custom-field-image",`url("${customFieldObjectUrl}")`);
+  document.body.classList.add("custom-field-active");
+  const size=meta.width&&meta.height?`${meta.width}×${meta.height}px`:"カスタム画像";
+  setFieldImageStatus(`現在：カスタム画像（${size}）`);
+}
+async function restoreCustomFieldImage(){
+  try{
+    const saved=await fieldDbGet(FIELD_IMAGE_KEY);
+    if(saved&&saved.blob instanceof Blob){applyCustomFieldBlob(saved.blob,saved);}
+    else setFieldImageStatus("現在：v17標準フィールド");
+  }catch(e){
+    console.warn("Custom field image restore failed",e);
+    setFieldImageStatus("現在：v17標準フィールド");
+  }
+}
+function openFieldSettings(){
+  const m=document.getElementById("fieldSettings");
+  if(m)m.classList.add("open");
+}
+function closeFieldSettings(){
+  const m=document.getElementById("fieldSettings");
+  if(m)m.classList.remove("open");
+}
+async function resetCustomFieldImage(){
+  try{await fieldDbDelete(FIELD_IMAGE_KEY);}catch(e){console.warn(e);}
+  if(customFieldObjectUrl){URL.revokeObjectURL(customFieldObjectUrl);customFieldObjectUrl=null;}
+  document.documentElement.style.removeProperty("--custom-field-image");
+  document.body.classList.remove("custom-field-active");
+  setFieldImageStatus("現在：v17標準フィールド");
+  toast("フィールドをv17標準に戻しました");
+}
+function readImageDimensions(file){
+  return new Promise((resolve,reject)=>{
+    const u=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{const out={width:img.naturalWidth,height:img.naturalHeight};URL.revokeObjectURL(u);resolve(out);};
+    img.onerror=()=>{URL.revokeObjectURL(u);reject(new Error("画像を読み込めません"));};
+    img.src=u;
+  });
+}
+const fieldImageInput=document.getElementById("fieldImageInput");
+if(fieldImageInput){
+  fieldImageInput.addEventListener("change",async e=>{
+    const file=e.target.files&&e.target.files[0];
+    if(!file)return;
+    if(!/^image\/(jpeg|png|webp)$/.test(file.type)){
+      toast("JPG / PNG / WebP画像を選択してください");e.target.value="";return;
+    }
+    if(file.size>10*1024*1024){
+      toast("画像は10MB以下にしてください");e.target.value="";return;
+    }
+    try{
+      const dim=await readImageDimensions(file);
+      const record={blob:file,name:file.name,width:dim.width,height:dim.height,type:file.type,size:file.size,updatedAt:Date.now()};
+      await fieldDbPut(FIELD_IMAGE_KEY,record);
+      applyCustomFieldBlob(file,record);
+      const low=dim.width<1280||dim.height<720;
+      toast(low?`画像を設定しました（${dim.width}×${dim.height}：1280×720以上を推奨）`:`フィールド画像を設定しました（${dim.width}×${dim.height}）`);
+      closeFieldSettings();
+    }catch(err){
+      console.error(err);toast("フィールド画像を保存できませんでした");
+    }finally{e.target.value="";}
+  });
+}
+const fieldSettings=document.getElementById("fieldSettings");
+if(fieldSettings){
+  fieldSettings.addEventListener("click",e=>{if(e.target===fieldSettings)closeFieldSettings();});
+}
+restoreCustomFieldImage();
 
 fillDeckSelectors();
 

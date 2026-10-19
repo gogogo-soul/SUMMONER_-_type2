@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v17-custom-field-r1";
+const CACHE_NAME = "summoner-pwa-v20-rulebook-pdf-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const CORE_ASSETS = [
   "./deckbuilder.html",
   "./decklibrary.html",
   "./updates.html",
+  "./SUMMONER_Rulebook_Beta2_v2.0.pdf",
   "./cards.js",
   "./firebase-config.js",
   "./pwa.js",

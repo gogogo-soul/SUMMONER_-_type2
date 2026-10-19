@@ -1002,6 +1002,52 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
   .field-settings-actions .field-close{margin-left:0}
 }
 
+
+/* ===== v18: three independent rows, battlefield > summoner > vein ===== */
+.summoner-choice-label{display:block;margin:12px 0 6px;color:#d9c58d;font-size:12px;font-weight:800}
+.summoner-select{width:100%;max-width:100%;padding:9px 8px;background:#151d26;color:#f8f6ef;border:1px solid #b29a5f;border-radius:7px;font-size:13px}
+.summoner-cards{overflow:visible;justify-content:center}
+.zonebox.zone-summoner .zone-label{color:#805221;font-weight:900}
+.zonebox.zone-land .zone-label{font-weight:850}
+.card.land{background:linear-gradient(140deg,#2b5148,#132b2a);border-color:#9ed9c8}
+.zonebox.zone-summoner .card{box-shadow:0 0 0 2px #deb96b,0 4px 12px #0008}
+@media(min-width:901px){
+  .cpu-half .zonebox.zone-land{top:34%;left:16%;right:16%;height:clamp(64px,9vh,95px)}
+  .cpu-half .zonebox.zone-summoner{top:55%;left:25%;right:25%;height:clamp(58px,8vh,82px)}
+  .cpu-half .zonebox.zone-field{top:74%;left:9%;right:9%;height:clamp(75px,10vh,105px)}
+  .you-half .zonebox.zone-field{top:3%;left:9%;right:9%;height:clamp(75px,10vh,105px)}
+  .you-half .zonebox.zone-summoner{top:25%;left:25%;right:25%;height:clamp(58px,8vh,82px)}
+  .you-half .zonebox.zone-land{top:44%;left:16%;right:16%;height:clamp(64px,9vh,95px)}
+  .cpu-half .resource-col.deck-grave-stack{top:39%;left:2.6%}
+  .you-half .resource-col.deck-grave-stack{top:27%;right:2.6%}
+  .zonebox.zone-summoner .card{flex:0 0 66px;width:66px;height:85px}
+  .zonebox.zone-summoner .card .art{height:25px}
+}
+@media(max-width:900px){
+  .cpu-half .zonebox.zone-land{top:41%;left:17%;right:17%;height:15%}
+  .cpu-half .zonebox.zone-summoner{top:59%;left:22%;right:22%;height:15%}
+  .cpu-half .zonebox.zone-field{top:78%;left:10%;right:10%;height:17%}
+  .you-half .zonebox.zone-field{top:3%;left:10%;right:10%;height:18%}
+  .you-half .zonebox.zone-summoner{top:26%;left:22%;right:22%;height:15%}
+  .you-half .zonebox.zone-land{top:46%;left:17%;right:17%;height:15%}
+  .zonebox.zone-summoner .card{flex:0 0 40px;width:40px;height:53px}
+  .zonebox.zone-summoner .card .art{height:17px}
+  .zonebox.zone-summoner .card .name{font-size:6px}
+  .zonebox.zone-summoner .card .type{font-size:5px}
+  .zonebox.zone-summoner .card-controls{bottom:5px}
+  .zonebox.zone-summoner .card-controls button{width:16px;height:16px;font-size:9px}
+  .cpu-half .resource-col.deck-grave-stack{top:50%;left:2.5%}
+  .you-half .resource-col.deck-grave-stack{top:16%;right:2.5%}
+  .zone-label{white-space:nowrap}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+  .cpu-half .zonebox.zone-land{top:42%;height:15%}
+  .cpu-half .zonebox.zone-summoner{top:60%;height:15%}
+  .cpu-half .zonebox.zone-field{top:78%;height:17%}
+  .you-half .zonebox.zone-field{top:3%;height:18%}
+  .you-half .zonebox.zone-summoner{top:26%;height:15%}
+  .you-half .zonebox.zone-land{top:46%;height:15%}
+}
 </style>
 </head>
 <body>
@@ -1026,15 +1072,16 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
       <div class="dmg-pop" id="cpuDmgPop"></div>
     </div>
     <div class="zone-row">
-      <div class="zonebox">
-        <div class="zone-label">召喚士ゾーン <span class="zone-count">(<span id="cpuLandCount">0</span>枚)</span> <span id="cpuManaPool" class="mana-pool-container"></span></div>
+      <div class="zonebox zone-land">
+        <div class="zone-label">流脈ゾーン <span class="zone-count">(<span id="cpuLandCount">0</span>枚)</span> <span id="cpuManaPool" class="mana-pool-container"></span></div>
         <div class="cards" id="cpuLands"></div>
       </div>
       <div class="resource-col deck-grave-stack">
         <div class="resource-zone" id="cpuGraveZone"><b>GRAVEYARD</b><span id="cpuGrave">0</span></div>
         <div class="resource-zone" id="cpuDeckZone"><b>DECK</b><span id="cpuDeck">50</span></div>
       </div>
-      <div class="zonebox"><div class="zone-label">Battlefield</div><div class="cards field-cards" id="cpuField"></div></div>
+      <div class="zonebox zone-summoner"><div class="zone-label">召喚士ゾーン</div><div class="cards summoner-cards" id="cpuSummoner"></div></div>
+      <div class="zonebox zone-field"><div class="zone-label">Battlefield</div><div class="cards field-cards" id="cpuField"></div></div>
       <div class="resource-col hand-count-stack">
         <div class="resource-zone" style="height:42px"><b>HAND</b><span id="cpuHand" style="font-size:14px;margin-top:0">0</span></div>
       </div>
@@ -1051,13 +1098,14 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
       <div class="dmg-pop" id="youDmgPop"></div>
     </div>
     <div class="zone-row">
-      <div class="zonebox"><div class="zone-label">Battlefield</div><div class="cards field-cards" id="youField"></div></div>
+      <div class="zonebox zone-field"><div class="zone-label">Battlefield</div><div class="cards field-cards" id="youField"></div></div>
       <div class="resource-col deck-grave-stack">
         <div class="resource-zone" id="youGraveZone"><b>GRAVEYARD</b><span id="youGrave">0</span></div>
         <div class="resource-zone" id="youDeckZone"><b>DECK</b><span id="youDeck">50</span></div>
       </div>
-      <div class="zonebox">
-        <div class="zone-label">召喚士ゾーン <span class="zone-count">(<span id="youLandCount">0</span>枚)</span> <span id="youManaPool" class="mana-pool-container"></span></div>
+      <div class="zonebox zone-summoner"><div class="zone-label">召喚士ゾーン</div><div class="cards summoner-cards" id="youSummoner"></div></div>
+      <div class="zonebox zone-land">
+        <div class="zone-label">流脈ゾーン <span class="zone-count">(<span id="youLandCount">0</span>枚)</span> <span id="youManaPool" class="mana-pool-container"></span></div>
         <div class="cards" id="youLands"></div>
       </div>
     </div>
@@ -1103,7 +1151,7 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
 </div>
 
 <div class="handbar">
-  <div class="hand-info"><b>YOUR HAND</b><span id="handCount">7 cards</span><br><span>召喚士ゾーン：タップして陣生成 / 召喚士固有効果</span><button class="mobile-hand-toggle" id="mobileHandToggle">手札を縮小</button></div>
+  <div class="hand-info"><b>YOUR HAND</b><span id="handCount">7 cards</span><br><span>流脈：マナ生成 / 召喚士：専用能力</span><button class="mobile-hand-toggle" id="mobileHandToggle">手札を縮小</button></div>
   <div class="hand" id="hand"></div>
 </div>
 </div>
@@ -1117,11 +1165,13 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
       <div class="deck-choice">
         <h3>PLAYER 1 使用デッキ</h3>
         <select id="p1DeckSelect" onchange="updateDeckSelectInfo()"></select>
+        <div class="summoner-choice-label">召喚士は構築時にデッキへ1枚採用（準備中は非公開）</div>
         <div class="deck-info" id="p1DeckInfo"></div>
       </div>
       <div class="deck-choice">
         <h3>PLAYER 2 使用デッキ</h3>
         <select id="p2DeckSelect" onchange="updateDeckSelectInfo()"></select>
+        <div class="summoner-choice-label">召喚士は構築時にデッキへ1枚採用（準備中は非公開）</div>
         <div class="deck-info" id="p2DeckInfo"></div>
       </div>
     </div>
@@ -1137,6 +1187,14 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
 </div>
 
 
+<div class="deck-setup hidden" id="summonerRevealOverlay">
+  <div class="deck-setup-box" style="max-width:530px;text-align:center">
+    <div class="deck-setup-title">召喚士の公開</div>
+    <p style="color:#c5ced9;line-height:1.8">両プレイヤーの召喚士を裏向きで専用ゾーンに準備しました。<br>準備完了後、同時に表向きにしてゲームを開始します。</p>
+    <div style="font-size:44px;letter-spacing:20px;margin:15px auto 22px;color:#c6ab72">▣ ▣</div>
+    <button type="button" class="start-battle-btn" onclick="revealSummonersAndStart()">両方の召喚士を公開してゲーム開始</button>
+  </div>
+</div>
 <div class="field-settings" id="fieldSettings" role="dialog" aria-modal="true" aria-labelledby="fieldSettingsTitle">
   <div class="field-settings-box">
     <div class="field-settings-title" id="fieldSettingsTitle">フィールド画像</div>
@@ -1171,11 +1229,6 @@ const currentUser = localStorage.getItem("arcana_duel_current_user") || "ゲス�
 const el = id => document.getElementById(id);
 const DECK_MAX=50;
 const LEGACY_CARD_NAMES={
-  "赤の流脈":"カイエン",
-  "青の流脈":"ルフナ",
-  "緑の流脈":"オニキス",
-  "黄の流脈":"サミュエル",
-  "黒の流脈":"ダイキリ",
   "赤の召喚士":"カイエン",
   "青の召喚士":"ルフナ",
   "緑の召喚士":"オニキス",
@@ -1191,10 +1244,14 @@ const LEGACY_CARD_NAMES={
 function normalizeCardName(name){return LEGACY_CARD_NAMES[name]||name;}
 function validateBattleDeck(list,label){
   if(!Array.isArray(list)||!list.length)return `${label}のデッキが空です。`;
-  const valid=list.map(normalizeCardName).filter(name=>DB[name]);
-  if(valid.length>DECK_MAX)return `${label}のデッキは最大${DECK_MAX}枚です（現在${valid.length}枚）。`;
+  if(list.some(name=>!DB[normalizeCardName(name)]))return `${label}に存在しないカードが含まれています。`;
+  const cards=list.map(normalizeCardName);
+  const main=cards.filter(n=>DB[n]?.t!=="summoner");
+  const summoners=cards.filter(n=>DB[n]?.t==="summoner");
+  if(main.length!==DECK_MAX)return `${label}の通常デッキはちょうど${DECK_MAX}枚必要です（現在${main.length}枚）。`;
+  if(summoners.length!==1)return `${label}の召喚士は専用枠に1種類1枚必要です（現在${summoners.length}枚）。`;
   const counts={};
-  for(const name of valid){
+  for(const name of main){
     counts[name]=(counts[name]||0)+1;
     const max=DB[name]?.n||4;
     if(counts[name]>max)return `${label}の《${name}》は最大${max}枚までです。`;
@@ -1205,12 +1262,13 @@ function validateBattleDeck(list,label){
 const COLOR_JP = {red:"赤", blue:"青", yellow:"黄", green:"緑", black:"黒", colorless:"無色"};
 function colorJP(c){ return COLOR_JP[c] || "無"; }
 function manaSymbol(c){ return {red:"🔴",blue:"🔵",yellow:"🟡",green:"🟢",black:"🟣",colorless:"⚪"}[c] || "⚪"; }
-function typeJP(t){ return t === "monster" ? "モンスター" : t === "spell" ? "魔法" : t === "summoner" ? "召喚士" : t; }
+function typeJP(t){ return t === "monster" ? "モンスター" : t === "spell" ? "魔法" : t === "summoner" ? "召喚士" : t === "land" ? "流脈" : t; }
 function cardIcon(c){
   if(c.timing==="instant")return "⚡";
   if(c.t==="monster")return "△";
   if(c.t==="spell")return "✦";
   if(c.t==="summoner")return "◎";
+  if(c.t==="land")return "◈";
   return "?";
 }
 function sideLabel(w){ return w === "you" ? "PLAYER 1" : "PLAYER 2"; }
@@ -1237,17 +1295,14 @@ function card(name){
 }
 
 function defaultDeckNames(){
-  // 最大50枚ルール対応のプレイテスト用デフォルトデッキ。
-  // カード削除でDB順が変わっても崩れないよう、色ごとに通常カードを選ぶ。
+  // 35通常カード＋15流脈。召喚士は開始時に別枠で選択する。
   const out=[];
-  const colors=["red","blue","green","yellow","black"];
-  const perColor=[10,9,9,9,9];
-  colors.forEach((color,ci)=>{
-    const pool=names.filter(n=>DB[n]?.color===color && DB[n]?.t!=="summoner");
-    for(let i=0;i<Math.min(perColor[ci],pool.length);i++)out.push(pool[i]);
-  });
-  ["カイエン","ルフナ","オニキス","サミュエル"].forEach(n=>{if(DB[n])out.push(n);});
-  return out.slice(0,50);
+  for(const [color,landName] of [["red","赤の流脈"],["blue","青の流脈"],["green","緑の流脈"],["yellow","黄の流脈"],["black","黒の流脈"]]){
+    const pool=names.filter(n=>DB[n]?.color===color&&(DB[n]?.t==="monster"||DB[n]?.t==="spell"));
+    out.push(...pool.slice(0,7));
+    for(let i=0;i<3;i++)out.push(landName);
+  }
+  return [...out.slice(0,DECK_MAX),"カイエン"];
 }
 function savedDecksForCurrentUser(){
   try{
@@ -1272,14 +1327,20 @@ function activeDeckNames(){
     return Array.isArray(list) ? list.map(normalizeCardName).filter(n=>DB[n]) : [];
   }catch(e){ return []; }
 }
+function battleCardNames(list){
+  // 召喚士はデッキシャッフルに入らず、開始時の専用ゾーンへ移動する。
+  return (list||[]).map(normalizeCardName).filter(n=>DB[n]&&DB[n].t!=="summoner");
+}
 function buildDeckFromNames(list,owner){
-  const valid=(list||[]).map(normalizeCardName).filter(n=>DB[n]);
-  const base=valid.length ? valid : defaultDeckNames();
-  return shuffle(base.map(name=>{
+  return shuffle(battleCardNames(list).map(name=>{
     const c=card(name);
     if(c)c.originalOwner=owner;
     return c;
   }).filter(Boolean));
+}
+function deckSummonerName(list){
+  const matches=(list||[]).map(normalizeCardName).filter(n=>DB[n]?.t==="summoner");
+  return matches.length===1?matches[0]:null;
 }
 function fillDeckSelectors(){
   const decks=savedDecksForCurrentUser();
@@ -1288,9 +1349,9 @@ function fillDeckSelectors(){
   const activeList=activeDeckNames();
 
   const options=[];
-  if(activeList.length) options.push({value:"__active__",label:`現在の使用デッキ：${activeName || "アクティブデッキ"}`,count:activeList.length});
-  namesSaved.forEach(name=>options.push({value:name,label:name,count:deckListFromCounts(decks[name]).length}));
-  if(!options.length) options.push({value:"__default__",label:"プレイテスト用デフォルトデッキ",count:defaultDeckNames().length});
+  if(activeList.length) options.push({value:"__active__",label:`現在の使用デッキ：${activeName || "アクティブデッキ"}`,count:battleCardNames(activeList).length});
+  namesSaved.forEach(name=>options.push({value:name,label:name,count:battleCardNames(deckListFromCounts(decks[name])).length}));
+  if(!options.length) options.push({value:"__default__",label:"プレイテスト用デフォルトデッキ",count:DECK_MAX});
 
   for(const id of ["p1DeckSelect","p2DeckSelect"]){
     const sel=el(id); sel.innerHTML="";
@@ -1316,7 +1377,8 @@ function updateDeckSelectInfo(){
     const sel=el(sid), info=el(iid);
     if(!sel||!info)return;
     const list=selectedDeckNames(sid);
-    info.textContent=`${list.length}枚 / 召喚士${summonerCountInList(list)}枚 / ${sel.options[sel.selectedIndex]?.textContent || ""}`;
+    const summon=deckSummonerName(list);
+    info.textContent=`通常${battleCardNames(list).length} / 50枚・召喚士${summon?"1 / 1枚（ゲーム開始時に公開）":"0 / 1枚：未設定"}・流脈${battleCardNames(list).filter(n=>DB[n]?.t==="land").length}枚`;
   }
 }
 function startBattleWithSelectedDecks(){
@@ -1325,13 +1387,14 @@ function startBattleWithSelectedDecks(){
   if(!p1.length || !p2.length){ toast("PLAYER 1 / PLAYER 2 のデッキを選択してください"); return; }
   const e1=validateBattleDeck(p1,"PLAYER 1");
   const e2=validateBattleDeck(p2,"PLAYER 2");
-  if(e1||e2){alert([e1,e2].filter(Boolean).join("\n"));return;}
+  if(e1||e2){alert([e1,e2].filter(Boolean).join("\n")+"\nデッキ構築で通常50枚＋召喚士1枚に調整してください。");return;}
   const firstSide=el("firstPlayerSelect")?.value==="cpu"?"cpu":"you";
   el("deckSetup").classList.add("hidden");
   init(p1,p2,firstSide);
 }
 function openDeckSetup(){
   fillDeckSelectors();
+  el("summonerRevealOverlay").classList.add("hidden");
   el("deckSetup").classList.remove("hidden");
 }
 function init(p1Names=null,p2Names=null,firstSide="you"){
@@ -1339,23 +1402,45 @@ function init(p1Names=null,p2Names=null,firstSide="you"){
   const p2=p2Names || selectedDeckNames("p2DeckSelect");
   firstSide=firstSide==="cpu"?"cpu":"you";
   G={
-    you:{hp:20,deck:buildDeckFromNames(p1,"you"),hand:[],field:[],lands:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
+    you:{hp:20,deck:buildDeckFromNames(p1,"you"),hand:[],field:[],lands:[],summoners:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
-    cpu:{hp:20,deck:buildDeckFromNames(p2,"cpu"),hand:[],field:[],lands:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
+    cpu:{hp:20,deck:buildDeckFromNames(p2,"cpu"),hand:[],field:[],lands:[],summoners:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
-    turn:firstSide,turnNo:1,phase:"MAIN PHASE",selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:firstSide,passCount:0,resolvingStack:false,pendingPlayDraft:null,
+    turn:firstSide,turnNo:1,phase:"PREPARATION",preparing:true,selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:firstSide,passCount:0,resolvingStack:false,pendingPlayDraft:null,
     pendingSummonerTriggers:[],processingSummonerTrigger:false,triggerTargetPending:false,endingTurnSide:null
   };
   el("log").innerHTML="";
+  for(const [side,deckList] of [["you",p1],["cpu",p2]]){
+    const startingName=deckSummonerName(deckList);
+    if(!startingName)throw new Error("召喚士が正しく設定されていません。");
+    const summon=card(startingName);
+    summon.originalOwner=side;summon.isFaceDown=true;
+    G[side].summoners.push(summon);
+    log(`${sideLabel(side)}の召喚士を裏向きで召喚士ゾーンに置きました。`);
+  }
   for(let i=0;i<7;i++){draw("you");draw("cpu");}
-  begin(firstSide,true);
-  log(`ゲーム開始。PLAYER 1「${el("p1DeckSelect").options[el("p1DeckSelect").selectedIndex]?.textContent || ""}」 / PLAYER 2「${el("p2DeckSelect").options[el("p2DeckSelect").selectedIndex]?.textContent || ""}」 / 先攻：${sideLabel(firstSide)}`);
+  render();
+  el("summonerRevealOverlay").classList.remove("hidden");
+}
+function revealSummonersAndStart(){
+  if(!G||!G.preparing)return;
+  for(const side of ["you","cpu"]){
+    const summon=G[side].summoners[0];
+    if(summon)summon.isFaceDown=false;
+  }
+  G.preparing=false;
+  el("summonerRevealOverlay").classList.add("hidden");
+  // 両プレイヤーの召喚士を同じ開始処理で一斉に表向きに公開する。
+  log(`召喚士を同時公開！ PLAYER 1：《${G.you.summoners[0].name}》 / PLAYER 2：《${G.cpu.summoners[0].name}》`);
+  begin(G.turn,true);
+  log(`ゲーム開始。先攻：${sideLabel(G.turn)}`);
   render();
 }
 function begin(w,first=false){
   const p=G[w]; p.land=false; p.mainActionStarted=false; p.manaPool=[]; p.drawPending=first?0:1;p.attacksThisTurn=0;p.playedNonSummonerThisTurn=false;
   p.field.forEach(c=>{c.summon=false;c.tapped=false;c.tapLocked=false;});
   p.lands.forEach(c=>{c.tapped=false;c.usedThisTurn=false;c.tapLocked=false;});
+  p.summoners.forEach(c=>{c.tapped=false;c.usedThisTurn=false;c.tapLocked=false;});
   G.phase="MAIN PHASE"; G.selected=null; G.uiSelected=null; G.blockPending=null; G.action=null;
   G.priority=w;G.passCount=0;
   log(sideLabel(w)+"のターン開始。"+(first?"先攻のため開始ドローはありません。":"DRAWボタンで1枚引いてください。"));
@@ -1389,9 +1474,9 @@ function markManaSpent(player,m){
   if(land){land.usedThisTurn=true;land.tapLocked=true;}
 }
 function canPayCost(player,c){
-  if(c.t==="summoner")return true;
+  if(c.t==="summoner"||c.t==="land")return false;
   const pool=player.manaPool||[]; if(pool.length<c.c)return false;
-  if(c.color&&c.color!=="none"&&!pool.some(m=>manaColorOf(m)===c.color))return false;
+  if(c.c>0&&c.color&&c.color!=="none"&&!pool.some(m=>manaColorOf(m)===c.color))return false;
   return true;
 }
 function canPayLpCost(player,c){
@@ -1400,8 +1485,9 @@ function canPayLpCost(player,c){
 }
 function canPayAllPlayCosts(player,c){return canPayCost(player,c)&&canPayLpCost(player,c);}
 function payCost(player,c){
-  if(c.t==="summoner")return;
+  if(c.t==="summoner"||c.t==="land")return;
   let pool=[...player.manaPool],req=c.c;
+  if(req<=0)return;
   const consume=i=>{if(i<0)return false;const [m]=pool.splice(i,1);markManaSpent(player,m);return true;};
   if(c.color&&c.color!=="none"){
     const i=pool.findIndex(m=>manaColorOf(m)===c.color);
@@ -1421,10 +1507,10 @@ function renderManaPool(owner){
 }
 
 function makeCard(c,where,index){
-  const owner=(where==="hand"||where==="youField"||where==="youLand")?"you":"cpu";
+  const owner=(where==="hand"||where==="youField"||where==="youLand"||where==="youSummoner")?"you":"cpu";
   const isField=(where==="youField"||where==="cpuField");
   let affordable=false;
-  if((where==="hand"||where==="cpuHand")&&c.t!=="summoner"){
+  if((where==="hand"||where==="cpuHand")&&c.t!=="summoner"&&c.t!=="land"){
     const instant=c.timing==="instant"; const valid=instant|| (G.turn===owner&&G.phase==="MAIN PHASE");
     affordable=valid&&canPayAllPlayCosts(G[owner],c);
   }
@@ -1433,24 +1519,25 @@ function makeCard(c,where,index){
   const colorClass=c.color&&c.color!=="none"?" color-"+c.color:"";
   d.className="card "+c.t+colorClass+(G.selected===c.id?" selected":"")+(c.tapped?" tapped":"")+(affordable?" affordable-red":"");
   const stats=c.t==="monster"?`<div class="atk-stat" title="ATK">${attackPower(c,owner)}</div><div class="hp-stat" title="HP">${Math.max(0,c.h)}</div>`:"";
-  d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div>${stats}`;
+  d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"&&c.t!=="land"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div>${stats}`;
 
   if(c.isFaceDown){
     d.className="card back"+(G.selected===c.id?" selected":"")+(c.tapped?" tapped":"");
-    d.innerHTML=`<div class="name" style="font-size:9px;color:#cbd5e1">裏向き召喚士</div><div class="art">◎</div>`;
+    d.innerHTML=`<div class="name" style="font-size:9px;color:#cbd5e1">${c.t==="summoner"?"裏向き召喚士":"裏向き流脈"}</div><div class="art">${c.t==="summoner"?"◎":"◈"}</div>`;
   }
 
   const isLandZone=(where==="youLand"||where==="cpuLand");
-  const isHandSummoner=(where==="hand"||where==="cpuHand")&&c.t==="summoner";
-  if(G.uiSelected===c.id && ((isField&&c.t==="monster")||isLandZone||isHandSummoner)){
+  const isHandVein=(where==="hand"||where==="cpuHand")&&c.t==="land";
+  const isSummonerZone=(where==="youSummoner"||where==="cpuSummoner");
+  if(!G.preparing && G.uiSelected===c.id && ((isField&&c.t==="monster")||isLandZone||isHandVein||isSummonerZone)){
     const controls=document.createElement("div");
     controls.className="card-controls";
 
-    if(isHandSummoner){
+    if(isHandVein){
       const placeBtn=document.createElement("button");
       placeBtn.className="place-btn";
       placeBtn.textContent="置";
-      placeBtn.title="召喚士ゾーンに置く";
+      placeBtn.title="流脈ゾーンに置く";
       placeBtn.disabled=G.turn!==owner||G.phase!=="MAIN PHASE"||G[owner].mainActionStarted||G[owner].land||G.stack.length>0||G.resolvingStack;
       if(placeBtn.disabled)placeBtn.classList.add("locked-btn");
       placeBtn.onclick=(e)=>{e.stopPropagation();playLand(index,false,owner);};
@@ -1460,10 +1547,16 @@ function makeCard(c,where,index){
       tapBtn.className="tap-btn";
       if(isLandZone){
         const locked=c.tapped&&c.usedThisTurn;
-        tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"未使用陣を取り消してアンタップ":"タップして陣生成");
+        tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"未使用マナを取り消してアンタップ":"タップしてマナ生成");
         tapBtn.textContent=locked?"🔒":(c.tapped?"↶":"↷");
         if(locked){tapBtn.disabled=true;tapBtn.classList.add("locked-btn");}
         tapBtn.onclick=(e)=>{e.stopPropagation();toggleLandMana(c,owner);};
+      }else if(isSummonerZone){
+        const locked=c.tapped&&c.tapLocked;
+        tapBtn.title=locked?"能力使用済み":(c.tapped?"召喚士をアンタップ":"召喚士をタップ");
+        tapBtn.textContent=locked?"🔒":(c.tapped?"↶":"↷");
+        if(locked){tapBtn.disabled=true;tapBtn.classList.add("locked-btn");}
+        tapBtn.onclick=(e)=>{e.stopPropagation();toggleSummonerTap(c,owner);};
       }else{
         const locked=c.tapped&&c.tapLocked;
         tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"アンタップ":"タップ");
@@ -1474,7 +1567,7 @@ function makeCard(c,where,index){
       controls.appendChild(tapBtn);
     }
 
-    if(isLandZone&&!c.isFaceDown&&c.t==="summoner"){
+    if(isSummonerZone&&c.t==="summoner"){
       const abilityBtn=document.createElement("button");
       abilityBtn.className="ability-btn";
       abilityBtn.textContent="効";
@@ -1506,7 +1599,7 @@ function makePendingCard(c,owner,label="解決待ち"){
   const colorClass=c.color&&c.color!=="none"?" color-"+c.color:"";
   d.className="card "+c.t+colorClass+" pending-play";
   const stats=c.t==="monster"?`<div class="atk-stat" title="ATK">${attackPower(c,owner)}</div><div class="hp-stat" title="HP">${Math.max(0,c.h)}</div>`:"";
-  d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div><div class="pending-badge">${label}</div>${stats}`;
+  d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"&&c.t!=="land"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div><div class="pending-badge">${label}</div>${stats}`;
   d.title="相手の対応待ち。クリックでCard Inspectorに効果を表示します";
   d.onclick=()=>{G.uiSelected=null;showInspector(c,owner);};
   return d;
@@ -1529,7 +1622,7 @@ function render(){
   renderManaPool("you");renderManaPool("cpu");renderStack();
   el("drawBtn").textContent="DRAW "+sideLabel(G.turn);el("drawBtn").disabled=G.over||G[G.turn].drawPending<=0;
   el("topTurn").textContent="TURN "+G.turnNo;el("turnPill").textContent=G.over?(G.you.hp>0?"PLAYER 1 WINS":"PLAYER 2 WINS"):sideLabel(G.turn)+" TURN";el("phase").textContent=G.phase;
-  fill("hand",G.you.hand,"hand");fill("cpuHandCards",G.cpu.hand,"cpuHand");fill("youField",G.you.field,"youField");fill("cpuField",G.cpu.field,"cpuField");appendPendingFieldCards("you");appendPendingFieldCards("cpu");fill("youLands",G.you.lands,"youLand");fill("cpuLands",G.cpu.lands,"cpuLand");
+  fill("hand",G.you.hand,"hand");fill("cpuHandCards",G.cpu.hand,"cpuHand");fill("youField",G.you.field,"youField");fill("cpuField",G.cpu.field,"cpuField");appendPendingFieldCards("you");appendPendingFieldCards("cpu");fill("youLands",G.you.lands,"youLand");fill("cpuLands",G.cpu.lands,"cpuLand");fill("youSummoner",G.you.summoners,"youSummoner");fill("cpuSummoner",G.cpu.summoners,"cpuSummoner");
   if(G.selected){const s=findById(G.selected);if(s)showInspector(s);}
   el("endBtn").disabled=G.over||G.stack.length>0||G.resolvingStack||!!G.endingTurnSide;el("battleBtn").disabled=G.over||G.phase!=="MAIN PHASE"||G.stack.length>0||!!G.endingTurnSide;el("noBlockBtn").disabled=G.over||!G.blockPending;
   syncModalCancelButton();
@@ -1547,14 +1640,15 @@ function fill(id,list,where){
     x.appendChild(node);
   });
 }
-function findById(id){for(const w of ["you","cpu"])for(const z of ["hand","field","lands","grave"])for(const c of G[w][z])if(c.id===id)return c;return null;}
+function findById(id){for(const w of ["you","cpu"])for(const z of ["hand","field","lands","summoners","grave"])for(const c of G[w][z])if(c.id===id)return c;return null;}
 function showInspector(c,ownerHint=null){
   if(window.innerWidth>900)document.body.classList.add("info-open");
   if(!c){el("inspector").innerHTML="<div class='big'>No card selected</div><div class='sub'>カードを選択してください</div><p>カードをクリックすると詳細が表示されます。</p>";return;}
-  if(c.isFaceDown){el("inspector").innerHTML=`<div class="big">裏向き召喚士</div><div class="sub">召喚士ゾーンの裏向きカード（無色）</div><p>元カード：${c.name}<br>タップで無色の陣を1つ生成。</p>`;return;}
-  const owner=ownerHint||(G.you.field.includes(c)||G.you.hand.includes(c)||G.you.lands.includes(c)?"you":"cpu");
+  if(c.isFaceDown&&c.t==="summoner"){el("inspector").innerHTML=`<div class="big">裏向き召喚士</div><p>ゲーム開始時に両プレイヤーの召喚士を同時公開します。</p>`;return;}
+  if(c.isFaceDown){el("inspector").innerHTML=`<div class="big">裏向き流脈</div><div class="sub">流脈ゾーンの裏向きカード（無色）</div><p>元カード：${c.name}<br>タップで無色マナを1つ生成。</p>`;return;}
+  const owner=ownerHint||(G.you.field.includes(c)||G.you.hand.includes(c)||G.you.lands.includes(c)||G.you.summoners.includes(c)?"you":"cpu");
   const timing=c.timing==="instant"?"【高速詠唱】":"";
-  el("inspector").innerHTML=`<div class="big">${c.name}</div><div class="sub">${c.code?c.code+" / ":""}${typeJP(c.t)} ${c.race?" / "+c.race:""} ${c.t!=="summoner"?"コスト "+c.c:""} ${c.color!=="none"?"【"+colorJP(c.color)+"】":""} ${timing}</div><p>${c.txt}</p>${c.t==="monster"?`<p style="margin-top:12px;font-weight:800">ATK ${attackPower(c,owner)} HP ${Math.max(0,c.h)}/${c.max}</p>`:""}`;
+  el("inspector").innerHTML=`<div class="big">${c.name}</div><div class="sub">${c.code?c.code+" / ":""}${typeJP(c.t)} ${c.race?" / "+c.race:""} ${c.t!=="summoner"&&c.t!=="land"?"コスト "+c.c:""} ${c.color!=="none"?"【"+colorJP(c.color)+"】":""} ${timing}</div><p>${c.txt}</p>${c.t==="monster"?`<p style="margin-top:12px;font-weight:800">ATK ${attackPower(c,owner)} HP ${Math.max(0,c.h)}/${c.max}</p>`:""}`;
 }
 
 function toggleLandMana(c,owner){
@@ -1562,23 +1656,29 @@ function toggleLandMana(c,owner){
   if(!G[owner].lands.includes(c))return;
 
   if(c.tapped){
-    if(c.usedThisTurn)return toast("この召喚士カードはすでに陣支払いに使用済みです。カード効果か次のターン開始までアンタップできません");
+    if(c.usedThisTurn)return toast("この流脈カードはすでにマナ支払いに使用済みです。カード効果か次のターン開始までアンタップできません");
     const i=(G[owner].manaPool||[]).findIndex(m=>typeof m!=="string"&&m.sourceId===c.id);
-    if(i<0){c.usedThisTurn=true;c.tapLocked=true;return toast("この召喚士の陣はすでに使用されています");}
+    if(i<0){c.usedThisTurn=true;c.tapLocked=true;return toast("この流脈のマナはすでに使用されています");}
     G[owner].manaPool.splice(i,1);
     c.tapped=false;
     c.tapLocked=false;
-    log(sideLabel(owner)+"が《"+(c.isFaceDown?"裏向きの召喚士":c.name)+"》のタップを取り消しました。");
+    log(sideLabel(owner)+"が《"+(c.isFaceDown?"裏向き流脈":c.name)+"》のタップを取り消しました。");
     render();return;
   }
 
   c.tapped=true;c.usedThisTurn=false;c.tapLocked=false;
   const manaColor=c.isFaceDown?"colorless":(c.color||"colorless");
   G[owner].manaPool.push({color:manaColor,sourceId:c.id});
-  log(sideLabel(owner)+"が《"+(c.isFaceDown?"裏向きの召喚士":c.name)+"》をタップし、"+colorJP(manaColor)+"の陣を1つ生成。");
+  log(sideLabel(owner)+"が《"+(c.isFaceDown?"裏向き流脈":c.name)+"》をタップし、"+colorJP(manaColor)+"のマナを1つ生成。");
   render();
 }
 
+function toggleSummonerTap(c,owner){
+  if(G.over||!G[owner].summoners.includes(c))return;
+  if(G.turn!==owner||G.phase!=="MAIN PHASE")return toast("自分のメインフェイズでのみ操作できます");
+  if(c.tapped&&c.tapLocked)return toast("能力で使用済みです");
+  c.tapped=!c.tapped;render();
+}
 function canPayGenericMana(player,count){return (player.manaPool||[]).length>=Math.max(0,count||0);}
 function payGenericMana(player,count){
   let pool=[...(player.manaPool||[])],remaining=Math.max(0,count||0);
@@ -1599,7 +1699,7 @@ function summonerAbilityTargets(c,owner){
     case "oppAtkMinus1": case "hpMinus1NextEnd": return G[opp].field.filter(x=>x.t==="monster");
     case "tapOppUntapped": return G[opp].field.filter(x=>x.t==="monster"&&!x.tapped);
     case "ownAtkPlus1": case "forceAttackTarget": case "hpPlus1NextEnd": case "grantDeathtouch": return G[owner].field.filter(x=>x.t==="monster");
-    case "untapOwnSummoner": return G[owner].lands.filter(x=>x.t==="summoner"&&!x.isFaceDown);
+    case "untapOwnSummoner": return G[owner].lands.filter(x=>x.t==="land"||x.isFaceDown);
     case "grantUnblockable": return G[owner].field.filter(x=>x.t==="monster");
     default:return [];
   }
@@ -1612,7 +1712,7 @@ function pushSummonerAbilityToStack(c,owner,selection=null,context=null){
 }
 function activateSummonerAbility(c,owner,context=null,fromTrigger=false){
   if(G.over)return false;
-  if(!G[owner].lands.includes(c)||c.isFaceDown||c.t!=="summoner")return false;
+  if(!G[owner].summoners.includes(c)||c.t!=="summoner")return false;
   if(c.tapped){if(!fromTrigger)toast("この召喚士カードはすでにタップされています");return false;}
   if(!c.summonerAbilityKey||c.summonerAbilityKey==="none"){if(!fromTrigger)toast("この召喚士カードの固有効果はまだ設定されていません");return false;}
   if(c.summonerTrigger&&!fromTrigger){toast("この能力は記載された発動条件を満たしたときに使用できます");return false;}
@@ -1620,11 +1720,11 @@ function activateSummonerAbility(c,owner,context=null,fromTrigger=false){
   if(G.resolvingStack){if(!fromTrigger)toast("スタック解決中は新しい能力を積めません");return false;}
   if(G.stack.length&&G.priority!==owner){if(!fromTrigger)toast(sideLabel(owner)+"は現在優先権を持っていません");return false;}
   const cost=Math.max(0,Number(c.summonerAbilityCost)||0);
-  if(!canPayGenericMana(G[owner],cost)){if(!fromTrigger)toast("能力の発動に必要な◎"+cost+"の陣が足りません");return false;}
+  if(!canPayGenericMana(G[owner],cost)){if(!fromTrigger)toast("能力の発動に必要な◎"+cost+"のマナが足りません");return false;}
 
   const commit=(selection=null)=>{
-    if(c.tapped||!G[owner].lands.includes(c))return false;
-    if(!canPayGenericMana(G[owner],cost)){toast("対象選択中に陣状態が変わったため発動できません");return false;}
+    if(c.tapped||!G[owner].summoners.includes(c))return false;
+    if(!canPayGenericMana(G[owner],cost)){toast("対象選択中にマナ状態が変わったため発動できません");return false;}
     if(cost>0)payGenericMana(G[owner],cost);
     c.tapped=true;c.usedThisTurn=true;c.tapLocked=true;
     pushSummonerAbilityToStack(c,owner,selection,context);return true;
@@ -1632,7 +1732,7 @@ function activateSummonerAbility(c,owner,context=null,fromTrigger=false){
 
   if(summonerAbilityNeedsTarget(c.summonerAbilityKey)){
     const list=summonerAbilityTargets(c,owner);
-    if(!list.length){if(!fromTrigger)toast("対象にできるモンスターがいません");return false;}
+    if(!list.length){if(!fromTrigger)toast("対象にできるカードがありません");return false;}
     if(fromTrigger)G.triggerTargetPending=true;
     const targetZone=c.summonerAbilityKey==="untapOwnSummoner"?"lands":"field";
     showPreStackSingle(list,"《"+c.name+"》：対象を選択",targetZone,selection=>{G.triggerTargetPending=false;commit(selection);},x=>targetOwnerOfCard(x));
@@ -1707,7 +1807,7 @@ function resolveSummonerAbility(entry){
     case "grantUnblockable":{const x=one();if(x){x.unblockableUntilTurnNo=G.turnNo;log("《"+source+"》：《"+x.name+"》はターン終了時までブロックされません。");}else invalid();complete();return;}
     case "ownAtkPlus1":{const x=one();if(x)changeTempATK(x,1);else invalid();complete();return;}
     case "revealTopMonster":revealTopMonsterAbility(w,source,complete);return;
-    case "untapOwnSummoner":{const x=one();if(x&&G[w].lands.includes(x)&&x.t==="summoner"&&!x.isFaceDown){untapByEffect(x);x.usedThisTurn=false;log("《"+source+"》：《"+x.name+"》をアンタップしました。");}else invalid();complete();return;}
+    case "untapOwnSummoner":{const x=one();if(x&&G[w].lands.includes(x)){untapByEffect(x);x.usedThisTurn=false;log("《"+source+"》：《"+x.name+"》をアンタップしました。");}else invalid();complete();return;}
     case "forceAttackTarget":{const x=one();if(x){tapAsUsed(x);x.forceAttackUntilTurnNo=G.turnNo+1;log("《"+source+"》：次のターン終了時まで、相手は攻撃可能なモンスターがいる限りバトルを行い、可能なら《"+x.name+"》を攻撃します。");}else invalid();complete();return;}
     case "heal1":healLP(w,1,source);complete();return;
     case "hpPlus1NextEnd":{const x=one();if(x)applyLongHpMod(x,1,G.turnNo+1,w);else invalid();complete();return;}
@@ -1725,7 +1825,7 @@ function resolveSummonerAbility(entry){
   }
 }
 function isSummonerTriggerValid(source,owner,context){
-  if(!source||!G[owner].lands.includes(source)||source.isFaceDown||source.t!=="summoner"||source.tapped)return false;
+  if(!source||!G[owner].summoners.includes(source)||source.t!=="summoner"||source.tapped)return false;
   const cost=Math.max(0,Number(source.summonerAbilityCost)||0);if(!canPayGenericMana(G[owner],cost))return false;
   if(context?.type==="summonRace"){
     if(source.summonerTrigger!=="summonRace")return false;
@@ -1737,7 +1837,7 @@ function isSummonerTriggerValid(source,owner,context){
     if(source.summonerTrigger!=="turnEnd"||G.turn!==owner)return false;
     if(source.summonerAbilityKey==="endDrawIf2Attacks"&&(G[owner].attacksThisTurn||0)<2)return false;
     if(source.summonerAbilityKey==="endDrawSummonerOnly"){
-      const count=G[owner].lands.filter(x=>!x.isFaceDown&&x.t==="summoner").length;
+      const count=G[owner].lands.length;
       if(count<3||G[owner].playedNonSummonerThisTurn)return false;
     }
   }else return false;
@@ -1750,16 +1850,16 @@ function queueSummonerTrigger(owner,source,context){
   if(!G.resolvingStack&&!G.stack.length)setTimeout(processPendingSummonerTriggers,0);
 }
 function queueSummonRaceTriggers(owner,monster){
-  G[owner].lands.filter(x=>x.t==="summoner"&&!x.isFaceDown&&x.summonerTrigger==="summonRace").forEach(s=>queueSummonerTrigger(owner,s,{type:"summonRace",monster}));
+  G[owner].summoners.filter(x=>x.t==="summoner"&&x.summonerTrigger==="summonRace").forEach(s=>queueSummonerTrigger(owner,s,{type:"summonRace",monster}));
 }
 function queueDestroyOppTriggers(causedBy,destroyedOwner,monster){
   if(!causedBy||causedBy===destroyedOwner||!G[causedBy])return;
-  G[causedBy].lands.filter(x=>x.t==="summoner"&&!x.isFaceDown&&x.summonerTrigger==="destroyOpp").forEach(s=>queueSummonerTrigger(causedBy,s,{type:"destroyOpp",monster}));
+  G[causedBy].summoners.filter(x=>x.t==="summoner"&&x.summonerTrigger==="destroyOpp").forEach(s=>queueSummonerTrigger(causedBy,s,{type:"destroyOpp",monster}));
 }
 function processPendingSummonerTriggers(){
   if(!G||G.over||G.resolvingStack||G.stack.length||G.processingSummonerTrigger||G.triggerTargetPending)return;
   while(G.pendingSummonerTriggers.length){
-    const t=G.pendingSummonerTriggers.shift(),source=G[t.owner]?.lands?.find(x=>x.id===t.sourceId);
+    const t=G.pendingSummonerTriggers.shift(),source=G[t.owner]?.summoners?.find(x=>x.id===t.sourceId);
     if(!isSummonerTriggerValid(source,t.owner,t.context))continue;
     G.processingSummonerTrigger=true;
     const box=el("targets");box.innerHTML="";el("modalTitle").textContent="《"+source.name+"》の能力を発動しますか？";
@@ -1787,7 +1887,7 @@ function requestEndTurn(){
   }
   G.endingTurnSide=G.turn;
   const w=G.turn;
-  G[w].lands.filter(x=>x.t==="summoner"&&!x.isFaceDown&&x.summonerTrigger==="turnEnd").forEach(s=>G.pendingSummonerTriggers.push({owner:w,sourceId:s.id,context:{type:"turnEnd"}}));
+  G[w].summoners.filter(x=>x.t==="summoner"&&x.summonerTrigger==="turnEnd").forEach(s=>G.pendingSummonerTriggers.push({owner:w,sourceId:s.id,context:{type:"turnEnd"}}));
   processPendingSummonerTriggers();
 }
 function finalizeTurnEnd(){
@@ -1813,7 +1913,7 @@ function openPlayModal(i,c,w){
   const box=el("targets");box.innerHTML="";el("modalTitle").textContent="《"+c.name+"》のプレイ方法を選択";
   const canNormal=canAddToStack(c,w)&&canPayAllPlayCosts(G[w],c);
   const b1=document.createElement("button");b1.textContent=`通常プレイ (コスト ${c.c})`;b1.disabled=!canNormal;if(!b1.disabled)b1.onclick=()=>{closeModal(true);playCard(i,w);};box.appendChild(b1);
-  const b2=document.createElement("button");b2.textContent="裏向きで召喚士ゾーンのカードとして置く";b2.disabled=G.stack.length>0||G.turn!==w||G.phase!=="MAIN PHASE"||G[w].land||G[w].mainActionStarted;b2.onclick=()=>{closeModal(true);playLand(i,true,w);};box.appendChild(b2);
+  const b2=document.createElement("button");b2.textContent="裏向きで流脈ゾーンに置く";b2.disabled=G.stack.length>0||G.turn!==w||G.phase!=="MAIN PHASE"||G[w].land||G[w].mainActionStarted;b2.onclick=()=>{closeModal(true);playLand(i,true,w);};box.appendChild(b2);
   el("modal").style.display="flex";syncModalCancelButton();
 }
 function checkCounterPlay(w,c){ // legacy compatibility; stack system handles 詠唱破棄
@@ -1870,14 +1970,16 @@ function prepareCardForLandZone(c,isFaceDown=false){
 }
 
 function playLand(i,isFaceDown,w=activeSide()){
-  if(G.turn!==w)return toast(sideLabel(w)+"のターンではありません");if(G.phase!=="MAIN PHASE")return toast("召喚士カードはメインフェイズでのみ置けます");if(G[w].mainActionStarted)return toast("このターンはすでにカードをプレイしています");if(G[w].land)return toast("このターンはすでに召喚士ゾーンのカードを置いています");
+  if(G.turn!==w)return toast(sideLabel(w)+"のターンではありません");if(G.phase!=="MAIN PHASE")return toast("流脈カードはメインフェイズでのみ置けます");if(G[w].mainActionStarted)return toast("このターンはすでにカードをプレイしています");if(G[w].land)return toast("このターンはすでに流脈を置いています");
   const c=G[w].hand[i];if(!c)return;
-  G[w].hand.splice(i,1);c.isFaceDown=isFaceDown;G[w].lands.push(c);G[w].land=true;G[w].mainActionStarted=true;log(sideLabel(w)+"が《"+c.name+"》を"+(isFaceDown?"裏向きで":"")+"召喚士ゾーンのカードとしてプレイ。");render();
+  if(!isFaceDown&&c.t!=="land")return toast("表向きで置けるのは流脈カードだけです");
+  if(isFaceDown&&c.t==="summoner")return toast("召喚士を流脈として置くことはできません");
+  G[w].hand.splice(i,1);prepareCardForLandZone(c,isFaceDown);G[w].lands.push(c);G[w].land=true;G[w].mainActionStarted=true;log(sideLabel(w)+"が《"+c.name+"》を"+(isFaceDown?"裏向きで":"")+"流脈ゾーンへ配置。");render();
 }
 
 function targetOwnerOfCard(x){
-  if(G.you.field.includes(x)||G.you.lands.includes(x)||G.you.grave.includes(x)||G.you.hand.includes(x))return "you";
-  if(G.cpu.field.includes(x)||G.cpu.lands.includes(x)||G.cpu.grave.includes(x)||G.cpu.hand.includes(x))return "cpu";
+  if(G.you.field.includes(x)||G.you.lands.includes(x)||G.you.summoners.includes(x)||G.you.grave.includes(x)||G.you.hand.includes(x))return "you";
+  if(G.cpu.field.includes(x)||G.cpu.lands.includes(x)||G.cpu.summoners.includes(x)||G.cpu.grave.includes(x)||G.cpu.hand.includes(x))return "cpu";
   return x?.originalOwner||null;
 }
 function makeTargetRef(x,zone,owner=null){
@@ -1928,6 +2030,7 @@ function renderStack(){
   btn.textContent=G.resolvingStack?"解決中":sideLabel(G.priority)+" PASS";
 }
 function canAddToStack(c,w){
+  if(c.t==="land"||c.t==="summoner")return false;
   const instant=c.timing==="instant";
   if(G.stack.length){
     if(!instant)return false;
@@ -2006,10 +2109,10 @@ function selectTargetsBeforeStack(c,w,done){
   }
   switch(k){
     case "damageOpp2": return required(oppMon(),"《"+c.name+"》：対象の相手モンスターを選択","field");
-    case "destroyOppLand": return required(G[opp].lands,"《"+c.name+"》：対象の相手召喚士ゾーンのカードを選択","lands",()=>opp);
+    case "destroyOppLand": return required(G[opp].lands,"《"+c.name+"》：対象の相手流脈ゾーンのカードを選択","lands",()=>opp);
     case "bounceAny": return required([...G.you.field,...G.cpu.field].filter(x=>x.t==="monster"),"《"+c.name+"》：手札に戻すモンスターを選択","field");
     case "atkPlus1": return required(ownMon(),"《"+c.name+"》：ATKを上げる自分のモンスターを選択","field",()=>w);
-    case "ownToFaceDownLand": return required(ownMon(),"《"+c.name+"》：召喚士ゾーンに置く自分のモンスターを選択","field",()=>w);
+    case "ownToFaceDownLand": return required(ownMon(),"《"+c.name+"》：流脈ゾーンに置く自分のモンスターを選択","field",()=>w);
     case "oppToFaceDownLand": return required(oppMon(),"《"+c.name+"》：対象の相手モンスターを選択","field",()=>opp);
     case "tapOppOnSummon": return required(oppMon(),"《"+c.name+"》：タップする相手モンスターを選択","field",()=>opp);
     case "graveToFaceDownLand": return required(G[w].grave.filter(x=>x.t==="monster"),"《"+c.name+"》：対象の墓地モンスターを選択","grave",()=>w);
@@ -2113,12 +2216,12 @@ function playCard(i,w=activeSide(),free=false){
     if(G.stack.length&&G.priority!==w)return toast(sideLabel(w)+"は現在優先権を持っていません");
     return toast(sideLabel(w)+"のターンのメインフェイズでのみプレイできます");
   }
-  if(!free&&!canPayCost(p,c))return toast("《"+c.name+"》のプレイに必要な陣が足りません");
+  if(!free&&!canPayCost(p,c))return toast("《"+c.name+"》のプレイに必要なマナが足りません");
   if(!free&&!canPayLpCost(p,c))return toast("《"+c.name+"》はLPを"+c.lpCost+"支払うため、支払い後にLPが1以上残る場合のみプレイできます");
 
   const finalizeCostsAndRemove=()=>{
     const currentIndex=p.hand.indexOf(c);if(currentIndex<0)return false;
-    if(!free&&!canPayCost(p,c)){toast("対象選択中に陣状態が変わったためプレイできません");return false;}
+    if(!free&&!canPayCost(p,c)){toast("対象選択中にマナ状態が変わったためプレイできません");return false;}
     if(!free&&!canPayLpCost(p,c)){toast("対象選択中にLPが変化したためプレイできません");return false;}
     if(!free)payCost(p,c);
     if(!free&&c.lpCost>0)payLP(w,c.lpCost,c.name);
@@ -2164,7 +2267,7 @@ function onSummon(c,w,entry=null,done=null){
     switch(k){
       case "destroyOppLand": {const x=one();if(x)destroyLand(x,opp);else invalid();complete();return;}
       case "tapOppOnSummon": {const x=one();if(x){tapAsUsed(x);log("《"+x.name+"》をタップしました。");}else invalid();complete();return;}
-      case "graveToFaceDownLand": {const x=one();if(x){const i=G[w].grave.indexOf(x);if(i>=0){G[w].grave.splice(i,1);prepareCardForLandZone(x,true);G[w].lands.push(x);log("《"+c.name+"》：墓地の《"+x.name+"》を裏向き召喚士にしました。");}}else invalid();complete();return;}
+      case "graveToFaceDownLand": {const x=one();if(x){const i=G[w].grave.indexOf(x);if(i>=0){G[w].grave.splice(i,1);prepareCardForLandZone(x,true);G[w].lands.push(x);log("《"+c.name+"》：墓地の《"+x.name+"》を裏向き流脈にしました。");}}else invalid();complete();return;}
       case "hpMinus1EOT": {const x=one();if(x)changeTempHP(x,-1);else invalid();complete();return;}
       case "hpMinus2EOT": {const x=one();if(x)changeTempHP(x,-2);else invalid();complete();return;}
       case "destroyOppMonster": {const x=one();if(x)destroyMonster(x,opp,w);else invalid();complete();return;}
@@ -2175,7 +2278,7 @@ function onSummon(c,w,entry=null,done=null){
       case "oppToFaceDownLand":
       case "oppToOwnFaceDownLand": {
         const x=one();
-        if(x){const destination=x.originalOwner||opp;moveBetweenToFaceDownLand(x,opp,destination);log("《"+c.name+"》の登場時効果で《"+x.name+"》を"+sideLabel(destination)+"の召喚士ゾーンに裏向きで置きました。");}
+        if(x){const destination=x.originalOwner||opp;moveBetweenToFaceDownLand(x,opp,destination);log("《"+c.name+"》の登場時効果で《"+x.name+"》を"+sideLabel(destination)+"の流脈ゾーンに裏向きで置きました。");}
         else invalid();
         complete();return;
       }
@@ -2187,21 +2290,21 @@ function onSummon(c,w,entry=null,done=null){
     case "draw2": requestDraw(w,2,()=>complete()); log(c.name+"の効果：2枚ドロー。DRAWボタンを押してください。");render();return;
     case "draw3": requestDraw(w,3,()=>complete()); log(c.name+"の効果：3枚ドロー。DRAWボタンを押してください。");render();return;
     case "draw5Bottom4": requestDraw(w,5,()=>openChooseFromHand(w,4,"オムニ・マインド：山札の下に置く4枚を選択",cards=>{cards.forEach(c2=>{const idx=G[w].hand.indexOf(c2);if(idx>=0)G[w].hand.splice(idx,1);});G[w].deck.unshift(...cards);log("オムニ・マインド：選んだ4枚を山札の下に置きました。");complete();}));render();return;
-    case "destroyOppLand": chooseFromList(G[opp].lands,sideLabel(opp)+"の召喚士ゾーンのカードを1枚選択",x=>{destroyLand(x,opp);complete();});return;
+    case "destroyOppLand": chooseFromList(G[opp].lands,sideLabel(opp)+"の流脈ゾーンのカードを1枚選択",x=>{destroyLand(x,opp);complete();});return;
     case "damageAll3": G[opp].field.filter(x=>x.t==="monster").slice().forEach(x=>dealDamage(x,3,c.name,opp,w));break;
     case "bounceAllOpp": bounceAll(opp);break;
     case "tapOppOnSummon": chooseFromList(G[opp].field.filter(x=>x.t==="monster"),"タップする相手モンスターを選択",x=>{tapAsUsed(x);log("《"+x.name+"》をタップしました。");complete();});return;
     case "tapAllOpp": G[opp].field.filter(x=>x.t==="monster").forEach(x=>tapAsUsed(x));log(c.name+"：相手モンスターをすべてタップしました。");break;
-    case "searchLand": searchDeckToLands(w,1,null,"召喚士ゾーンに置く召喚士カードを1枚選択",()=>complete());return;
+    case "searchLand": searchDeckToLands(w,1,null,"流脈ゾーンに置く流脈カードを1枚選択",()=>complete());return;
     case "searchSpell": searchDeckN(w,"spell",1,null,()=>complete(),"スペルカードを1枚選択");return;
     case "searchMonster": searchDeckN(w,"monster",1,null,()=>complete(),"モンスターカードを1枚選択");return;
     case "handToFaceDownLand": {
-      if(!G[w].hand.length){log("《"+c.name+"》：召喚士ゾーンに置ける手札がありません。");break;}
-      chooseFromList(G[w].hand,"召喚士ゾーンのカードとして裏向きに置く手札を1枚選択",x=>{const i=G[w].hand.indexOf(x);if(i>=0){G[w].hand.splice(i,1);prepareCardForLandZone(x,true);G[w].lands.push(x);log("《仙道エルフ》：手札の《"+x.name+"》を裏向き召喚士にしました。");}complete();});return;
+      if(!G[w].hand.length){log("《"+c.name+"》：流脈ゾーンに置ける手札がありません。");break;}
+      chooseFromList(G[w].hand,"流脈ゾーンのカードとして裏向きに置く手札を1枚選択",x=>{const i=G[w].hand.indexOf(x);if(i>=0){G[w].hand.splice(i,1);prepareCardForLandZone(x,true);G[w].lands.push(x);log("《仙道エルフ》：手札の《"+x.name+"》を裏向き流脈にしました。");}complete();});return;
     }
     case "graveToFaceDownLand": {
       const list=G[w].grave.filter(x=>x.t==="monster");if(!list.length){log("《"+c.name+"》：対象にできる墓地モンスターがいません。");break;}
-      chooseFromList(list,"裏向き召喚士にする墓地のモンスターを1体選択",x=>{const i=G[w].grave.indexOf(x);if(i>=0){G[w].grave.splice(i,1);prepareCardForLandZone(x,true);G[w].lands.push(x);}complete();});return;
+      chooseFromList(list,"裏向き流脈にする墓地のモンスターを1体選択",x=>{const i=G[w].grave.indexOf(x);if(i>=0){G[w].grave.splice(i,1);prepareCardForLandZone(x,true);G[w].lands.push(x);}complete();});return;
     }
     case "sacOwnOnSummon": chooseFromList(G[w].field.filter(x=>x.t==="monster"),"墓地へ送る自分のモンスターを1体選択",x=>{destroyMonster(x,w);complete();});return;
     case "hpMinus1EOT": chooseFromList(G[opp].field.filter(x=>x.t==="monster"),"HPを-1する相手モンスターを選択",x=>{changeTempHP(x,-1);complete();});return;
@@ -2210,11 +2313,11 @@ function onSummon(c,w,entry=null,done=null){
     case "discardRandomOpp": discardRandom(opp);break;
     case "oppToOwnFaceDownLand": {
       const list=G[opp].field.filter(x=>x.t==="monster");if(!list.length){log("《"+c.name+"》：対象がありません。");break;}
-      chooseFromList(list,"もともとの持ち主の召喚士ゾーンに置く相手モンスターを選択",x=>{moveBetweenToFaceDownLand(x,opp,x.originalOwner||opp);complete();});return;
+      chooseFromList(list,"もともとの持ち主の流脈ゾーンに置く相手モンスターを選択",x=>{moveBetweenToFaceDownLand(x,opp,x.originalOwner||opp);complete();});return;
     }
     case "oppToFaceDownLand": {
       const list=G[opp].field.filter(x=>x.t==="monster");if(!list.length){log("《"+c.name+"》：対象がありません。");break;}
-      chooseFromList(list,"もともとの持ち主の召喚士ゾーンに置く相手モンスターを選択",x=>{moveBetweenToFaceDownLand(x,opp,x.originalOwner||opp);complete();});return;
+      chooseFromList(list,"もともとの持ち主の流脈ゾーンに置く相手モンスターを選択",x=>{moveBetweenToFaceDownLand(x,opp,x.originalOwner||opp);complete();});return;
     }
     case "destroyOppMonster": {
       const list=G[opp].field.filter(x=>x.t==="monster");if(!list.length){log("《"+c.name+"》：対象がありません。");break;}
@@ -2297,7 +2400,7 @@ function activateSpell(c,w=activeSide(),entry=null){
     case "teamAtk3": simpleSpell(c,w,()=>G[w].field.filter(x=>x.t==="monster").forEach(x=>changeTempATK(x,3)));break;
     case "searchMonster": searchDeckN(w,"monster",1,c,null,"手札に加えるモンスターカードを1枚選択");break;
     case "oppToFaceDownLand": targetSpell(c,w,x=>moveToFaceDownLand(x,opponentSide(w)),G[opponentSide(w)].field.filter(x=>x.t==="monster"));break;
-    case "search2Land": searchDeckToLands(w,2,c,"召喚士ゾーンに置く召喚士カードを選択");break;
+    case "search2Land": searchDeckToLands(w,2,c,"流脈ゾーンに置く流脈カードを選択");break;
     case "soulNever": simpleSpell(c,w,()=>{G[w].soulNever=true;G[w].field.filter(x=>x.t==="monster").forEach(x=>x.soulNever=true);});break;
     case "prevent3": simpleSpell(c,w,()=>{G[w].damagePrevent+=3;});break;
     case "heal2": simpleSpell(c,w,()=>healLP(w,2,c.name));break;
@@ -2390,22 +2493,22 @@ function searchDeckToLands(w,n,c,title,done=null){
   }
 
   function step(){
-    const matches=G[w].deck.filter(x=>x.t==="summoner");
+    const matches=G[w].deck.filter(x=>x.t==="land");
     if(remaining<=0 || !matches.length){
-      if(remaining>0&&!matches.length)toast("山札にこれ以上召喚士カードがありません");
+      if(remaining>0&&!matches.length)toast("山札にこれ以上流脈カードがありません");
       finishSearch();
       return;
     }
 
     const box=el("targets");box.innerHTML="";
-    el("modalTitle").textContent=(title||"召喚士カードを選択")+"（残り"+remaining+"枚）";
+    el("modalTitle").textContent=(title||"流脈カードを選択")+"（残り"+remaining+"枚）";
     matches.forEach(x=>addTarget(x.name+" / "+colorJP(x.color),()=>{
       const deckIndex=G[w].deck.indexOf(x);
       if(deckIndex>=0)G[w].deck.splice(deckIndex,1);
       prepareCardForLandZone(x,false);
       G[w].lands.push(x);
       remaining--;
-      log(sideLabel(w)+"は山札から《"+x.name+"》を召喚士ゾーンに置きました。");
+      log(sideLabel(w)+"は山札から《"+x.name+"》を流脈ゾーンに置きました。");
       if(remaining<=0)finishSearch();else step();
     }));
     el("modal").style.display="flex";syncModalCancelButton();
@@ -2487,7 +2590,7 @@ function destroyLand(c,owner){
   G[owner].lands.splice(i,1);
   prepareCardForHandOrGrave(c);
   G[owner].grave.push(c);
-  log(sideLabel(owner)+"の召喚士ゾーンの《"+c.name+"》を墓地へ送りました。");
+  log(sideLabel(owner)+"の流脈ゾーンの《"+c.name+"》を墓地へ送りました。");
   render();
 }
 
@@ -2506,7 +2609,7 @@ function moveToFaceDownLand(c,owner){
   G[owner].field.splice(i,1);
   prepareCardForLandZone(c,true);
   G[owner].lands.push(c);
-  log("《"+c.name+"》を裏向き召喚士として置きました。");
+  log("《"+c.name+"》を裏向き流脈として置きました。");
 }
 
 function moveBetweenToFaceDownLand(c,fromOwner,toOwner){
@@ -2514,7 +2617,7 @@ function moveBetweenToFaceDownLand(c,fromOwner,toOwner){
   G[fromOwner].field.splice(i,1);
   prepareCardForLandZone(c,true);
   G[toOwner].lands.push(c);
-  log(sideLabel(toOwner)+"の召喚士ゾーンのカードとして《"+c.name+"》が裏向きで置かれました。");
+  log(sideLabel(toOwner)+"の流脈ゾーンのカードとして《"+c.name+"》が裏向きで置かれました。");
   render();
 }
 function dealDamage(target,amount,source,targetOwner,sourceOwner=null){
@@ -2568,7 +2671,7 @@ function destroyMonster(m,owner,causedBy=null){
   }else if(G[owner].soulNever || m.soulNever || m.effectKey==="faceDownLandOnDeath"){
     prepareCardForLandZone(m,true);
     G[owner].lands.push(m);
-    log("《"+m.name+"》は墓地へ送られる代わりに裏向き召喚士になりました。");
+    log("《"+m.name+"》は墓地へ送られる代わりに裏向き流脈になりました。");
   }else{
     prepareCardForHandOrGrave(m);
     G[owner].grave.push(m);
@@ -2591,8 +2694,8 @@ function attackAllowedByTrap(a,w){
 }
 function prepareAttackCost(a,w,next){
   if(a.effectKey!=="sacLandOnAttack") { next(); return; }
-  if(!G[w].lands.length){toast("このモンスターは攻撃時に召喚士ゾーンのカードを1枚墓地へ送る必要があります");return;}
-  chooseFromList(G[w].lands,"攻撃コストとして墓地へ送る自分の召喚士ゾーンのカードを1枚選択",land=>{destroyLand(land,w);next();});
+  if(!G[w].lands.length){toast("このモンスターは攻撃時に流脈ゾーンのカードを1枚墓地へ送る必要があります");return;}
+  chooseFromList(G[w].lands,"攻撃コストとして墓地へ送る自分の流脈ゾーンのカードを1枚選択",land=>{destroyLand(land,w);next();});
 }
 
 function forcedAttackTargets(attackerOwner){
@@ -2717,22 +2820,23 @@ function noBlock(){
 }
 
 function clickCard(where,i,c){
-  if(G.over)return;
+  if(G.over||G.preparing)return;
   showInspector(c);
   if(G.effectPeekMode)return;
-  const controllable=((where==="youField"||where==="cpuField")&&c.t==="monster")||where==="youLand"||where==="cpuLand"||((where==="hand"||where==="cpuHand")&&c.t==="summoner");
+  const controllable=((where==="youField"||where==="cpuField")&&c.t==="monster")||where==="youLand"||where==="cpuLand"||where==="youSummoner"||where==="cpuSummoner"||((where==="hand"||where==="cpuHand")&&c.t==="land");
   G.uiSelected=controllable?c.id:null;
-  const owner=(where==="hand"||where==="youField"||where==="youLand")?"you":"cpu";
+  const owner=(where==="hand"||where==="youField"||where==="youLand"||where==="youSummoner")?"you":"cpu";
   if(G.blockPending){
     if(owner===G.blockPending.defender&&where===(owner==="you"?"youField":"cpuField")&&c.t==="monster")chooseBlocker(c);
     else toast(sideLabel(G.blockPending.defender)+"はブロックするモンスターを選択してください");return;
   }
   const ownTurn=G.turn===owner,instant=c.timing==="instant";
   if(where==="hand"||where==="cpuHand"){
-    if(c.t==="summoner"){
-      // 1クリック目はCard Inspectorで効果確認のみ。選択したカードに出る「置」ボタンで配置する。
+    if(c.t==="land"){
+      // 流脈は「置」ボタンから表向きで配置。
       render();return;
     }
+    if(c.t==="summoner")return toast("召喚士は対戦開始時に専用ゾーンへ配置します");
     if(!ownTurn&&!instant)return toast(sideLabel(owner)+"のターンでは操作できません");
     if(ownTurn&&G.phase==="MAIN PHASE"&&!G[owner].land&&!G.stack.length)openPlayModal(i,c,owner);
     else playCard(i,owner);
@@ -2750,7 +2854,7 @@ function clickCard(where,i,c){
       selectTarget(c);
       if(G.phase!=="BATTLE PHASE")render();
     }
-  } else if(where==="youLand"||where==="cpuLand"){render();}
+  } else if(where==="youLand"||where==="cpuLand"||where==="youSummoner"||where==="cpuSummoner"){render();}
 }
 function modalCancelLocked(){
   return !!(G&&(G.resolvingStack||G.processingSummonerTrigger||G.triggerTargetPending||G.pendingPlayDraft));

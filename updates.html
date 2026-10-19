@@ -47,11 +47,46 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v17</div>
+    <div class="latest">LATEST · Beta2 v20</div>
   </section>
 
   <section class="timeline">
     <article class="release latest-release">
+      <div class="release-head"><div><div class="version">Beta2 v20</div><div class="release-title">ルールブック改訂 / タイトルからPDF表示</div></div><div class="tag">LATEST</div></div>
+      <ul>
+        <li>ルールブックを現行仕様に更新（通常デッキ50枚＋召喚士1枚、準備中の裏向き配置と開始時の同時公開）。</li>
+        <li>流脈／マナの独立、召喚士の固有能力、戦場と流脈の間にある召喚士ゾーンを図付きで説明。</li>
+        <li>タイトル画面の「ルールブック (RULEBOOK PDF)」から別タブでPDFを開けるように変更。</li>
+        <li>PDFを同梱し、Service Workerのキャッシュ対象にも追加。編集用Word版も同梱。</li>
+        <li>カードと対戦の基本処理はBeta2 v19を引き継ぎます。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v19</div><div class="release-title">通常50枚＋召喚士1枚 / 開始時同時公開</div></div><div class="tag">RULE</div></div>
+      <ul>
+        <li>通常デッキはちょうど50枚、召喚士は別枠で1種類1枚だけ採用するルールに変更。</li>
+        <li>召喚士をデッキビルダー・デッキコード・共有ライブラリに独立枠として保存。対戦画面から任意選択する機能を廃止。</li>
+        <li>ゲームの準備中は両方の召喚士を裏向きに配置。「召喚士を公開してゲーム開始」で同時に表向きで公開。</li>
+        <li>旧デッキ・旧コードは編集用として読み込み可能。条件を満たすまで保存・共有・対戦開始を禁止。</li>
+        <li>旧流脈／マナ機能と、召喚士固有能力を分離したv18の処理を継続。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v18</div><div class="release-title">流脈・マナ復活 / 召喚士を独立した初期配置カードへ</div></div><div class="tag">RULE</div></div>
+      <ul>
+        <li>旧流脈カード5種を復活。流脈のタップで色マナ、裏向きの通常カードで無色マナを生成。</li>
+        <li>対戦開始前にPLAYER 1 / PLAYER 2が召喚士を1枚ずつ選び、ゲーム開始時から専用ゾーンに表向きで配置。</li>
+        <li>召喚士からマナ生成機能を取り除き、召喚士固有の能力のみ使用可能に。</li>
+        <li>盤面に独立した召喚士ゾーンを追加。各プレイヤーの戦場と流脈ゾーンの間へ配置。</li>
+        <li>旧召喚士ゾーンを流脈ゾーンに改名し、カード効果・選択画面・ログ内の用語を新ルールへ更新。</li>
+        <li>旧デッキ内の召喚士カードは試合中のみ同色の流脈カードに読み替えて互換性を維持。</li>
+        <li>デッキ構築で新流脈カードに対応。カスタムフィールド画像・スマホUI・PWA設定を継承。</li>
+      </ul>
+    </article>
+
+    <article class="release">
       <div class="release-head"><div><div class="version">Beta2 v17</div><div class="release-title">対戦UI刷新・スマホ統一・更新内容ページ追加</div></div><div class="tag">LATEST</div></div>
       <ul>
         <li>PC版の対戦画面を白いプレイマット風の卓上レイアウトへ刷新。</li>

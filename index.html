@@ -161,6 +161,13 @@ button,select{font:inherit;color:inherit}
   background:#2a3142;
   transform:translateY(-2px);
 }
+/* ルールブックPDFへのリンク（PC・スマホ共通） */
+.btn-rulebook{
+  background:#202b37;
+  color:#e3f4fc;
+  border:1px solid #4e9ab6;
+}
+.btn-rulebook:hover{background:#2c4052;transform:translateY(-2px)}
 @media(max-width:600px){
   html,body{height:auto;min-height:100%;overflow:auto}
   .title-container{height:auto;min-height:100dvh;padding:24px 16px calc(24px + env(safe-area-inset-bottom))}
@@ -206,6 +213,7 @@ button,select{font:inherit;color:inherit}
     <a href="summoner.html" class="menu-btn btn-start">対戦開始 (DUEL)</a>
     <a href="deckbuilder.html" class="menu-btn btn-builder">デッキ構築 (DECK BUILDER)</a>
     <a href="decklibrary.html" class="menu-btn btn-library">デッキ置き場 (DECK LIBRARY)</a>
+    <a href="SUMMONER_Rulebook_Beta2_v2.0.pdf" class="menu-btn btn-rulebook" target="_blank" rel="noopener noreferrer" type="application/pdf" aria-label="SUMMONER ルールブックPDFを新しいタブで開く">ルールブック (RULEBOOK PDF)</a>
     <button type="button" class="menu-btn btn-feedback" onclick="openFeedbackForm()">意見・感想を送る (FEEDBACK)</button>
     <a href="updates.html" class="menu-btn btn-updates">更新内容 (UPDATE NOTES)</a>
   </div>

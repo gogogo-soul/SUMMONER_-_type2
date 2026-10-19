@@ -85,6 +85,7 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
 .sort-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
 .sort-row select{flex:1;background:#1a202c;border:1px solid #46505e;padding:6px;border-radius:6px;font-size:12px;color:#fff}
 .deck-rule{font-size:10px;color:var(--muted);line-height:1.5}
+.summoner-dedicated-item{border:2px solid #c6a459!important;background:#302718!important;}
 .deck-code-box{display:flex;flex-direction:column;gap:6px;padding-top:8px;margin-top:2px;border-top:1px solid #303946}
 .deck-code-label{font-size:10px;color:var(--muted);line-height:1.4}
 .deck-code-input{width:100%;min-height:58px;resize:vertical;background:#0b0e13;border:1px solid #46505e;border-radius:6px;padding:7px 8px;font-size:11px;line-height:1.4;color:#fff;word-break:break-all}
@@ -238,7 +239,7 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
     </section>
 
     <section class="deck-section">
-      <h2>編集中のデッキ <span><span id="totalCards">0 / 50 枚</span> ・ 召喚士 <span id="summonerCards">0 枚</span> <span class="drop-hint">← カードをここへドラッグ</span></span></h2>
+      <h2>編集中のデッキ <span><span id="totalCards">0 / 50 枚</span> ・ 召喚士 <span id="summonerCards">0 / 1 枚</span> <span class="drop-hint">← カードをここへドラッグ</span></span></h2>
       
       <div class="deck-controls">
         <div class="deck-select-row">
@@ -258,7 +259,7 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
             <option value="cost">コスト順（低い順）</option>
           </select>
         </div>
-        <div class="deck-rule">デッキ：最大50枚 / カード種類を問わず同名カードは最大4枚（召喚士を含む）</div>
+        <div class="deck-rule">通常デッキ：ちょうど50枚＋召喚士専用枠：1種類1枚（通常デッキ枚数には含めません）。モンスター・魔法は同名4枚まで、流脈は同名50枚まで。召喚士は準備時に裏向き、ゲーム開始時に公開します。</div>
         <div class="deck-code-box">
           <div class="deck-code-label">デッキコード共有：現在のデッキをコード化して送るか、受け取ったコードを貼り付けて復元できます。</div>
           <textarea id="deckCodeInput" class="deck-code-input" spellcheck="false" autocomplete="off" placeholder="ここにデッキコードを表示 / 貼り付け"></textarea>
@@ -303,14 +304,9 @@ let sortMode = "default";
 
 const DECK_MAX = 50;
 const DECK_CODE_PREFIX = "SMN2-";
-const DECK_CODE_FORMAT_VERSION = 2;
+const DECK_CODE_FORMAT_VERSION = 3;
 const DECK_LIBRARY_IMPORT_KEY = "summoner_deck_library_import";
 const LEGACY_CARD_NAMES = {
-  "赤の流脈":"カイエン",
-  "青の流脈":"ルフナ",
-  "緑の流脈":"オニキス",
-  "黄の流脈":"サミュエル",
-  "黒の流脈":"ダイキリ",
   "赤の召喚士":"カイエン",
   "青の召喚士":"ルフナ",
   "緑の召喚士":"オニキス",
@@ -333,17 +329,21 @@ function normalizeDeckCounts(deck){
   });
   return out;
 }
-function deckTotal(deck=currentDeck){ return Object.values(deck||{}).reduce((a,b)=>a+(Number(b)||0),0); }
+function deckTotal(deck=currentDeck){ return Object.entries(deck||{}).reduce((sum,[name,count])=>sum+(DB[name]?.t!=="summoner"?(Number(count)||0):0),0); }
 function summonerTotal(deck=currentDeck){
   return Object.entries(deck||{}).reduce((sum,[name,count])=>sum+(DB[name]?.t==="summoner"?(Number(count)||0):0),0);
 }
-function validateDeck(deck=currentDeck){
-  const total=deckTotal(deck);
-  if(total>DECK_MAX)return {ok:false,msg:`デッキは最大 ${DECK_MAX} 枚です。現在 ${total} 枚あります。`};
+function validateDeck(deck=currentDeck,requireComplete=false){
+  const total=deckTotal(deck),summoners=summonerTotal(deck);
+  if(total>DECK_MAX)return {ok:false,msg:`通常デッキは${DECK_MAX}枚です。現在${total}枚あります。`};
+  if(summoners>1)return {ok:false,msg:"召喚士は専用枠に1種類1枚だけ採用できます。"};
   for(const [name,count] of Object.entries(deck||{})){
-    const max=DB[name]?.n||4;
-    if(count>max)return {ok:false,msg:`《${name}》は最大 ${max} 枚までです。`};
+    if(!DB[name] || !Number.isInteger(count) || count<1)return {ok:false,msg:`《${name}》の枚数が不正です。`};
+    const max=DB[name].t==="summoner"?1:(DB[name].n||4);
+    if(count>max)return {ok:false,msg:`《${name}》は最大${max}枚までです。`};
   }
+  if(requireComplete && total!==DECK_MAX)return {ok:false,msg:`通常デッキはちょうど${DECK_MAX}枚必要です（現在${total}枚）。`};
+  if(requireComplete && summoners!==1)return {ok:false,msg:"召喚士を1種類1枚、専用枠に選んでください。"};
   return {ok:true};
 }
 function setDeckCodeStatus(message,isError=false){
@@ -380,7 +380,7 @@ function base64UrlToBytes(text){
   return Array.from(binary,ch=>ch.charCodeAt(0));
 }
 function encodeDeckCode(deck=currentDeck){
-  const check=validateDeck(deck);
+  const check=validateDeck(deck,true);
   if(!check.ok)throw new Error(check.msg);
   const total=deckTotal(deck);
   if(total<=0)throw new Error("デッキが空です。");
@@ -410,7 +410,7 @@ function decodeDeckCode(rawCode){
   const body=bytes.slice(0,-1);
   if(checksumBytes(body)!==storedChecksum)throw new Error("デッキコードが壊れているか、入力に誤りがあります。");
   const [version,declaredTotal,entryCount]=body;
-  if(version!==DECK_CODE_FORMAT_VERSION)throw new Error("このデッキコードの形式には現在対応していません。");
+  if(version!==2 && version!==DECK_CODE_FORMAT_VERSION)throw new Error("このデッキコードの形式には現在対応していません。");
   if(body.length!==3+entryCount*2)throw new Error("デッキコードのデータ長が不正です。");
   const deck={};
   let actualTotal=0;
@@ -419,14 +419,19 @@ function decodeDeckCode(rawCode){
     const count=body[4+i*2];
     const name=cardNameByNumber(number);
     if(!name)throw new Error(`BS01-${String(number).padStart(3,"0")} は現在のカードプールに存在しません。`);
-    if(count<1 || count>(DB[name]?.n||4))throw new Error(`《${name}》の枚数データが不正です。`);
+    if(count<1 || count>(DB[name]?.t==="summoner" && version===3?1:(DB[name]?.n||4)))throw new Error(`《${name}》の枚数データが不正です。`);
     if(deck[name])throw new Error(`《${name}》が重複して記録されています。`);
     deck[name]=count;
     actualTotal+=count;
   }
-  if(actualTotal!==declaredTotal)throw new Error("デッキコードの合計枚数が一致しません。");
-  const check=validateDeck(deck);
-  if(!check.ok)throw new Error(check.msg);
+  if((version===2?actualTotal:deckTotal(deck))!==declaredTotal)throw new Error("デッキコードの合計枚数が一致しません。");
+  // 旧v2コードは編集のため読み込めるが、対戦・保存には新ルールを適用する。
+  // 旧v2コードは最大4枚の召喚士が含まれていても、修正用に読み込める。
+  // v3コードは通常50枚＋召喚士1枚に厳格に限定する。
+  if(version===3){
+    const check=validateDeck(deck,true);
+    if(!check.ok)throw new Error(check.msg);
+  }
   return deck;
 }
 function generateDeckCode(){
@@ -434,7 +439,7 @@ function generateDeckCode(){
     const code=encodeDeckCode();
     const field=document.getElementById("deckCodeInput");
     field.value=code;
-    setDeckCodeStatus(`デッキコードを発行しました（${deckTotal()}枚）。このコードだけでデッキを復元できます。`);
+    setDeckCodeStatus(`デッキコードを発行しました（通常${deckTotal()}枚＋召喚士1枚）。このコードだけでデッキを復元できます。`);
     field.focus();
     field.select();
   }catch(err){
@@ -472,7 +477,7 @@ function importDeckCode(){
     document.getElementById("deckNameInput").value="";
     document.getElementById("savedDecksSelect").value="";
     renderDeck();
-    setDeckCodeStatus(`${total}枚のデッキを読み込みました。必要ならデッキ名を付けて保存してください。`);
+    setDeckCodeStatus(`通常${total}枚＋召喚士${summonerTotal()}枚を読み込みました。旧コードは新ルールに合わせて編集してください。`);
   }catch(err){
     setDeckCodeStatus(err.message||String(err),true);
     alert(err.message||String(err));
@@ -482,7 +487,7 @@ function cardIcon(c){
   if(c.timing==="instant")return "⚡";
   if(c.t==="monster")return "△";
   if(c.t==="spell")return "✦";
-  if(c.t==="summoner")return "◎";
+  if(c.t==="summoner")return "◎";if(c.t==="land")return "◈";
   return "?";
 }
 function colorIcon(c){
@@ -608,18 +613,18 @@ function renderPool() {
   Object.keys(DB).forEach(name => {
     const c = DB[name];
     const inDeck = currentDeck[name] || 0;
-    const max = c.n || 4;
+    const max = c.t==="summoner"?1:(c.n || 4);
     const colorClass = c.color && c.color !== "none" ? ` color-${c.color}` : "";
 
     const cardEl = document.createElement("div");
     cardEl.className = `card ${c.t}${colorClass}`;
     cardEl.draggable = true;
     cardEl.dataset.cardName = name;
-    cardEl.title = "クリック：効果を見る / ドラッグ：デッキへ追加";
+    cardEl.title = c.t==="summoner"?"クリックまたはドラッグで召喚士専用枠に1枚採用":"クリック：効果を見る / ドラッグ：デッキへ追加";
     cardEl.innerHTML = `
       <div class="name">${colorIcon(c)} ${name}</div>
       <div class="type">${c.code ? `${c.code} / ` : ""}${typeJP(c.t)}${c.race ? ` / ${c.race}` : ""}</div>
-      ${c.t !== 'summoner' ? `<div class="cost">${c.c}</div>` : ''}
+      ${c.t !== 'summoner' && c.t !== 'land' ? `<div class="cost">${c.c}</div>` : ''}
       <div class="art">${cardIcon(c)}</div>
       ${c.t === 'monster' ? `<div class="atk-stat" title="ATK">${c.a}</div><div class="hp-stat" title="HP">${c.h}</div>` : '<div></div>'}
       <div class="count-badge">${inDeck}/${max}</div>
@@ -637,7 +642,7 @@ function renderPool() {
 }
 
 function typeJP(t) {
-  return t === "monster" ? "モンスター" : t === "spell" ? "魔法" : t === "summoner" ? "召喚士" : t;
+  return t === "monster" ? "モンスター" : t === "spell" ? "魔法" : t === "summoner" ? "召喚士" : t === "land" ? "流脈" : t;
 }
 
 function colorJP(c) {
@@ -666,7 +671,7 @@ function showCardDetail(name) {
     c.t === "monster" ? `ATK ${c.a} / HP ${c.h}` : "";
 
   document.getElementById("detailEffect").textContent =
-    c.txt || (c.t === "summoner" ? `${colorJP(c.color)}の陣を1つ生成する。` : "効果なし");
+    c.txt || (c.t === "summoner" ? "召喚士固有能力" : "効果なし");
 
   document.getElementById("cardDetailModal").classList.add("open");
 }
@@ -714,10 +719,10 @@ function renderDeck() {
     if (!c) return;
 
     const item = document.createElement("div");
-    item.className = "deck-item";
+    item.className = "deck-item"+(c.t==="summoner"?" summoner-dedicated-item":"");
     item.innerHTML = `
       <div class="info">
-        <span class="qty">${count}x</span>
+        <span class="qty">${c.t==="summoner"?"召喚士専用枠　":""}${count}x</span>
         <span>${colorIcon(c)} ${cardIcon(c)} ${name}${c.code ? ` <small style="color:#8f9baa">${c.code}</small>` : ""}</span>
       </div>
       <div style="display:flex;gap:4px;">
@@ -734,9 +739,9 @@ function renderDeck() {
   const totalEl=document.getElementById("totalCards");
   const sumEl=document.getElementById("summonerCards");
   totalEl.textContent = `${total} / ${DECK_MAX} 枚`;
-  sumEl.textContent = `${summoners} 枚`;
+  sumEl.textContent = `${summoners} / 1 枚`;
   totalEl.classList.toggle("deck-limit-warn",total>DECK_MAX);
-  sumEl.classList.remove("deck-limit-warn");
+  sumEl.classList.toggle("deck-limit-warn",summoners!==1);
   renderPool();
 }
 
@@ -744,6 +749,13 @@ function addCard(name) {
   name=normalizeCardName(name);
   const c=DB[name];
   if(!c)return;
+  if(c.t==="summoner"){
+    const existing=Object.keys(currentDeck).find(n=>DB[n]?.t==="summoner" && currentDeck[n]>0);
+    if(existing===name)return alert("召喚士は同じカードを追加できません。専用枠は1枚のみです。");
+    if(existing && !confirm(`召喚士を《${existing}》から《${name}》へ変更しますか？`))return;
+    if(existing)delete currentDeck[existing];
+    currentDeck[name]=1;renderDeck();return;
+  }
   const total=deckTotal();
   if(total>=DECK_MAX)return alert(`デッキは最大 ${DECK_MAX} 枚です。`);
   const max=c.n||4;
@@ -793,7 +805,7 @@ function saveDeck() {
   if (!name) return alert("デッキ名を入力してください。");
   if (Object.keys(currentDeck).length === 0) return alert("カードが1枚も選ばれていません。");
 
-  const check = validateDeck();
+  const check = validateDeck(currentDeck,true);
   if (!check.ok) return alert(check.msg);
   const decks = getSavedDecks();
   decks[name] = currentDeck;
@@ -831,7 +843,7 @@ function deleteDeck() {
 function setActiveDeck() {
   const name = document.getElementById("deckNameInput").value.trim() || "カスタムデッキ";
   if (Object.keys(currentDeck).length === 0) return alert("デッキが空です。");
-  const check = validateDeck();
+  const check = validateDeck(currentDeck,true);
   if (!check.ok) return alert(check.msg);
 
   let activeList = [];
@@ -843,7 +855,7 @@ function setActiveDeck() {
 
   localStorage.setItem(getActiveDeckKey(), JSON.stringify(activeList));
   localStorage.setItem(getActiveDeckKey() + "_name", name);
-  alert(`[${currentUser}] 用として「${name}」（計${activeList.length}枚）をセットしました！`);
+  alert(`[${currentUser}] 用として「${name}」（通常50枚＋召喚士1枚）をセットしました！`);
 }
 
 document.addEventListener("keydown", e => {

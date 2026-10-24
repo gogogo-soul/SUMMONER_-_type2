@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
+<script src="deck-reset-v30.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0e13">
@@ -133,6 +134,8 @@ button,select{font:inherit;color:inherit}
 }
 .btn-library:hover{background:#203b34;transform:translateY(-2px)}
 
+.btn-online{background:#172a32;color:#c6f3ff;border:1px solid #3b8caa}
+.btn-online:hover{background:#214251;transform:translateY(-2px)}
 .btn-feedback{
   background:#27221a;
   color:#f4df9c;
@@ -211,9 +214,10 @@ button,select{font:inherit;color:inherit}
   <!-- メインメニュー -->
   <div class="menu-buttons">
     <a href="summoner.html" class="menu-btn btn-start">対戦開始 (DUEL)</a>
+    <a href="online.html" class="menu-btn btn-online">オンライン対戦の準備 (LOBBY)</a>
     <a href="deckbuilder.html" class="menu-btn btn-builder">デッキ構築 (DECK BUILDER)</a>
     <a href="decklibrary.html" class="menu-btn btn-library">デッキ置き場 (DECK LIBRARY)</a>
-    <a href="SUMMONER_Rulebook_Beta2_v2.0.pdf" class="menu-btn btn-rulebook" target="_blank" rel="noopener noreferrer" type="application/pdf" aria-label="SUMMONER ルールブックPDFを新しいタブで開く">ルールブック (RULEBOOK PDF)</a>
+    <a href="SUMMONER_Rulebook_Beta.pdf" class="menu-btn btn-rulebook" target="_blank" rel="noopener noreferrer" type="application/pdf" aria-label="SUMMONER ルールブックPDFを新しいタブで開く">ルールブック (RULEBOOK PDF)</a>
     <button type="button" class="menu-btn btn-feedback" onclick="openFeedbackForm()">意見・感想を送る (FEEDBACK)</button>
     <a href="updates.html" class="menu-btn btn-updates">更新内容 (UPDATE NOTES)</a>
   </div>
@@ -285,7 +289,7 @@ function addNewUser() {
 
 function updateDeckDisplay() {
   const activeDeckKey = `arcana_duel_active_deck_${currentUser}_name`;
-  const deckName = localStorage.getItem(activeDeckKey) || "デフォルトデッキ";
+  const deckName = localStorage.getItem(activeDeckKey) || "初期デッキから選択可能";
   document.getElementById("activeDeckName").textContent = deckName;
 }
 

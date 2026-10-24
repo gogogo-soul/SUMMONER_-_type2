@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
+<script src="deck-reset-v30.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0e13">
@@ -67,15 +68,16 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
 
 .card .name{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:16px}
 .card .type{font-size:8px;color:#aeb7c3}
-.card .cost{position:absolute;right:4px;top:4px;background:#2b80b9;border-radius:50%;min-width:16px;text-align:center;padding:1px;font-size:9px;font-weight:900}
+.card .cost{position:absolute;left:4px;top:4px;z-index:1;background:#2b80b9;border-radius:50%;min-width:16px;text-align:center;padding:1px;font-size:9px;font-weight:900}
+.card:has(.cost) .name{padding-left:21px;padding-right:0}
 .card .art{height:40px;margin:2px 0;border-radius:4px;background:linear-gradient(135deg,#ffffff12,#0005);display:flex;align-items:center;justify-content:center;font-size:16px}
-.card .atk-stat,.card .hp-stat{position:absolute;bottom:4px;font-size:12px;font-weight:900;line-height:1;
+.card .power-stat,.card .sp-stat{position:absolute;bottom:4px;font-size:12px;font-weight:900;line-height:1;
   -webkit-text-stroke:1px #000;
   paint-order:stroke fill;
   text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 1px 2px #000
 }
-.card .atk-stat{left:5px}
-.card .hp-stat{right:5px}
+.card .power-stat{left:5px}
+.card .sp-stat{right:5px}
 .card .count-badge{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);background:var(--gold);color:#000;font-size:9px;font-weight:900;padding:1px 5px;border-radius:4px}
 
 /* デッキコントロール */
@@ -259,7 +261,7 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
             <option value="cost">コスト順（低い順）</option>
           </select>
         </div>
-        <div class="deck-rule">通常デッキ：ちょうど50枚＋召喚士専用枠：1種類1枚（通常デッキ枚数には含めません）。モンスター・魔法は同名4枚まで、流脈は同名50枚まで。召喚士は準備時に裏向き、ゲーム開始時に公開します。</div>
+        <div class="deck-rule">通常デッキ：ちょうど50枚＋召喚士専用枠：1種類1枚（通常デッキ枚数には含めません）。モンスター・魔法は同名4枚まで、流脈は同名50枚まで。アナログ対戦では準備時に裏向き、ゲーム開始時に公開します。</div>
         <div class="deck-code-box">
           <div class="deck-code-label">デッキコード共有：現在のデッキをコード化して送るか、受け取ったコードを貼り付けて復元できます。</div>
           <textarea id="deckCodeInput" class="deck-code-input" spellcheck="false" autocomplete="off" placeholder="ここにデッキコードを表示 / 貼り付け"></textarea>
@@ -296,6 +298,7 @@ h2{font-size:14px;margin:0 0 10px;color:#b9c2ce;text-transform:uppercase;letter-
 </div>
 
 <script src="cards.js"></script>
+<script src="starter-decks.js"></script>
 <script>
 let currentDeck = {};
 let currentUser = "ゲスト";
@@ -418,7 +421,7 @@ function decodeDeckCode(rawCode){
     const number=body[3+i*2];
     const count=body[4+i*2];
     const name=cardNameByNumber(number);
-    if(!name)throw new Error(`BS01-${String(number).padStart(3,"0")} は現在のカードプールに存在しません。`);
+    if(!name)throw new Error(`BS01-${String(number).padStart(3,"0")} は削除済み、または現行カードプールに存在しません。新しい召喚士を選んでデッキコードを再発行してください。`);
     if(count<1 || count>(DB[name]?.t==="summoner" && version===3?1:(DB[name]?.n||4)))throw new Error(`《${name}》の枚数データが不正です。`);
     if(deck[name])throw new Error(`《${name}》が重複して記録されています。`);
     deck[name]=count;
@@ -487,7 +490,7 @@ function cardIcon(c){
   if(c.timing==="instant")return "⚡";
   if(c.t==="monster")return "△";
   if(c.t==="spell")return "✦";
-  if(c.t==="summoner")return "◎";if(c.t==="land")return "◈";
+  if(c.t==="summoner")return "◎";if(c.t==="land")return "≋";
   return "?";
 }
 function colorIcon(c){
@@ -626,7 +629,7 @@ function renderPool() {
       <div class="type">${c.code ? `${c.code} / ` : ""}${typeJP(c.t)}${c.race ? ` / ${c.race}` : ""}</div>
       ${c.t !== 'summoner' && c.t !== 'land' ? `<div class="cost">${c.c}</div>` : ''}
       <div class="art">${cardIcon(c)}</div>
-      ${c.t === 'monster' ? `<div class="atk-stat" title="ATK">${c.a}</div><div class="hp-stat" title="HP">${c.h}</div>` : '<div></div>'}
+      ${c.t === 'monster' ? `<div class="power-stat" title="パワー">${c.power}</div><div class="sp-stat" title="SP">${c.sp}</div>` : '<div></div>'}
       <div class="count-badge">${inDeck}/${max}</div>
     `;
 
@@ -668,7 +671,7 @@ function showCardDetail(name) {
     chips.map(x => `<span class="detail-chip">${x}</span>`).join("");
 
   document.getElementById("detailStats").textContent =
-    c.t === "monster" ? `ATK ${c.a} / HP ${c.h}` : "";
+    c.t === "monster" ? `パワー ${c.power} / SP ${c.sp}` : "";
 
   document.getElementById("detailEffect").textContent =
     c.txt || (c.t === "summoner" ? "召喚士固有能力" : "効果なし");
@@ -792,17 +795,33 @@ function loadSavedDecksList() {
   const select = document.getElementById("savedDecksSelect");
   select.innerHTML = '<option value="">-- 保存済みデッキを選択 --</option>';
   
+  const starters=window.SUMMONER_STARTER_DECKS||[];
+  if(starters.length){
+    const group=document.createElement("optgroup");
+    group.label="初期デッキ（7種類・読み込み専用）";
+    for(const starter of starters){
+      const opt=document.createElement("option");
+      opt.value=starter.id;
+      opt.textContent=`初期デッキ：${starter.name}`;
+      group.appendChild(opt);
+    }
+    select.appendChild(group);
+  }
+  const savedGroup=document.createElement("optgroup");
+  savedGroup.label="自分の保存デッキ";
   Object.keys(decks).forEach(name => {
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
-    select.appendChild(opt);
+    savedGroup.appendChild(opt);
   });
+  select.appendChild(savedGroup);
 }
 
 function saveDeck() {
   const name = document.getElementById("deckNameInput").value.trim();
   if (!name) return alert("デッキ名を入力してください。");
+  if (/^__starter_\d+$/.test(name))return alert("このデッキ名は使用できません。");
   if (Object.keys(currentDeck).length === 0) return alert("カードが1枚も選ばれていません。");
 
   const check = validateDeck(currentDeck,true);
@@ -819,17 +838,28 @@ function saveDeck() {
 function loadSelectedDeck() {
   const name = document.getElementById("savedDecksSelect").value;
   if (!name) return;
+  const starter=(window.SUMMONER_STARTER_DECKS||[]).find(d=>d.id===name);
+  if(starter){
+    currentDeck={...starter.counts};
+    document.getElementById("deckNameInput").value=`初期デッキ：${starter.name}`;
+    document.getElementById("deckCodeInput").value=starter.code;
+    renderDeck();
+    setDeckCodeStatus("初期デッキを読み込みました。編集して保存すると、自分のデッキとして保存されます。");
+    return;
+  }
   const decks = getSavedDecks();
   if (decks[name]) {
     currentDeck = normalizeDeckCounts(decks[name]);
     document.getElementById("deckNameInput").value = name;
     renderDeck();
+    // 旧デッキの存在しないカードは読込時に除外（保存済みの元データは保持）。
   }
 }
 
 function deleteDeck() {
   const name = document.getElementById("savedDecksSelect").value;
   if (!name) return alert("削除するデッキを選択してください。");
+  if ((window.SUMMONER_STARTER_DECKS||[]).some(d=>d.id===name))return alert("初期デッキは削除できません。自分の保存デッキのみ削除できます。");
   if (!confirm(`[${currentUser}] のデッキ「${name}」を削除してもよろしいですか？`)) return;
 
   const decks = getSavedDecks();

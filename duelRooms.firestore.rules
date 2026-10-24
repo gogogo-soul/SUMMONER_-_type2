@@ -1,0 +1,55 @@
+// 既存の firestore.rules の service cloud.firestore / match /databases/{database}/documents 内に
+// この match /duelRooms/{roomId} を追加してください。ファイルを丸ごと上書きすると
+// DECK LIBRARY 用の既存ルールを消してしまうので注意してください。
+match /duelRooms/{roomId} {
+  function signedIn() { return request.auth != null; }
+  function validName(n) { return n is string && n.size() <= 24; }
+  function roomShape(d) {
+    return d.keys().hasOnly(['schemaVersion', 'hostUid', 'hostName', 'hostReady',
+      'guestUid', 'guestName', 'guestReady', 'createdAt', 'updatedAt'])
+      && d.schemaVersion == 1
+      && d.hostUid is string && d.hostUid.size() > 0
+      && validName(d.hostName) && validName(d.guestName)
+      && d.hostReady is bool && d.guestReady is bool;
+  }
+  // 推測困難な12文字の部屋コードを知っているログイン済みユーザーのみ個別取得できます。
+  // 対戦の秘密情報は保存していません。検索・一覧取得は禁止します。
+  allow get: if signedIn();
+  allow list: if false;
+  allow create: if signedIn()
+    && roomId.matches('[A-HJ-NP-Z2-9]{12}')
+    && roomShape(request.resource.data)
+    && request.resource.data.hostUid == request.auth.uid
+    && request.resource.data.guestUid == null
+    && request.resource.data.guestName == ''
+    && request.resource.data.hostReady == false
+    && request.resource.data.guestReady == false
+    && request.resource.data.createdAt == request.time
+    && request.resource.data.updatedAt == request.time;
+  allow update: if signedIn()
+    && roomShape(request.resource.data)
+    && request.resource.data.hostUid == resource.data.hostUid
+    && request.resource.data.hostName == resource.data.hostName
+    && request.resource.data.createdAt == resource.data.createdAt
+    && request.resource.data.updatedAt == request.time
+    && (
+      // 作成者が準備状態だけ変更
+      (request.auth.uid == resource.data.hostUid &&
+       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hostReady','updatedAt']))
+      ||
+      // 空いている部屋へ参加
+      (resource.data.guestUid == null && request.auth.uid != resource.data.hostUid &&
+       request.resource.data.guestUid == request.auth.uid && request.resource.data.guestReady == false &&
+       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestUid','guestName','updatedAt']))
+      ||
+      // 参加者が準備状態だけ変更
+      (request.auth.uid == resource.data.guestUid &&
+       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestReady','updatedAt']))
+      ||
+      // 参加者が退出
+      (request.auth.uid == resource.data.guestUid &&
+       request.resource.data.guestUid == null && request.resource.data.guestName == '' && request.resource.data.guestReady == false &&
+       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestUid','guestName','guestReady','updatedAt']))
+    );
+  allow delete: if signedIn() && resource.data.hostUid == request.auth.uid;
+}

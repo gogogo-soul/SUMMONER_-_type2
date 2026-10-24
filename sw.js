@@ -1,13 +1,16 @@
-const CACHE_NAME = "summoner-pwa-v20-rulebook-pdf-r1";
+const CACHE_NAME = "summoner-pwa-v30-7starters-deckreset-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./summoner.html",
+  "./online.html",
   "./deckbuilder.html",
   "./decklibrary.html",
   "./updates.html",
-  "./SUMMONER_Rulebook_Beta2_v2.0.pdf",
+  "./SUMMONER_Rulebook_Beta.pdf",
   "./cards.js",
+  "./starter-decks.js",
+  "./deck-reset-v30.js",
   "./firebase-config.js",
   "./pwa.js",
   "./manifest.json",

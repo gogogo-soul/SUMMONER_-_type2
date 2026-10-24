@@ -47,12 +47,113 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v20</div>
+    <div class="latest">LATEST · Beta2 v30</div>
   </section>
 
   <section class="timeline">
     <article class="release latest-release">
-      <div class="release-head"><div><div class="version">Beta2 v20</div><div class="release-title">ルールブック改訂 / タイトルからPDF表示</div></div><div class="tag">LATEST</div></div>
+      <div class="release-head"><div><div class="version">Beta2 v30</div><div class="release-title">初期デッキ7種類へ変更・保存デッキ全削除</div></div><div class="tag">LATEST</div></div>
+      <ul>
+        <li>指定されたSMN2デッキコード7件を初期デッキに反映（赤・青・緑・黄・黒・赤青緑・青緑黒）。通常50枚＋召喚士1枚を維持。</li>
+        <li>更新後に初めてアクセスしたブラウザで、ローカル保存された全ユーザー分の「自分の保存デッキ」と対戦用の設定済みデッキを一度だけ削除。</li>
+        <li>更新後に新しく保存したデッキは自動削除されません。別のブラウザ・端末・サイトURLでのローカル保存には影響しません。</li>
+        <li>DECK LIBRARYのFirebase共有投稿やカスタムフィールド設定は削除しません。ユーザー提供のルールブックPDFは変更なし。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v29</div><div class="release-title">同じパワーのモンスターは両方破壊</div></div><div class="tag">PREVIOUS</div></div>
+      <ul>
+        <li>モンスター同士のパワーが同じ場合、攻撃・防御の両モンスターが破壊されるように変更。</li>
+        <li>パワー差がある戦闘は従来どおり低い側を破壊。バトルではパワーを増減させません。</li>
+        <li>提供された「SUMMONER_Rulebook_Beta.pdf」を公式表示PDFとして採用。タイトル画面のリンクとPWAキャッシュを更新（ルールのプログラム処理は変更なし）。</li>
+        <li>初期デッキ5種類、保存デッキ、カードデータとオンライン接続準備機能は維持。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v28</div><div class="release-title">指定デッキコードを初期デッキ5種類として追加</div></div><div class="tag">PREVIOUS</div></div>
+      <ul>
+        <li>指定された7つのデッキコードを確認。黄色の同一コードが3回あったため、異なる5種類（赤・青・緑・黄・青緑黒）を初期デッキとして登録。</li>
+        <li>対戦開始のデッキ選択で初期デッキ5種類をいつでも利用可能。デッキビルダーでも読込・編集・別名保存できます。</li>
+        <li>デッキコードはSMN2形式のまま保持。通常50枚＋召喚士1枚を検証済みです。</li>
+        <li>既存ユーザーの保存済みデッキは変更・削除しません。PWAキャッシュを更新しました。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v27</div><div class="release-title">召喚士4種類の固有能力を調整</div></div><div class="tag">PREVIOUS</div></div>
+      <ul>
+        <li>《オニキス》：自分のモンスター1体のSPをターン終了時まで＋1。</li>
+        <li>《グレイ》：相手モンスター1体のSPを次のターン終了時まで－1。</li>
+        <li>《ダニエル》：相手モンスター1体は次のターン終了時まで、ブロック時のみパワー＋2000。</li>
+        <li>《スプモーニ》：自分のモンスター1体にターン終了時まで【炸裂】を付与。</li>
+        <li>ルールブックv2.8：旧v1.1の全12章を踏襲し、現行ルールの詳細・ゾーン図・召喚士4種の効果を全面改訂。タイトル画面から開くPDFも差し替え。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v26</div><div class="release-title">モンスター66種類のパワー・SP確定</div></div><div class="tag">LATEST</div></div>
+      <ul>
+        <li>各色計66種類のモンスターに指定されたパワーとSPを反映（1500の個体を含む）。</li>
+        <li>《剣術エルフ》の種族を「エルフ」に修正。</li>
+        <li>パワー関連の修正・閾値効果を1000単位に統一。プレイヤーダメージとSPは従来の数値単位を維持。</li>
+        <li>確定値一覧・ルールブックv2.6・PDFリンクとPWAキャッシュを更新。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v25</div><div class="release-title">戦闘刷新：パワーとSP・【炸裂】</div></div><div class="tag">PREVIOUS</div></div>
+      <ul>
+        <li>モンスターのATK/HPを廃止し、左下をパワー・右下をSPに変更。</li>
+        <li>モンスター同士のバトルは現在パワーの大小で判定。低い側は破壊され、高い側のパワーは変動しない。同値の場合はv29で双方破壊へ変更。</li>
+        <li>ブロックされない直接攻撃は、モンスターのSPに等しいダメージをプレイヤーLPに与える。</li>
+        <li>旧「モンスターへNダメージ」効果は「パワーN以下のモンスターを破壊」に変更。パワー＋／－の効果は数値変動を維持。</li>
+        <li>【接死】を【炸裂】に改名。バトルした相手をパワーに関係なく破壊する。</li>
+        <li>カードの新数値は暫定配分（パワー＝旧ATK/HPの大きい方、SP＝旧ATK）。CSV一覧で調整可能。</li>
+        <li>ルールブックv2.5・PDFリンク・オフラインキャッシュを更新。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v24</div><div class="release-title">カードコスト左上配置・召喚士自動配置・オンライン接続準備</div></div><div class="tag">UI</div></div>
+      <ul>
+        <li>デッキビルダーの旧カード除外時に表示されていた長い警告文を削除（保存済みデッキを勝手に変更しない処理は維持）。</li>
+        <li>対戦・デッキ構築・デッキライブラリでカードのコスト表示を右上から左上へ変更。</li>
+        <li>デジタル版の「召喚士の公開」画面を廃止。対戦開始と同時に召喚士を表向きで配置する。アナログ対戦時の裏向き準備／同時公開ルールは維持。</li>
+        <li>オンラインルーム（作成・コード参加・双方の準備完了状態を共有）の接続準備ページを追加。盤面・操作・手札のオンライン同期は未実装。</li>
+        <li>ルールブックv2.4、PDFリンク、PWAキャッシュを更新。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v23</div><div class="release-title">流脈アイコン「≋」・召喚士の属性別能力コスト</div></div><div class="tag">RULES</div></div>
+      <ul>
+        <li>流脈カードの種類アイコンを「◈」から「≋」へ統一。対戦、デッキ構築、デッキライブラリに対応。</li>
+        <li>召喚士のコスト表記を属性別に変更。「赤の流脈≋1」などは、同色の未タップ流脈1枚を能力コストとしてタップする。</li>
+        <li>2コスト能力は「赤の流脈≋1+≋1」などに変更。同色流脈1枚のタップに加えて、任意のマナ1つを支払う。</li>
+        <li>召喚士自身はタップしない。流脈を能力コストとしてタップしたときはマナを生成しない。</li>
+        <li>15種類の召喚士カードのテキスト、能力支払い処理、ルールブックv2.3、PDFリンクとPWAキャッシュを更新。</li>
+      </ul>
+    </article>
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v22</div><div class="release-title">召喚士の能力コスト変更・魔法7枚調整</div></div><div class="tag">BALANCE</div></div>
+      <ul>
+        <li>召喚士の「自身をタップ」能力を「自身と同じ色の流脈1枚をタップ」に変更。流脈は能力コストとして使用し、マナは生成しない。</li>
+        <li>召喚士の「自身をタップ＋マナ1／2」能力は召喚士自身をタップせず、記載されたマナ1／2のみを支払う。</li>
+        <li>《火山雷》《詠唱破棄》《魂死なず》《大地へと還れ》《閃光》《魔神拳》のコストをすべて3に変更。</li>
+        <li>《毒針》：アンタップ状態の相手モンスター1体のHPを、破壊する代わりにターン終了時まで-3する。</li>
+        <li>ルールブックv2.2／PDFのタイトル画面リンク／オフラインキャッシュを更新。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v21</div><div class="release-title">召喚士10種削除 / カードプール整理</div></div><div class="tag">CARDS</div></div>
+      <ul>
+        <li>召喚士10種をカードプールから削除：ギムレット、ヴューカレ、ヨナ、ミカ、ベリル、ジェイド、アッサム、ダージリン、フェンネル、アムチュール。</li>
+        <li>各色3種、召喚士合計15種に変更（全カード125種）。</li>
+        <li>残るカードのBS01識別番号は維持。削除した番号は欠番として扱う。</li>
+        <li>削除された召喚士を設定していた保存デッキは、別の召喚士を選択してから保存・対戦する。</li>
+        <li>削除対象入りデッキコードは現行カードプールでは使用できないことを明示。</li>
+        <li>ルールブックをv2.1に更新。通常デッキ50枚＋召喚士専用枠1枚のルールは変更なし。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v20</div><div class="release-title">ルールブック改訂 / タイトルからPDF表示</div></div><div class="tag">DOCS</div></div>
       <ul>
         <li>ルールブックを現行仕様に更新（通常デッキ50枚＋召喚士1枚、準備中の裏向き配置と開始時の同時公開）。</li>
         <li>流脈／マナの独立、召喚士の固有能力、戦場と流脈の間にある召喚士ゾーンを図付きで説明。</li>
@@ -87,7 +188,7 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     </article>
 
     <article class="release">
-      <div class="release-head"><div><div class="version">Beta2 v17</div><div class="release-title">対戦UI刷新・スマホ統一・更新内容ページ追加</div></div><div class="tag">LATEST</div></div>
+      <div class="release-head"><div><div class="version">Beta2 v17</div><div class="release-title">対戦UI刷新・スマホ統一・更新内容ページ追加</div></div><div class="tag">UI</div></div>
       <ul>
         <li>PC版の対戦画面を白いプレイマット風の卓上レイアウトへ刷新。</li>
         <li>PLAYER 2を上、PLAYER 1を下に配置した上下対称レイアウトへ変更。</li>

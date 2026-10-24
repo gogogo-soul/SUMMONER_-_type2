@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v30-7starters-deckreset-r1";
+const CACHE_NAME = "summoner-pwa-v31-1-hand-click-exceptions-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",

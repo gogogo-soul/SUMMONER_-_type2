@@ -1050,6 +1050,59 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
   .you-half .zonebox.zone-summoner{top:26%;height:15%}
   .you-half .zonebox.zone-land{top:46%;height:15%}
 }
+
+/* ===== v31: tap the battlefield to minimize both hands; tap a hand to expand ===== */
+.handbar,.opponent-hand-wrap{cursor:pointer;transition:height .18s ease, bottom .18s ease,top .18s ease,width .18s ease}
+.handbar .card,.opponent-hand-wrap .card{transition:width .18s ease,height .18s ease,transform .18s ease}
+body.hands-compact .handbar{height:56px!important;bottom:8px!important;width:min(740px,78vw)!important;z-index:47}
+body.hands-compact .hand{height:54px!important;overflow:visible!important;align-items:flex-end!important;padding:0!important;gap:3px!important}
+body.hands-compact .hand .card{flex:0 0 43px!important;width:43px!important;height:49px!important;margin-left:0!important;padding:3px!important;transform:none!important}
+body.hands-compact .hand .card:hover{transform:translateY(-3px)!important}
+body.hands-compact .hand .card .name{font-size:6px!important}
+body.hands-compact .hand .card .type{font-size:5px!important}
+body.hands-compact .hand .card .art{height:14px!important;margin:1px 0!important;font-size:9px!important}
+body.hands-compact .hand .card .power-stat,body.hands-compact .hand .card .sp-stat{font-size:8px!important;min-width:0!important;padding:1px!important}
+body.hands-compact .opponent-hand-wrap{height:54px!important;top:45px!important;width:min(740px,78vw)!important;z-index:47}
+body.hands-compact .opponent-hand{height:54px!important;align-items:flex-start!important;gap:3px!important;padding:0!important;overflow:visible!important}
+body.hands-compact .opponent-hand .card{flex:0 0 43px!important;width:43px!important;height:49px!important;margin-left:0!important;padding:3px!important;transform:none!important}
+body.hands-compact .opponent-hand .card:hover{transform:translateY(3px)!important}
+body.hands-compact .opponent-hand .card .name{font-size:6px!important}
+body.hands-compact .opponent-hand .card .type{font-size:5px!important}
+body.hands-compact .opponent-hand .card .art{height:14px!important;margin:1px 0!important;font-size:9px!important}
+body.hands-compact .opponent-hand .card .power-stat,body.hands-compact .opponent-hand .card .sp-stat{font-size:8px!important;min-width:0!important;padding:1px!important}
+/* battlefield-centered stack, completely separate from INFO */
+.central-stack-panel,.draw-progress-panel{position:absolute;left:50%;transform:translateX(-50%);box-shadow:0 4px 18px #000a;background:rgba(19,24,31,.94);color:#eef2f7;border:1px solid #d3bc76;border-radius:8px;z-index:49;font:700 11px/1.4 system-ui,sans-serif;max-width:86%;pointer-events:none}
+.central-stack-panel[hidden],.draw-progress-panel[hidden]{display:none!important}
+.central-stack-panel{top:50%;transform:translate(-50%,-50%);width:min(510px,83vw);padding:5px 10px;max-height:min(165px,24dvh);overflow-y:auto}
+.central-stack-title{text-align:center;font-size:10px;color:#e5ce83;letter-spacing:.06em}
+.central-stack-panel .stack-box{overflow:visible;max-height:none!important;background:transparent!important;padding:0;margin:0}
+.central-stack-panel .stack-entry{padding:4px 5px;font-size:10px;gap:9px;color:#fff}
+.central-stack-panel .priority-line{text-align:center;color:#d9dfef;margin-top:3px;font-size:10px}
+.draw-progress-panel{top:calc(50% - 76px);width:max-content;min-width:230px;text-align:center;padding:9px 12px;border-color:#83b8dc}
+.draw-progress-line+ .draw-progress-line{margin-top:5px}
+.table:has(.central-stack-panel:not([hidden])) .centerbar{opacity:.2;pointer-events:none}
+body.hands-compact .handbar::before,body.hands-compact .opponent-hand-wrap::before{
+ content:"手札をタップして拡大";position:absolute;left:50%;transform:translateX(-50%);
+ white-space:nowrap;color:#fff;background:#172333dd;border:1px solid #889eb3;border-radius:8px;
+ padding:1px 7px;font:bold 9px/1.4 system-ui;z-index:1;pointer-events:none
+}
+body.hands-compact .handbar::before{top:-15px}
+body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
+@media(max-width:900px){
+ body.hands-compact .handbar{width:min(340px,84vw)!important;bottom:53px!important;height:48px!important}
+ body.hands-compact .hand{height:45px!important;justify-content:center!important}
+ body.hands-compact .hand .card{flex-basis:29px!important;width:29px!important;height:40px!important;margin-left:0!important}
+ body.hands-compact .opponent-hand-wrap{width:min(340px,84vw)!important;top:43px!important;height:44px!important}
+ body.hands-compact .opponent-hand{height:44px!important;justify-content:center!important}
+ body.hands-compact .opponent-hand .card{flex-basis:29px!important;width:29px!important;height:40px!important;margin-left:0!important}
+ .central-stack-panel{width:88vw;top:50%;max-height:22dvh;padding:4px 6px;font-size:9px}
+ .central-stack-panel .stack-entry{font-size:9px;padding:3px}
+ .draw-progress-panel{top:calc(50% - 57px);font-size:9px;min-width:0;padding:6px 9px;max-width:90vw}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ .central-stack-panel{max-height:28dvh;top:50%}
+ .draw-progress-panel{top:calc(50% - 45px)}
+}
 </style>
 </head>
 <body>
@@ -1088,10 +1141,16 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
         <div class="resource-zone" style="height:42px"><b>HAND</b><span id="cpuHand" style="font-size:14px;margin-top:0">0</span></div>
       </div>
     </div>
-    <div class="opponent-hand-wrap"><div class="opponent-hand-title">PLAYER 2 HAND <span id="cpuHandCount">7 cards</span></div><div class="opponent-hand" id="cpuHandCards"></div></div>
+    <div class="opponent-hand-wrap"><div class="opponent-hand-title">PLAYER 2 HAND <span id="cpuHandCount">7 cards</span></div><div class="opponent-hand" id="cpuHandCards" title="手札をタップして拡大"></div></div>
   </div>
 
   <div class="centerbar"><span class="turn-pill" id="turnPill">PLAYER 1 TURN</span><span class="phase" id="phase">MAIN PHASE</span></div>
+  <section id="centralStackPanel" class="central-stack-panel" aria-label="中央の解決待ちスタック" aria-live="polite" hidden>
+    <div class="central-stack-title">解決待ち / STACK</div>
+    <div class="stack-box" id="stackBox"></div>
+    <div class="priority-line" id="priorityLine"></div>
+  </section>
+  <div id="drawProgressPanel" class="draw-progress-panel" role="status" aria-live="polite" hidden></div>
 
   <div class="half you-half">
     <div class="player-head">
@@ -1117,9 +1176,6 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
 <aside class="side" id="sidePanel">
   <h2>Card Inspector</h2>
   <div class="inspector" id="inspector"><div class="big">No card selected</div><div class="sub">カードを選択してください</div><p>手札や戦場のカードをクリックすると、ここに詳細が表示されます。</p></div>
-  <h2>解決待ち / Priority</h2>
-  <div class="stack-box" id="stackBox"><div class="stack-empty">解決待ちのカードはありません</div></div>
-  <div class="priority-line" id="priorityLine">優先権：-</div>
   <h2>Action Log</h2>
   <div class="log" id="log"></div>
   <div class="actions">
@@ -1154,7 +1210,7 @@ body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1p
 
 <div class="handbar">
   <div class="hand-info"><b>YOUR HAND</b><span id="handCount">7 cards</span><br><span>流脈：マナ生成 / 召喚士：専用能力</span><button class="mobile-hand-toggle" id="mobileHandToggle">手札を縮小</button></div>
-  <div class="hand" id="hand"></div>
+  <div class="hand" id="hand" title="手札をタップして拡大"></div>
 </div>
 </div>
 
@@ -1402,9 +1458,9 @@ function init(p1Names=null,p2Names=null,firstSide="you"){
   const p2=p2Names || selectedDeckNames("p2DeckSelect");
   firstSide=firstSide==="cpu"?"cpu":"you";
   G={
-    you:{hp:20,deck:buildDeckFromNames(p1,"you"),hand:[],field:[],lands:[],summoners:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
+    you:{hp:20,deck:buildDeckFromNames(p1,"you"),hand:[],field:[],lands:[],summoners:[],grave:[],land:false,manaPool:[],drawPending:0,drawEffect:null,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
-    cpu:{hp:20,deck:buildDeckFromNames(p2,"cpu"),hand:[],field:[],lands:[],summoners:[],grave:[],land:false,manaPool:[],drawPending:0,afterDraw:null,
+    cpu:{hp:20,deck:buildDeckFromNames(p2,"cpu"),hand:[],field:[],lands:[],summoners:[],grave:[],land:false,manaPool:[],drawPending:0,drawEffect:null,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
     turn:firstSide,turnNo:1,phase:"MAIN PHASE",preparing:false,selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:firstSide,passCount:0,resolvingStack:false,pendingPlayDraft:null,
     pendingSummonerTriggers:[],processingSummonerTrigger:false,triggerTargetPending:false,endingTurnSide:null
@@ -1435,15 +1491,37 @@ function begin(w,first=false){
   log(sideLabel(w)+"のターン開始。"+(first?"先攻のため開始ドローはありません。":"DRAWボタンで1枚引いてください。"));
 }
 function draw(w){ const p=G[w]; if(!p.deck.length){p.hp=0;check();return null;} const c=p.deck.pop(); p.hand.push(c); return c; }
-function requestDraw(w,count=1,afterDraw=null){
-  const p=G[w]; p.drawPending=(p.drawPending||0)+count; if(afterDraw) p.afterDraw=afterDraw;
+function requestDraw(w,count=1,afterDraw=null,sourceName=null){
+  const p=G[w];
+  p.drawPending=(p.drawPending||0)+count;
+  if(sourceName){p.drawEffect={source:sourceName,total:count,remaining:count};}
+  if(afterDraw)p.afterDraw=afterDraw;
+  renderDrawProgress();
+}
+function clearDrawEffect(w,sourceName=null){
+  const d=G?.[w]?.drawEffect;
+  if(d&&(!sourceName||d.source===sourceName))G[w].drawEffect=null;
+  renderDrawProgress();
+}
+function renderDrawProgress(){
+  const panel=el("drawProgressPanel");if(!panel)return;
+  const pending=G?["you","cpu"].filter(w=>G[w].drawEffect).map(w=>({w,...G[w].drawEffect})):[];
+  panel.hidden=!pending.length;
+  panel.replaceChildren();
+  pending.forEach(d=>{
+    const line=document.createElement("div");
+    line.className="draw-progress-line";
+    line.textContent=sideLabel(d.w)+" 《"+d.source+"》："+d.total+"枚ドロー"+(d.remaining>0?"（残り"+d.remaining+"枚）":"（ドロー完了・効果処理中）");
+    panel.appendChild(line);
+  });
 }
 function playerDraw(){
   if(G.over)return;
-  const w=activeSide(),p=G[w];
+  const w=G[activeSide()].drawPending>0?activeSide():opponentSide(activeSide()),p=G[w];
   if(p.drawPending<=0)return toast("現在ドローできません");
   if(!p.deck.length){p.hp=0;check();render();return;}
   draw(w); p.drawPending--;
+  if(p.drawEffect&&p.drawEffect.remaining>0)p.drawEffect.remaining--;
   log(sideLabel(w)+"がDRAWボタンで1枚引きました。");
   if(p.drawPending===0 && typeof p.afterDraw==="function"){
     const fn=p.afterDraw; p.afterDraw=null; setTimeout(()=>fn(),0);
@@ -1608,8 +1686,10 @@ function render(){
   el("youGrave").textContent=G.you.grave.length;el("cpuGrave").textContent=G.cpu.grave.length;
   el("youLandCount").textContent=G.you.lands.length;el("cpuLandCount").textContent=G.cpu.lands.length;
   el("handCount").textContent=G.you.hand.length+" cards";
-  renderManaPool("you");renderManaPool("cpu");renderStack();
-  el("drawBtn").textContent="DRAW "+sideLabel(G.turn);el("drawBtn").disabled=G.over||G[G.turn].drawPending<=0;
+  renderManaPool("you");renderManaPool("cpu");renderStack();renderDrawProgress();
+  const drawOwner=G[G.turn].drawPending>0?G.turn:opponentSide(G.turn);
+  el("drawBtn").textContent="DRAW "+sideLabel(drawOwner)+(G[drawOwner].drawEffect?" (残"+G[drawOwner].drawEffect.remaining+")":"");
+  el("drawBtn").disabled=G.over||G[drawOwner].drawPending<=0;
   el("topTurn").textContent="TURN "+G.turnNo;el("turnPill").textContent=G.over?(G.you.hp>0?"PLAYER 1 WINS":"PLAYER 2 WINS"):sideLabel(G.turn)+" TURN";el("phase").textContent=G.phase;
   fill("hand",G.you.hand,"hand");fill("cpuHandCards",G.cpu.hand,"cpuHand");fill("youField",G.you.field,"youField");fill("cpuField",G.cpu.field,"cpuField");appendPendingFieldCards("you");appendPendingFieldCards("cpu");fill("youLands",G.you.lands,"youLand");fill("cpuLands",G.cpu.lands,"cpuLand");fill("youSummoner",G.you.summoners,"youSummoner");fill("cpuSummoner",G.cpu.summoners,"cpuSummoner");
   if(G.selected){const s=findById(G.selected);if(s)showInspector(s);}
@@ -1830,8 +1910,8 @@ function resolveSummonerAbility(entry){
     case "face2":dealDamage("face",2,source,opp,w);complete();return;
     case "grantHaste":{const x=one();if(x){x.summon=false;log("《"+source+"》：《"+x.name+"》はターン終了時まで【速攻】を得ました。");}else invalid();complete();return;}
     case "destroyTriggerBurn2":{const x=one();if(x)dealDamage(x,2,source,opp,w);else invalid();complete();return;}
-    case "endDrawIf2Attacks":requestDraw(w,1,complete);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
-    case "tribeSummonDraw":requestDraw(w,1,complete);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
+    case "endDrawIf2Attacks":requestDraw(w,1,()=>{complete();clearDrawEffect(w,source);},source);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
+    case "tribeSummonDraw":requestDraw(w,1,()=>{complete();clearDrawEffect(w,source);},source);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
     case "reorderTop3":reorderTop3Ability(w,source,complete);return;
     case "oppSpMinus1NextEnd":{const x=one();if(x){applyTemporarySpMod(x,-1,G.turnNo+1);log("《"+source+"》：《"+x.name+"》のSPを次のターン終了時まで-1しました。");}else invalid();complete();return;}
     case "tapOppUntapped":{const x=one();if(x&&!x.tapped)tapAsUsed(x);else invalid();complete();return;}
@@ -1843,10 +1923,10 @@ function resolveSummonerAbility(entry){
     case "heal1":healLP(w,1,source);complete();return;
     case "oppBlockPowerPlus2NextEnd":{const x=one();if(x){applyBlockingPowerMod(x,2000,G.turnNo+1);log("《"+source+"》：《"+x.name+"》は次のターン終了時までブロックするときパワー+2000を得ました。");}else invalid();complete();return;}
     case "endUntapAll":G[w].field.filter(x=>x.t==="monster").forEach(untapByEffect);log("《"+source+"》：自分のモンスターを全てアンタップしました。");complete();return;
-    case "endDrawSummonerOnly":requestDraw(w,1,complete);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
+    case "endDrawSummonerOnly":requestDraw(w,1,()=>{complete();clearDrawEffect(w,source);},source);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
     case "hpMinus1NextEnd":{const x=one();if(x)applyLongPowerMod(x,-1,G.turnNo+1,w);else invalid();complete();return;}
     case "grantDeathtouch":{const x=one();if(x){x.burst=true;log("《"+source+"》：《"+x.name+"》はターン終了時まで【炸裂】を得ました。");}else invalid();complete();return;}
-    case "draw1SelfDamage2":requestDraw(w,1,()=>{dealDamage("face",2,source,w,w);complete();});log("《"+source+"》：1枚ドロー。DRAW後、自分に2ダメージ。DRAWボタンを押してください。");render();return;
+    case "draw1SelfDamage2":requestDraw(w,1,()=>{dealDamage("face",2,source,w,w);complete();clearDrawEffect(w,source);},source);log("《"+source+"》：1枚ドロー。DRAW後、自分に2ダメージ。DRAWボタンを押してください。");render();return;
     case "millTop1":{
       if(G[w].deck.length){const x=G[w].deck.pop();prepareCardForHandOrGrave(x);G[w].grave.push(x);log("《"+source+"》：山札の一番上《"+x.name+"》を墓地へ送りました。");}
       else log("《"+source+"》：山札が空です。");
@@ -2039,9 +2119,10 @@ function selectionLabel(entry){
 }
 function renderStack(){
   if(!G)return;
-  const box=el("stackBox"),line=el("priorityLine"),btn=el("passBtn");
+  const box=el("stackBox"),line=el("priorityLine"),btn=el("passBtn"),panel=el("centralStackPanel");
   if(!box||!line||!btn)return;
   box.innerHTML="";
+  if(panel)panel.hidden=!G.stack.length;
   if(!G.stack.length){
     box.innerHTML='<div class="stack-empty">解決待ちのカードはありません</div>';
     line.textContent=G.resolvingStack?"解決待ちを連続処理中":"優先権：通常進行";
@@ -2122,7 +2203,22 @@ function selectTargetsBeforeStack(c,w,done){
   const k=c.effectKey,opp=opponentSide(w);
   const ownMon=()=>G[w].field.filter(x=>x.t==="monster");
   const oppMon=()=>G[opp].field.filter(x=>x.t==="monster");
-  const required=(list,title,zone,ownerFn=null)=>showPreStackSingle(list,title,zone,done,ownerFn);
+  const required=(list,title,zone,ownerFn=null)=>{
+    if(!list.length){
+      toast("《"+c.name+"》：対象にできるカードがありません");
+      if(c.t==="monster")done({targets:[]}); // monster enters battlefield; its targeted ETB effect fizzles
+      return true; // handled: never allow a targeted spell with no target to be cast
+    }
+    return showPreStackSingle(list,title,zone,done,ownerFn);
+  };
+  const maybeMulti=(list,title,zone,max,ownerFn=null)=>{
+    if(!list.length){
+      toast("《"+c.name+"》：対象にできるカードがありません");
+      if(c.t==="monster")done({targets:[]});
+      return true;
+    }
+    return showPreStackMulti(list,title,zone,max,done,ownerFn,true);
+  };
 
   if(k==="counterPlay"){
     const entries=[...G.stack].reverse().filter(e=>e.kind==="card"&&e.card?.t!=="summoner"&&e.owner!==w);
@@ -2152,12 +2248,17 @@ function selectTargetsBeforeStack(c,w,done){
     case "destroyOppMonster": return required(oppMon(),"《"+c.name+"》：破壊する相手モンスターを選択","field",()=>opp);
     case "hpMinus3UntappedOpp": return required(oppMon().filter(x=>!x.tapped),"《"+c.name+"》：パワーを-3000するアンタップ状態の相手モンスターを選択","field",()=>opp);
     case "recoverOne": return required(G[w].grave.filter(x=>x.t==="monster"),"《"+c.name+"》：手札に戻す墓地モンスターを選択","grave",()=>w);
-    case "tapUpTo2": return showPreStackMulti(oppMon(),"《"+c.name+"》：最大2体を対象に選択","field",2,done,()=>opp,true);
-    case "recoverUpTo2": return showPreStackMulti(G[w].grave.filter(x=>x.t==="monster"),"《"+c.name+"》：最大2体を対象に選択","grave",2,done,()=>w,true);
-    case "soulDrain": return showPreStackMulti(ownMon(),"《"+c.name+"》：破壊する自分のモンスターを選択","field",Math.max(ownMon().length,1),done,()=>w,true);
+    case "freeSummon3": {
+      const choices=G[w].hand.filter(x=>x!==c&&x.t==="monster"&&x.c<=3);
+      if(!choices.length){toast("《"+c.name+"》：召喚できる手札のモンスターがありません");return true;}
+      return false; // existing resolution UI handles selection of these cards
+    }
+    case "tapUpTo2": return maybeMulti(oppMon(),"《"+c.name+"》：最大2体を対象に選択","field",2,()=>opp);
+    case "recoverUpTo2": return maybeMulti(G[w].grave.filter(x=>x.t==="monster"),"《"+c.name+"》：最大2体を対象に選択","grave",2,()=>w);
+    case "soulDrain": return maybeMulti(ownMon(),"《"+c.name+"》：破壊する自分のモンスターを選択","field",Math.max(ownMon().length,1),()=>w);
     case "destroyOneEach": {
       const own=ownMon(),enemy=oppMon();
-      if(!own.length||!enemy.length){toast("自分と相手の両方に対象モンスターが必要です");return true;}
+      if(!own.length||!enemy.length){toast("自分と相手の両方に対象モンスターが必要です");if(c.t==="monster")done({targets:[]});return true;}
       return showPreStackSingle(own,"《"+c.name+"》：自分の破壊するモンスターを選択","field",sel1=>{
         const first=sel1.targets[0];
         showPreStackSingle(enemy,"《"+c.name+"》：相手の破壊するモンスターを選択","field",sel2=>done({targets:[first,sel2.targets[0]]}),()=>opp);
@@ -2288,7 +2389,7 @@ function playCard(i,w=activeSide(),free=false){
 
 function onSummon(c,w,entry=null,done=null){
   const k=c.effectKey,opp=opponentSide(w),sel=entry?.selection||null;
-  const complete=()=>{render();check();if(typeof done==="function")done();else if(entry&&G.resolvingStack)continueStackResolution();};
+  const complete=()=>{clearDrawEffect(w,c.name);render();check();if(typeof done==="function")done();else if(entry&&G.resolvingStack)continueStackResolution();};
   const one=()=>sel?.targets?.length?resolveTargetRef(sel.targets[0]):null;
   const many=()=>sel?.targets?.map(resolveTargetRef).filter(Boolean)||[];
   const invalid=()=>log("《"+c.name+"》：指定した対象が解決時に存在しないため、その対象への効果は不発になりました。");
@@ -2317,10 +2418,10 @@ function onSummon(c,w,entry=null,done=null){
   }
 
   switch(k){
-    case "draw1": requestDraw(w,1,()=>complete()); log(c.name+"の効果：1枚ドロー。DRAWボタンを押してください。");render();return;
-    case "draw2": requestDraw(w,2,()=>complete()); log(c.name+"の効果：2枚ドロー。DRAWボタンを押してください。");render();return;
-    case "draw3": requestDraw(w,3,()=>complete()); log(c.name+"の効果：3枚ドロー。DRAWボタンを押してください。");render();return;
-    case "draw5Bottom4": requestDraw(w,5,()=>openChooseFromHand(w,4,"オムニ・マインド：山札の下に置く4枚を選択",cards=>{cards.forEach(c2=>{const idx=G[w].hand.indexOf(c2);if(idx>=0)G[w].hand.splice(idx,1);});G[w].deck.unshift(...cards);log("オムニ・マインド：選んだ4枚を山札の下に置きました。");complete();}));render();return;
+    case "draw1": requestDraw(w,1,()=>complete(),c.name); log(c.name+"の効果：1枚ドロー。DRAWボタンを押してください。");render();return;
+    case "draw2": requestDraw(w,2,()=>complete(),c.name); log(c.name+"の効果：2枚ドロー。DRAWボタンを押してください。");render();return;
+    case "draw3": requestDraw(w,3,()=>complete(),c.name); log(c.name+"の効果：3枚ドロー。DRAWボタンを押してください。");render();return;
+    case "draw5Bottom4": requestDraw(w,5,()=>openChooseFromHand(w,4,"オムニ・マインド：山札の下に置く4枚を選択",cards=>{cards.forEach(c2=>{const idx=G[w].hand.indexOf(c2);if(idx>=0)G[w].hand.splice(idx,1);});G[w].deck.unshift(...cards);log("オムニ・マインド：選んだ4枚を山札の下に置きました。");complete();}),c.name);render();return;
     case "destroyOppLand": chooseFromList(G[opp].lands,sideLabel(opp)+"の流脈ゾーンのカードを1枚選択",x=>{destroyLand(x,opp);complete();});return;
     case "damageAll3": G[opp].field.filter(x=>x.t==="monster").slice().forEach(x=>dealDamage(x,3,c.name,opp,w));break;
     case "bounceAllOpp": bounceAll(opp);break;
@@ -2465,10 +2566,10 @@ function activateSpell(c,w=activeSide(),entry=null){
     default: simpleSpell(c,w,()=>{});break;
   }
 }
-function finishSpell(c,w){ if(G[w].field.some(x=>x.id===c.id)){G[w].field=G[w].field.filter(x=>x.id!==c.id);prepareCardForHandOrGrave(c);G[w].grave.push(c);}G.action=null;render();check();if(G.resolvingStack)continueStackResolution();else{G.priority=G.turn;G.passCount=0;} }
+function finishSpell(c,w){ clearDrawEffect(w,c.name); if(G[w].field.some(x=>x.id===c.id)){G[w].field=G[w].field.filter(x=>x.id!==c.id);prepareCardForHandOrGrave(c);G[w].grave.push(c);}G.action=null;render();check();if(G.resolvingStack)continueStackResolution();else{G.priority=G.turn;G.passCount=0;} }
 function simpleSpell(c,w,fn){fn();finishSpell(c,w);}
 function requestThenFinishDrawSpell(c,w,count,after=null){
-  requestDraw(w,count,()=>{if(after)after();else finishSpell(c,w);});
+  requestDraw(w,count,()=>{if(after)after();else finishSpell(c,w);},c.name);
   log("《"+c.name+">："+count+"枚ドロー。DRAWボタンを押してください。");render();
 }
 function targetSpell(c,w,fn,list){
@@ -2975,11 +3076,36 @@ el("endBtn").onclick=requestEndTurn;
 el("newBtn").onclick=openDeckSetup;
 
 
+function setHandsCompact(compact){
+  document.body.classList.toggle("hands-compact",!!compact);
+  const toggle=el("mobileHandToggle");if(toggle)toggle.textContent=compact?"手札を拡大":"手札を縮小";
+}
+// v31.1: Field cards are interactive and must not collapse the hands.
+// Only tapping/clicking outside of field cards and hand areas collapses them.
+// Capture phase makes the decision before a card click can re-render its DOM.
+const yourHandSurface=document.querySelector(".handbar");
+const opponentHandSurface=document.querySelector(".opponent-hand-wrap");
+document.addEventListener("click",e=>{
+  if(!(e.target instanceof Element))return;
+  // Both hand areas remain tap-to-expand (never collapse on hand interaction).
+  if(e.target.closest(".handbar, .opponent-hand-wrap"))return;
+  // Monsters, flow cards, summoners, and their buttons/icons are all exempt.
+  if(e.target.closest(".table .zone-row .card"))return;
+  setHandsCompact(true);
+},true);
+for(const handSurface of [yourHandSurface,opponentHandSurface]){
+  if(!handSurface)continue;
+  handSurface.addEventListener("click",e=>{
+    if(document.body.classList.contains("hands-compact")){
+      e.preventDefault();e.stopPropagation();
+      setHandsCompact(false); // first tap only expands; second tap selects a card
+    }
+  },true);
+}
 const mobileHandToggle=document.getElementById("mobileHandToggle");
 if(mobileHandToggle){
   mobileHandToggle.addEventListener("click",()=>{
-    document.body.classList.toggle("hand-collapsed");
-    mobileHandToggle.textContent=document.body.classList.contains("hand-collapsed")?"手札を開く":"手札を縮小";
+    setHandsCompact(!document.body.classList.contains("hands-compact"));
   });
 }
 

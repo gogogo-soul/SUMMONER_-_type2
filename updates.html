@@ -47,11 +47,30 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v30</div>
+    <div class="latest">LATEST · Beta2 v31.1</div>
   </section>
 
   <section class="timeline">
     <article class="release latest-release">
+      <div class="release-head"><div><div class="version">Beta2 v31.1</div><div class="release-title">手札表示切替のクリック判定を修正</div></div><div class="tag">LATEST</div></div>
+      <ul>
+        <li>戦場・流脈ゾーン・召喚士ゾーンのカードと操作アイコンをクリック／タップしても手札の大きさは変わりません。</li>
+        <li>カード・手札以外（余白、操作ボタン、情報パネルなど）のクリック／タップで手札を縮小します。手札を押すと再び拡大します。</li>
+        <li>ゲーム本体のルール、初期デッキ7種類、中央スタック、ドロー表示、指定PDFは変更していません。</li>
+      </ul>
+    </article>
+
+    <article class="release">
+      <div class="release-head"><div><div class="version">Beta2 v31</div><div class="release-title">手札表示切替・対象チェック・中央スタック・ドロー処理表示</div></div><div class="tag">LATEST</div></div>
+      <ul>
+        <li>盤面をクリック／タップすると両者の手札を縮小し、手札部分をクリック／タップすると拡大。縮小中も手札の枚数が分かるよう小さなカードを残します。</li>
+        <li>《墓荒らし》など必須の対象がない魔法は、マナやLPを支払う前に発動を拒否。対象がいない登場時効果モンスターは召喚でき、対象効果だけ不発になります。</li>
+        <li>解決待ちスタックをINFOから移し、両者の間に表示。優先権と解決順が見えるようにしました。</li>
+        <li>複数枚ドロー効果中はフィールドに効果名・総枚数・残り枚数を継続表示。後続のカード選択がある場合も完了まで表示します。</li>
+        <li>初期デッキ7種類、ローカル保存デッキの一度きりの削除処理、ユーザー指定ルールブックPDF、オンライン準備機能は維持。</li>
+      </ul>
+    </article>
+    <article class="release">
       <div class="release-head"><div><div class="version">Beta2 v30</div><div class="release-title">初期デッキ7種類へ変更・保存デッキ全削除</div></div><div class="tag">LATEST</div></div>
       <ul>
         <li>指定されたSMN2デッキコード7件を初期デッキに反映（赤・青・緑・黄・黒・赤青緑・青緑黒）。通常50枚＋召喚士1枚を維持。</li>

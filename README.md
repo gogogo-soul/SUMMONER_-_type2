@@ -1,3 +1,19 @@
+# SUMMONER Beta2 v32 — ONLINE DUEL ALPHA (2026-10-24)
+
+本ZIPは既存のv31.1ローカル対戦を残したまま、オンライン用の対戦画面とCloudflare Workers＋Durable Objects用サーバーを追加しています。
+**オンライン用コードは動作テスト可能ですが、実際のCloudflareへのデプロイと2端末通信試験は未実施です。**
+
+まず `ONLINE_DEPLOY.md` を読んでください。オンラインの未対応・要検証項目は `ONLINE_LIMITATIONS.md` にあります。
+
+- `index.html`：タイトル画面／オンラインへの入口
+- `summoner.html`：これまでの同端末2人ローカル対戦
+- `online.html` / `online-client.js`：非公開手札のオンライン対戦画面
+- `online-config.js`：Cloudflare Worker URLの設定
+- `online-server/`：サーバー一式。Workerへデプロイする。GitHub Pagesでは実行できません
+- `SUMMONER_Rulebook_Beta.pdf`：アップロードされたPDFを維持
+- `starter-decks.js`：指定7種類の初期デッキを維持
+
+---
 # SUMMONER Beta2 v31.1 — 手札表示のクリック判定修正（2026-10-24）
 
 - 戦場・流脈ゾーン・召喚士ゾーンに置かれたカード本体やカード操作アイコンをクリック／タップしても手札を縮小しません。

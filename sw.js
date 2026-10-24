@@ -1,9 +1,11 @@
-const CACHE_NAME = "summoner-pwa-v31-1-hand-click-exceptions-r1";
+const CACHE_NAME = "summoner-pwa-v32-online-duel-alpha1-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./summoner.html",
   "./online.html",
+  "./online-client.js",
+  "./online-config.js",
   "./deckbuilder.html",
   "./decklibrary.html",
   "./updates.html",

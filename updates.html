@@ -47,10 +47,20 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v31.1</div>
+    <div class="latest">LATEST · Beta2 v32 (オンライン対戦アルファ)</div>
   </section>
 
   <section class="timeline">
+    <article class="release latest-release">
+      <div class="release-head"><div><div class="version">Beta2 v32</div><div class="release-title">サーバー管理・非公開手札のオンライン対戦アルファ版</div></div><div class="tag">ONLINE ALPHA</div></div>
+      <ul>
+        <li>無料枠のCloudflare Workers＋Durable Objects（WebSocket）用サーバーを追加。招待コードで2人が別端末から参加できます。</li>
+        <li>サーバー側でデッキ検証・山札のシャッフル・ドロー・マナ・プレイ・スタック・ターン・バトルを管理。相手には手札と山札の内容を送らず枚数だけ表示します。</li>
+        <li>初期デッキ7種類とブラウザ保存デッキで対戦。両者の準備完了後に自動開始し、切断時は再接続を試みます。</li>
+        <li>ローカル版の対戦画面は維持。オンライン版は新しい実装のため、すべての特殊効果の完全一致は未検証です。</li>
+        <li>GitHub Pagesに静的ファイルを公開するだけでは動きません。Cloudflareの無料アカウントでサーバーをデプロイする必要があります（ONLINE_DEPLOY.md）。</li>
+      </ul>
+    </article>
     <article class="release latest-release">
       <div class="release-head"><div><div class="version">Beta2 v31.1</div><div class="release-title">手札表示切替のクリック判定を修正</div></div><div class="tag">LATEST</div></div>
       <ul>

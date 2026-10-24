@@ -1,185 +1,44 @@
 <!doctype html>
-<html lang="ja">
-<head>
-<script src="deck-reset-v30.js"></script>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0e13">
-<title>SUMMONER - ONLINE LOBBY / 接続準備</title>
-<link rel="manifest" href="manifest.json">
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101723"><title>SUMMONER ONLINE — 非公開手札PvP</title><link rel="manifest" href="manifest.json">
 <style>
-:root{color-scheme:dark;--bg:#0b0e13;--panel:#151e2a;--border:#465468;--text:#ecf2fb;--sub:#b1bbca;--accent:#3a89c1;--gold:#e9c66a}
-*{box-sizing:border-box}body{background:radial-gradient(circle at 50% -10%,#20384d 0%,#0b0e13 60%);color:var(--text);margin:0;font:14px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #35435a;padding:15px 4vw;gap:12px}header strong{letter-spacing:.12em;font-size:18px}a{color:#9bdbff}header a{border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-decoration:none;color:var(--text)}
-main{width:min(840px,calc(100% - 32px));margin:32px auto 80px}.eyebrow{font-size:11px;letter-spacing:.25em;color:#88bbdb;font-weight:800}h1{font-size:clamp(24px,5vw,36px);letter-spacing:.06em;margin:6px 0 9px}h2{font-size:18px;margin:0 0 13px}.intro{color:var(--sub);margin:0 0 24px}.note{border:1px solid #6b6048;background:#272318;padding:14px 16px;border-radius:10px;line-height:1.7;color:#f3d6a1}.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:17px}.panel{background:var(--panel);padding:20px;border:1px solid var(--border);border-radius:14px}.panel.full{grid-column:1/-1}.panel p{margin:4px 0 13px;color:var(--sub)}label{display:block;font-size:12px;color:var(--sub);font-weight:700;margin:9px 0 5px}input{border:1px solid #697b91;border-radius:7px;padding:11px 12px;background:#0b131e;color:white;width:100%;font-size:16px}.buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}button{border:1px solid #698196;color:#fff;border-radius:8px;min-height:43px;padding:9px 16px;background:#23364c;font-size:13px;font-weight:800;cursor:pointer}button.primary{background:#236da2;border-color:#6ebbef}button:disabled{opacity:.42;cursor:not-allowed}.status{font-size:12px;margin:18px 0;padding:12px;border-left:3px solid #70adcf;background:#152434;white-space:pre-wrap}.status.error{border-color:#ef8c79;background:#302024}.hidden{display:none!important}.player-row{display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid #334252;padding:10px 1px}.player-row:last-child{border-bottom:0}.phase{font-weight:900;color:var(--gold)}.room-code{font-size:clamp(26px,5vw,44px);font-weight:900;letter-spacing:.15em;user-select:all}.room-link{word-break:break-all;font-size:12px}.steps{color:var(--sub);padding-left:20px;margin-bottom:0}.small{font-size:12px;color:var(--sub)}
-@media(max-width:650px){.panels{grid-template-columns:1fr}.panel.full{grid-column:1}.panel{padding:17px}main{margin-top:23px}button{flex:1}header strong{font-size:15px}}
-</style>
-</head>
-<body>
-<header><strong>SUMMONER <span style="color:#b8d3e8;font-size:10px">ONLINE LOBBY</span></strong><a href="index.html">タイトルへ戻る</a></header>
+:root{color-scheme:dark;--bg:#0c111b;--card:#1a2535;--line:#4b647d;--text:#eef4ff;--sub:#a7b7ce;--accent:#4ca6df;--gold:#e7c77e}
+*{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(ellipse at 50% 0%,#1c3446 0%,var(--bg) 70%);font:14px/1.5 system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer;border:1px solid #56748d;border-radius:8px;padding:9px 12px;background:#25364a;color:var(--text);font-weight:700;min-height:38px}button:hover{background:#345375}button:disabled{opacity:.42;cursor:not-allowed}input,select{background:#101c2b;color:#eef4ff;border:1px solid #62758f;border-radius:7px;padding:11px;min-height:42px;width:100%}.primary{background:#236d9e;border-color:#8bd2ff}.danger{background:#59303a;border-color:#bd717c}.muted{color:var(--sub);font-size:12px}.hidden{display:none!important}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 3vw;border-bottom:1px solid #334960;background:#0b111bcf}header strong{font-size:20px;letter-spacing:.13em}header a{color:#abdfff;text-decoration:none}header small{display:block;color:#92a8bf;font-size:11px}main{max-width:1480px;margin:auto;padding:18px 20px 100px}h1{font-size:28px;margin:5px 0 8px}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0 0 8px;color:#c7e1f5}.panel{border:1px solid #405670;background:linear-gradient(145deg,#1b2637,#141d2c);border-radius:12px;padding:18px}.lobby{max-width:870px;margin:20px auto}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}label{display:block;font-weight:700;font-size:12px;margin:8px 0 5px;color:#b7cbe1}.buttonline{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.status{margin:10px 0;padding:10px 13px;background:#1a3443;border-left:3px solid #62b5dc;border-radius:5px;white-space:pre-wrap}.status.err{background:#40262c;border-color:#e58282}.code{font-size:30px;letter-spacing:.12em;font-weight:900;color:var(--gold)}
+#duelView{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px}.board{min-width:0;position:relative;border:1px solid #5b6d77;border-radius:14px;background:linear-gradient(180deg,#182e36 0%,#2e4543 46%,#334337 50%,#182f35 100%);box-shadow:inset 0 0 65px #08121699;padding:10px;display:flex;flex-direction:column;gap:5px}.player-info{display:flex;align-items:center;justify-content:space-between;gap:9px;border-radius:7px;background:#081725ab;padding:6px 12px}.player-info .hp{font-size:22px;font-weight:900;color:#f7d8a0}.area{border:1px solid #ffffff37;border-radius:9px;padding:7px;min-height:89px;background:#07152646}.area .caption{font-weight:700;letter-spacing:.09em;color:#c3dee1;font-size:11px;margin-bottom:5px}.zone-row{display:flex;gap:7px;overflow-x:auto;min-height:65px;scrollbar-width:thin}.card{width:91px;min-width:91px;min-height:106px;padding:7px 5px 5px;border:1px solid #9aaabe;border-radius:7px;background:linear-gradient(180deg,#263c50,#101d2b);display:flex;flex-direction:column;justify-content:space-between;gap:2px;color:#fff;text-align:left;position:relative;user-select:none}.card.monster{background:linear-gradient(140deg,#334d5f,#172b3c)}.card.spell{background:linear-gradient(140deg,#444061,#23243a)}.card.land{background:linear-gradient(140deg,#37594f,#183e33)}.card.summoner{background:linear-gradient(140deg,#795b3c,#3e3023);border-color:#e6c58a}.card.unknown{background:repeating-linear-gradient(45deg,#263b51 0px,#263b51 10px,#152335 10px,#152335 20px)}.card.tapped{transform:rotate(4deg);opacity:.63;border-color:#8f7a64}.card .cost{font-size:10px;color:#f1e1a2}.card .name{font-weight:800;font-size:12px;overflow-wrap:anywhere;line-height:1.3}.card .stats{font-weight:900;color:#ffe5a6;display:flex;justify-content:space-between;font-size:11px}.card .type{font-size:10px;color:#c4d6e9}.card.selected{outline:3px solid var(--gold)}.face{min-height:70px;flex:1;text-align:center;border:1px dashed #a4b5ba55;padding:16px;font-size:12px;border-radius:9px}.battle-divider{min-height:67px;padding:9px 8px;background:#0b1823d9;border:1px solid #69879b;border-radius:10px;display:flex;align-items:center;gap:9px;justify-content:center;position:relative;z-index:2}.battle-divider strong{color:#f7deb1}.battle-divider .stack-items{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}.battle-divider .item{border-radius:5px;background:#273d56;padding:5px 8px;border:1px solid #7089a5;font-size:11px}.player-grid{display:grid;grid-template-columns:minmax(0,1fr) 124px;gap:7px}.side-zone{display:grid;align-content:start;gap:5px}.side-zone .tiny{border:1px solid #94a1a352;min-height:56px;border-radius:8px;padding:8px 5px;text-align:center;background:#142a3288;font-size:11px}.handline{border:1px solid #ffffff36;padding:10px 8px;border-radius:9px;background:#102134af}.back{display:inline-grid;place-items:center;min-width:50px;height:69px;border:1px solid #607b92;border-radius:6px;background:repeating-linear-gradient(45deg,#1c324d 0,#1c324d 8px,#0c1c2f 8px,#0c1c2f 16px);font-size:15px;color:#acc8dc}.sidebar{display:flex;flex-direction:column;gap:12px;min-width:0}.sidebar .panel{padding:14px}.minigap{display:flex;flex-wrap:wrap;gap:5px}.minigap button{font-size:12px;padding:8px}.battle-guide{font-size:12px;color:#dae7f2;white-space:pre-wrap}.scroll{max-height:195px;overflow:auto}.logline{font-size:12px;border-bottom:1px solid #354556;padding:6px 0;color:#d4deea}.status-main{font-size:14px;font-weight:700;color:#ebd5a1}.tips{border:1px solid #806f49;padding:9px;border-radius:6px;color:#f4dba4;font-size:12px}.player-counter{font-size:12px;color:#a6dbf4}
+.dialog{position:fixed;inset:0;background:#03070cba;z-index:20;display:grid;place-items:center;padding:12px}.dialog>div{max-width:620px;width:100%;max-height:92dvh;overflow:auto;border:1px solid #6c8aa5;background:#162438;border-radius:12px;padding:20px;box-shadow:0 20px 80px #0009}.dialog h2{font-size:19px;margin:0 0 10px}.dialog p{font-size:12px;color:#c0cbdb}.dialog .options{max-height:350px;overflow:auto;display:grid;gap:7px}.dialog .options button{text-align:left;overflow-wrap:anywhere}.dialog .options .active{background:#295c76;border-color:#ffd18c}.dialog footer{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+@media(max-width:950px){#duelView{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sidebar .panel{min-width:0}}
+@media(max-width:560px){header strong{font-size:14px}main{padding:10px 8px 40px}.grid2{grid-template-columns:1fr}.panel{padding:13px}.sidebar{display:flex}.player-grid{grid-template-columns:minmax(0,1fr) 73px;gap:4px}.side-zone .tiny{font-size:10px}.card{min-width:73px;width:73px;min-height:100px;padding:5px 3px}.card .name{font-size:10px}.card .stats{font-size:10px}.board{padding:5px}.zone-row{gap:4px}.battle-divider{flex-wrap:wrap}.player-info .hp{font-size:17px}.code{font-size:24px}}
+</style></head><body>
+<header><div><strong>SUMMONER <span style="color:#96cce6">ONLINE</span></strong><small>PRIVATE HAND / SERVER-AUTHORITATIVE BETA</small></div><a href="index.html">タイトルへ戻る</a></header>
 <main>
-<div class="eyebrow">BETA2 / NETWORK PREPARATION</div>
-<h1>オンライン対戦の接続準備</h1>
-<p class="intro">ルームコードで2台の端末を接続し、参加状況と準備完了状態を共有するためのページです。</p>
-<div class="note"><b>オンライン対戦はまだプレイできません。</b> ルームへの接続と準備状態の共有までが今回の実装です。山札・手札の秘匿、操作・ターン・スタックの同期、切断復帰は今後の開発対象です。ルームを使うにはFirebaseの認証・Firestoreおよび同梱のセキュリティルールの設定が必要です。</div>
-<div id="status" class="status" role="status" aria-live="polite">通信設定を確認中です…</div>
-<div id="setupPanels" class="panels">
-<section class="panel">
-<h2>ルームを作る</h2><p>PLAYER 1として待機し、発行したコードを相手へ送ります。</p>
-<label for="hostName">表示名</label><input id="hostName" maxlength="24" placeholder="プレイヤー1" autocomplete="nickname">
-<div class="buttons"><button id="createButton" class="primary" disabled>ルーム作成</button></div>
-</section>
-<section class="panel">
-<h2>ルームに参加する</h2><p>相手から届いたコードを入力して参加します。</p>
-<label for="guestName">表示名</label><input id="guestName" maxlength="24" placeholder="プレイヤー2" autocomplete="nickname">
-<label for="roomInput">ルームコード</label><input id="roomInput" maxlength="12" placeholder="例: A2BC3D4E5F" autocapitalize="characters" autocorrect="off" spellcheck="false">
-<div class="buttons"><button id="joinButton" class="primary" disabled>参加する</button></div>
-</section>
-</div>
-<section id="roomPanel" class="panel hidden" style="margin-top:17px">
-<h2>接続中のルーム</h2>
-<div class="room-code" id="roomCodeDisplay"></div>
-<div class="room-link" id="roomShareUrl"></div>
-<div class="buttons"><button id="copyButton">招待URLをコピー</button><button id="leaveButton">ルームを退出</button></div>
-<div style="margin-top:18px">
-  <div class="player-row"><span id="hostLabel">PLAYER 1</span><span id="hostReady" class="phase">未準備</span></div>
-  <div class="player-row"><span id="guestLabel">PLAYER 2</span><span id="guestReady" class="phase">参加待ち</span></div>
-</div>
-<div class="buttons"><button id="readyButton" class="primary">準備完了にする</button></div>
-<p id="readyMessage" class="small">両者が参加・準備完了すると「接続準備完了」と表示されます。これはオンライン対戦開始を意味しません。</p>
-</section>
-<section class="panel" style="margin-top:17px">
-<h2>今後のオンライン対戦に必要な工程</h2>
-<ol class="steps"><li>Firestoreのアクセス権・ルーム参加者の識別を確立する</li><li>両プレイヤーのデッキ検証、先攻決定と対戦開始の合意</li><li>非公開情報を相手に送らない状態管理とサーバー側のルール検証</li><li>ターン・操作・優先権・スタック・能力選択の同期</li><li>切断・再接続・不正操作対策・対戦結果の確定</li></ol>
-<p class="small">通信可能な端末からHTTPSで公開されたサイト（GitHub Pages等）を開いてください。ローカルのfile://ではFirebaseの利用を保証しません。</p>
-</section>
+ <div id="status" class="status">接続先を確認しています…</div>
+ <section id="lobbyView" class="lobby">
+  <h1>オンライン対戦</h1><div class="buttonline"><button id="changeServer">接続先URLを変更</button></div><p class="muted">別の端末にいる相手と、手札を隠して対戦します。両プレイヤーに別々の画面を配信し、山札と効果処理はサーバーが管理します。</p>
+  <div id="serverConfig" class="panel"><h2>無料サーバー接続先</h2><p class="muted">Cloudflare Workersを公開後、発行されたworkers.devのURLを入力してください。オンライン対戦サーバーの準備方法はZIP内の ONLINE_DEPLOY.md に記載しています。</p><label for="serverUrl">Worker URL</label><input id="serverUrl" type="url" placeholder="https://summoner-online-duel.****.workers.dev"><div class="buttonline"><button id="saveServer" class="primary">接続先を保存して確認</button></div></div>
+  <div class="grid2" style="margin-top:13px">
+   <div class="panel"><h2>ルームを作成</h2><label>プレイヤー名</label><input id="hostName" maxlength="24" placeholder="プレイヤー1"><button id="create" class="primary" style="margin-top:12px">ルーム作成</button></div>
+   <div class="panel"><h2>ルームへ参加</h2><label>プレイヤー名</label><input id="guestName" maxlength="24" placeholder="プレイヤー2"><label>ルームコード</label><input id="roomCode" maxlength="12" placeholder="12桁のコード"><button id="join" class="primary" style="margin-top:12px">参加する</button></div>
+  </div>
+  <section id="lobbyWait" class="panel hidden" style="margin-top:13px"><h2>対戦ルーム</h2><div class="code" id="roomLabel"></div><div class="buttonline"><button id="copyInvite">招待URLをコピー</button><button id="forgetSeat" class="danger">この端末の接続を解除</button></div><div id="roomPlayers" style="margin:12px 0"></div><label>使用デッキ（50枚＋召喚士1枚）</label><select id="deckPick"></select><div class="buttonline"><button id="selectDeck">デッキを登録</button><button id="ready" class="primary">準備完了</button></div><p class="muted">双方が準備完了すると対戦が始まります。相手にはデッキ内容も手札も公開されません（召喚士のみ開始時に公開）。</p></section>
+  <p class="tips" style="margin-top:12px">オンライン対戦は開発版です。切断後の復帰には同じブラウザの接続情報を利用します。ローカル版の全カード効果との完全な一致は検証中です。</p>
+ </section>
+ <section id="duelView" class="hidden">
+  <div class="board" id="board">
+    <div class="player-info"><strong id="opName">相手 PLAYER</strong><span class="player-counter" id="opCounts"></span><span class="hp" id="opLP">20 LP</span></div>
+    <div class="handline"><div class="muted" id="opHandLabel">相手の手札 — 非公開</div><div id="opHand" class="zone-row"></div></div>
+    <div class="player-grid"><div><div class="area"><div class="caption">相手の流脈 ≋</div><div id="opLands" class="zone-row"></div></div><div class="area" style="margin-top:5px"><div class="caption">相手の召喚士 ◎</div><div id="opSummoner" class="zone-row"></div></div><div class="area" style="margin-top:5px"><div class="caption">相手の戦場 △</div><div id="opField" class="zone-row"></div></div></div><div class="side-zone"><div id="opDeck" class="tiny"></div><div id="opGrave" class="tiny"></div></div></div>
+    <div class="battle-divider"><strong id="phaseLabel">MAIN</strong><div class="stack-items" id="stackCenter">スタックなし</div><small id="stackPriority"></small></div>
+    <div class="player-grid"><div><div class="area"><div class="caption">自分の戦場 △</div><div id="myField" class="zone-row"></div></div><div class="area" style="margin-top:5px"><div class="caption">自分の召喚士 ◎</div><div id="mySummoner" class="zone-row"></div></div><div class="area" style="margin-top:5px"><div class="caption">自分の流脈 ≋</div><div id="myLands" class="zone-row"></div></div></div><div class="side-zone"><div id="myDeck" class="tiny"></div><div id="myGrave" class="tiny"></div></div></div>
+    <div class="handline"><div class="muted">自分の手札 — 自分だけに公開</div><div id="myHand" class="zone-row"></div></div>
+    <div class="player-info"><strong id="myName">自分 PLAYER</strong><span class="player-counter" id="myMana"></span><span class="hp" id="myLP">20 LP</span></div>
+  </div>
+  <aside class="sidebar">
+    <section class="panel"><h2>対戦操作</h2><div id="turnStatus" class="status-main"></div><div id="turnHelp" class="battle-guide"></div><div class="buttonline" id="actions"><button id="drawBtn">DRAW</button><button id="battleBtn">BATTLE PHASE</button><button id="endBtn">END TURN</button><button id="passBtn">PASS</button><button id="summonerBtn">召喚士能力</button><button id="surrenderBtn" class="danger">降参</button></div></section>
+    <section class="panel"><h2>対象・カード情報</h2><div id="cardInfo" class="battle-guide">カードをクリックして詳細や操作を確認できます。</div><div class="buttonline" id="cardActions"></div></section>
+    <section class="panel"><h2>対戦ログ</h2><div class="scroll" id="gameLog"></div></section>
+    <section class="panel"><h3>サーバー情報の扱い</h3><p class="muted">自分の手札・デッキ内容は対戦相手へ送信しません。対戦操作はサーバーが検証します。通信が途切れたら自動で再接続します。</p></section>
+  </aside>
+ </section>
 </main>
-<script type="module">
-import {firebaseDb,ensureAnonymousAuth} from './firebase-config.js';
-import {doc,getDoc,setDoc,updateDoc,deleteDoc,runTransaction,onSnapshot,serverTimestamp} from 'https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js';
-const $=id=>document.getElementById(id);
-const ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const STORAGE='summoner_online_lobby_room_v24';
-let user=null,roomId=null,roomData=null,unsub=null,isBusy=false;
-const setStatus=(msg,error=false)=>{const node=$('status');node.textContent=msg;node.classList.toggle('error',error)};
-const errMsg=e=>{
- const code=e?.code||'';
- if(code==='permission-denied')return 'Firebaseの権限がありません。ONLINE_SETUP.md にあるFirestore Security Rulesを確認してください。';
- if(code==='unauthenticated')return '匿名認証が無効です。Firebase Authenticationで匿名ログインを有効にしてください。';
- if(code==='unavailable')return '通信できません。ネットワークまたはFirestoreの状態を確認してください。';
- return `${code||'エラー'}: ${e?.message||e}`;
-};
-function codeFromRandom(){const a=new Uint8Array(12);crypto.getRandomValues(a);return [...a].map(x=>ALPHABET[x%ALPHABET.length]).join('')}
-function validCode(c){return /^[A-HJ-NP-Z2-9]{12}$/.test(c)}
-function roomRef(code){return doc(firebaseDb,'duelRooms',code)}
-function displayName(v,fallback){return String(v||'').trim().slice(0,24)||fallback}
-function linkForRoom(code){const url=new URL('online.html',location.href);url.searchParams.set('room',code);return url.href}
-function setBusy(b){isBusy=b;render()}
-function render(){
- $('setupPanels').classList.toggle('hidden',!!roomId);
- $('roomPanel').classList.toggle('hidden',!roomId);
- $('createButton').disabled=!user||isBusy||!!roomId;
- $('joinButton').disabled=!user||isBusy||!!roomId;
- if(!roomId||!roomData)return;
- const mine=roomData.hostUid===user?.uid?'host':roomData.guestUid===user?.uid?'guest':null;
- $('roomCodeDisplay').textContent=roomId;
- $('roomShareUrl').textContent=linkForRoom(roomId);
- $('hostLabel').textContent=`PLAYER 1（作成者）：${roomData.hostName||'未設定'}`;
- $('guestLabel').textContent=roomData.guestUid?`PLAYER 2（参加者）：${roomData.guestName||'未設定'}`:'PLAYER 2：参加者待ち';
- $('hostReady').textContent=roomData.hostReady?'準備完了':'未準備';
- $('guestReady').textContent=!roomData.guestUid?'参加待ち':roomData.guestReady?'準備完了':'未準備';
- $('readyButton').disabled=isBusy||!mine||!roomData.guestUid;
- $('readyButton').textContent=roomData[`${mine}Ready`]?'準備完了を取り消す':'準備完了にする';
- $('readyMessage').textContent=roomData.guestUid&&roomData.hostReady&&roomData.guestReady
-  ?'接続準備完了：双方の準備状態を共有できました。盤面同期は未実装のため、オンライン対戦はまだ開始できません。'
-  :'双方が参加し、準備完了になると接続テストが完了します。オンライン対戦はまだ開始できません。';
- $('leaveButton').disabled=isBusy;
-}
-function listenRoom(code){
- if(unsub){unsub();unsub=null;}
- roomId=code;localStorage.setItem(STORAGE,code);render();
- unsub=onSnapshot(roomRef(code),snap=>{
-  if(!snap.exists()){
-   setStatus('ルームが終了しました。');detach();return;
-  }
-  const d=snap.data();
-  if(d.hostUid!==user?.uid&&d.guestUid!==user?.uid){setStatus('このルームのメンバーではありません。');detach();return;}
-  roomData=d;
-  setStatus('ルームに接続しています。参加状況と準備状態がリアルタイムで更新されます。');render();
- },e=>setStatus(errMsg(e),true));
-}
-function detach(){if(unsub){unsub();unsub=null;}roomId=null;roomData=null;localStorage.removeItem(STORAGE);render()}
-$('createButton').onclick=async()=>{
- if(!user||isBusy)return;setBusy(true);
- try{
-  const name=displayName($('hostName').value,'PLAYER 1');
-  let code=null;
-  for(let i=0;i<4;i++){
-   const c=codeFromRandom();
-   try{
-    await setDoc(roomRef(c),{schemaVersion:1,hostUid:user.uid,hostName:name,hostReady:false,guestUid:null,guestName:'',guestReady:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
-    code=c;break;
-   }catch(e){if(e?.code!=='already-exists')throw e}
-  }
-  if(!code)throw Error('ルームコードを確保できませんでした。');
-  listenRoom(code);
- }catch(e){setStatus(errMsg(e),true)}finally{setBusy(false)}
-};
-$('joinButton').onclick=async()=>{
- if(!user||isBusy)return;
- const code=$('roomInput').value.replace(/\s/g,'').toUpperCase();
- if(!validCode(code)){setStatus('12文字のルームコードを入力してください。',true);return;}
- setBusy(true);
- try{
-  const name=displayName($('guestName').value,'PLAYER 2');
-  await runTransaction(firebaseDb,async tx=>{
-    const ref=roomRef(code),s=await tx.get(ref);
-    if(!s.exists())throw Error('ルームが存在しません。コードを確認してください。');
-    const d=s.data();
-    if(d.hostUid===user.uid)throw Error('自分の作成したルームです。');
-    if(d.guestUid&&d.guestUid!==user.uid)throw Error('すでに2人参加しています。');
-    if(!d.guestUid)tx.update(ref,{guestUid:user.uid,guestName:name,guestReady:false,updatedAt:serverTimestamp()});
-  });
-  listenRoom(code);
- }catch(e){setStatus(errMsg(e),true)}finally{setBusy(false)}
-};
-$('readyButton').onclick=async()=>{
- if(!roomId||!roomData||!user||isBusy)return;
- const mine=roomData.hostUid===user.uid?'host':'guest';
- setBusy(true);try{await updateDoc(roomRef(roomId),{[`${mine}Ready`]:!roomData[`${mine}Ready`],updatedAt:serverTimestamp()})}
- catch(e){setStatus(errMsg(e),true)}finally{setBusy(false)}
-};
-$('leaveButton').onclick=async()=>{
- if(!roomId||!roomData||!user||isBusy)return;
- if(!confirm('ルームから退出しますか？作成者の場合、ルームは終了します。'))return;
- setBusy(true);
- try{
-  if(roomData.hostUid===user.uid)await deleteDoc(roomRef(roomId));
-  else await updateDoc(roomRef(roomId),{guestUid:null,guestName:'',guestReady:false,updatedAt:serverTimestamp()});
-  detach();setStatus('ルームから退出しました。');
- }catch(e){setStatus(errMsg(e),true)}finally{setBusy(false)}
-};
-$('copyButton').onclick=async()=>{
- if(!roomId)return;const text=linkForRoom(roomId);
- try{await navigator.clipboard.writeText(text);setStatus('招待URLをコピーしました。')}catch(_){setStatus('URLをコピーできません。画面のURLを選択してコピーしてください。',true)}
-};
-$('roomInput').value=(new URL(location.href)).searchParams.get('room')?.toUpperCase()||'';
-$('hostName').value=localStorage.getItem('arcana_duel_current_user')||'';
-$('guestName').value=$('hostName').value;
-async function bootstrap(){
- try{
-  user=await ensureAnonymousAuth();
-  setStatus('接続可能です。ルームを作成するか、相手のルームコードを入力してください。');
-  const previous=localStorage.getItem(STORAGE);
-  if(previous&&validCode(previous)){
-   const snap=await getDoc(roomRef(previous));
-   if(snap.exists()&&[snap.data().hostUid,snap.data().guestUid].includes(user.uid))listenRoom(previous);
-   else localStorage.removeItem(STORAGE);
-  }
- }catch(e){setStatus(errMsg(e)+'\nFirebaseの設定が未完了の場合、同梱のONLINE_SETUP.mdを参照してください。',true)}finally{render()}
-}
-bootstrap();
-</script>
-<script src="pwa.js"></script>
-</body>
-</html>
+<div id="dialog" class="dialog hidden"><div><h2 id="dialogTitle">対象選択</h2><p id="dialogHelp"></p><div class="options" id="dialogOptions"></div><footer><button id="dialogCancel">キャンセル</button><button id="dialogOk" class="primary">確定</button></footer></div></div>
+<script src="cards.js"></script><script src="starter-decks.js"></script><script src="online-config.js"></script><script src="online-client.js"></script><script src="pwa.js"></script></body></html>

@@ -1,10 +1,12 @@
-const CACHE_NAME = "summoner-pwa-v32-online-duel-alpha1-r1";
+const CACHE_NAME = "summoner-pwa-v33-online-shared-playmat-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./summoner.html",
   "./online.html",
   "./online-client.js",
+  "./online-field.css",
+  "./online-field-overrides.css",
   "./online-config.js",
   "./deckbuilder.html",
   "./decklibrary.html",

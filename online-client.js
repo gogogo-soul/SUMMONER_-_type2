@@ -4,11 +4,11 @@ const STORAGE='summoner_online_pvp_session_v1',SERVER_STORE='summoner_online_wor
 let session=null,ws=null,view=null,pending=null,selected=null,dialogCb=null,dialogChosen=[],dialogMax=1,dialogMin=1,reconnect=0,manualClose=false;
 const CE=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};
 const n=v=>String(v||'');
-const status=(msg,err=false)=>{$('status').textContent=msg;$('status').classList.toggle('err',err)};
+const status=(msg,err=false)=>{const n=$('status');n.textContent=msg;n.classList.toggle('err',err);const hud=$('onlineNotice');if(view?.game&&hud){hud.hidden=false;hud.textContent=err?'通信エラー：'+msg:msg;hud.classList.toggle('error',err);if(!err)hud.hidden=true;}};
 const server=()=>{const raw=($('serverUrl').value||'').trim().replace(/\/$/,'');if(!raw)return null;try{const u=new URL(raw);if(u.protocol!=='https:'&&!(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname)))return null;return u.origin;}catch{return null;}};
 function getServer(){return server()}
 function saveSession(r){session=r;localStorage.setItem(STORAGE,JSON.stringify(r));}
-function forget(){manualClose=true;if(ws)ws.close();session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');$('lobbyView').classList.remove('hidden');status('このブラウザからルームの接続情報を解除しました。');}
+function forget(){manualClose=true;if(ws)ws.close();session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('このブラウザからルームの接続情報を解除しました。');}
 function titleRoom(){const code=session?.code;if(!code)return '';return code;}
 function roomInvite(){const u=new URL('online.html',location.href);u.searchParams.set('room',titleRoom());if(getServer())u.searchParams.set('server',getServer());return u.href;}
 async function rest(path,data){const root=getServer();if(!root)throw Error('Cloudflare WorkerのURLを設定してください');const r=await fetch(root+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error||`通信エラー HTTP ${r.status}`);return body;}
@@ -30,34 +30,75 @@ function refreshDecks(){availableDecks=listDecks();const select=$('deckPick');se
 function deckAsNames(counts){const d=[];for(const [name,num] of Object.entries(counts||{}))for(let i=0;i<Number(num);i++)d.push(name);return d;}
 function renderLobby(){if(!view)return;const playerList=$('roomPlayers');playerList.replaceChildren();view.players.forEach((p,i)=>{const row=CE('div','player-info');row.append(CE('span','',`PLAYER ${i+1}：${p.name||'参加待ち'}`),CE('span','',`${p.hasDeck?'デッキ登録済み':'未登録'}／${p.ready?'準備完了':'未準備'}`));playerList.append(row)});const mine=view.players[view.seat];$('ready').textContent=mine.ready?'準備完了を取り消す':'準備完了';$('roomLabel').textContent=view.room;$('lobbyWait').classList.remove('hidden');}
 function empty(node){node.replaceChildren();}
-function makeCard(c,handler=null){const cEl=CE('button','card '+(c.faceDown?'unknown':c.type||'')+(c.tapped?' tapped':''));cEl.type='button';if(c.faceDown){cEl.append(CE('div','name','流脈 ≋'),CE('div','type','裏向き'));}else{cEl.append(CE('div','cost',c.cost>0?`≋${c.cost}`:c.type==='land'?'≋':' '),CE('div','name',c.name));if(c.type==='monster'){const stats=CE('div','stats');stats.append(CE('span','',`P ${c.power}`),CE('span','',`SP ${c.sp}`));cEl.append(stats);}else cEl.append(CE('div','type',c.type==='summoner'?'◎ 召喚士':c.type==='spell'?'✦ 魔法':c.type==='land'?'≋ 流脈':''));}if(handler)cEl.addEventListener('click',()=>handler(c));return cEl;}
-function putCards(node,cards,part,side){empty(node);for(const c of cards||[])node.append(makeCard(c,()=>openCard(c,part,side)));if(!cards?.length)node.append(CE('span','muted','—'));}
-function backs(node,count){empty(node);for(let i=0;i<Math.min(count,16);i++)node.append(CE('div','back','✦'));if(count>16)node.append(CE('div','back',`+${count-16}`))}
+const ICONS={monster:'△',spell:'✦',land:'≋',summoner:'◎'};
+const jpType={monster:'モンスター',spell:'魔法',land:'流脈',summoner:'召喚士'};
+function makeCard(c,handler=null,back=false){
+ const d=DB[c.name]||{};
+ const hidden=back||c.faceDown;const klass='card '+(hidden?'back':c.type||'')+(!hidden&&c.color&&c.color!=='none'?' color-'+c.color:'')+(c.tapped?' tapped':'');
+ const node=CE('div',klass);node.dataset.id=c.id||'';
+ if(hidden){node.append(CE('div','name',back?'裏向きカード':'裏向き流脈'),CE('div','art',back?'✦':'≋'));}
+ else{
+  node.append(CE('div','name',c.name),CE('div','type',`${c.code||d.code||''}${(c.code||d.code)?' / ':''}${jpType[c.type]||''}${d.race?' / '+d.race:''}`));
+  if(c.type!=='land'&&c.type!=='summoner')node.append(CE('div','cost',String(c.cost??d.c??0)));
+  node.append(CE('div','art',d.timing==='instant'?'⚡':ICONS[c.type]||'✦'));
+  if(c.type==='monster')node.append(CE('div','power-stat',String(c.power??d.power??0)),CE('div','sp-stat',String(c.sp??d.sp??0)));
+ }
+ if(handler){node.setAttribute('role','button');node.tabIndex=0;node.addEventListener('click',()=>handler(c,node));node.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handler(c,node)}});}
+ return node;
+}
+function putCards(node,cards,part,side){node.replaceChildren();for(const c of cards||[])node.append(makeCard(c,(x,dom)=>openCard(x,part,side,dom)));}
+function backs(node,count){node.replaceChildren();for(let i=0;i<count;i++)node.append(makeCard({name:'',type:'unknown'},null,true));}
 const colorWord=c=>({red:'赤',blue:'青',green:'緑',yellow:'黄',black:'黒',none:'無色'})[c]||'無色';
 function prettyMana(m){return (m||[]).length?m.map(c=>colorWord(c)).join(' / '):'なし';}
 function button(parent,text,fn,klass){const b=CE('button',klass||'',text);b.onclick=fn;parent.append(b);return b;}
-function renderDuel(){const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];$('lobbyView').classList.add('hidden');$('duelView').classList.remove('hidden');
- $('myName').textContent=`PLAYER ${me+1}：${view.players[me].name}`;$('opName').textContent=`PLAYER ${enemy+1}：${view.players[enemy].name}`;$('myLP').textContent=`${mine.lp} LP`;$('opLP').textContent=`${op.lp} LP`;
- $('myMana').textContent=`マナ：${prettyMana(mine.mana)}`;$('opCounts').textContent=`手札 ${op.handCount} / 山札 ${op.deckCount}`;$('opHandLabel').textContent=`相手の手札 ${op.handCount}枚（内容は非公開）`;
- backs($('opHand'),op.handCount);putCards($('opField'),op.field,'field',enemy);putCards($('myField'),mine.field,'field',me);putCards($('opLands'),op.lands,'lands',enemy);putCards($('myLands'),mine.lands,'lands',me);putCards($('opSummoner'),[op.summoner],'summoner',enemy);putCards($('mySummoner'),[mine.summoner],'summoner',me);putCards($('myHand'),mine.hand,'hand',me);
- $('opDeck').textContent=`山札 ${op.deckCount}`;$('myDeck').textContent=`山札 ${mine.deckCount}`;$('opGrave').textContent=`墓地 ${op.grave.length}`;$('myGrave').textContent=`墓地 ${mine.grave.length}`;
+function renderDuel(){
+ const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];
+ $('lobbyView').classList.add('hidden');$('duelView').classList.remove('hidden');
+ document.body.classList.add('online-active');$('onlineFieldCss').disabled=false;$('onlineOverrideCss').disabled=false;
+ $('myName').textContent=`PLAYER ${me+1}：${view.players[me].name}（自分）`;
+ $('opName').textContent=`PLAYER ${enemy+1}：${view.players[enemy].name}`;
+ $('myLP').textContent=`${mine.lp} LP`;$('opLP').textContent=`${op.lp} LP`;
+ $('myMana').textContent=`マナ ${prettyMana(mine.mana)}`;
+ $('opHandLabel').textContent=`相手の手札 ${op.handCount}枚 — 非公開`;
+ $('opHandCount').textContent=String(op.handCount);
+ $('opLandCount').textContent=String(op.lands.length);$('myLandCount').textContent=String(mine.lands.length);
+ backs($('opHand'),op.handCount);
+ putCards($('opField'),op.field,'field',enemy);putCards($('myField'),mine.field,'field',me);
+ putCards($('opLands'),op.lands,'lands',enemy);putCards($('myLands'),mine.lands,'lands',me);
+ putCards($('opSummoner'),[op.summoner],'summoner',enemy);putCards($('mySummoner'),[mine.summoner],'summoner',me);
+ putCards($('myHand'),mine.hand,'hand',me);
+ $('opDeckCount').textContent=String(op.deckCount);$('myDeckCount').textContent=String(mine.deckCount);
+ $('opGraveCount').textContent=String(op.grave.length);$('myGraveCount').textContent=String(mine.grave.length);
  $('opGrave').onclick=()=>openGrave(enemy);$('myGrave').onclick=()=>openGrave(me);
- $('phaseLabel').textContent=`T${g.turnNo} / ${g.phase}`;const stack=$('stackCenter');empty(stack);for(const s of g.stack)stack.append(CE('span','item',`P${s.side+1}：《${s.name}》`));if(!g.stack.length)stack.append(CE('span','muted','解決待ちなし'));
- $('stackPriority').textContent=g.stack.length?`優先権 P${g.priority+1}`:'';
- $('drawBtn').disabled=g.over||g.turn!==me||!g.drawPending;
- $('battleBtn').disabled=g.over||g.turn!==me||g.phase!=='MAIN'||g.drawPending>0||g.stack.length>0||!!g.block;
- $('endBtn').disabled=g.over||g.turn!==me||g.drawPending>0||g.stack.length>0||!!g.block;
+ const cur=g.turn===me?'あなた':'相手';
+ $('phaseLabel').textContent=`TURN ${g.turnNo} / ${cur}のターン`;
+ const stack=$('stackCenter');stack.replaceChildren();for(const x of g.stack)stack.append(CE('div','stack-entry',`PLAYER ${x.side+1}：《${x.name}》`));
+ $('centralStackPanel').hidden=!g.stack.length;
+ $('stackPriority').textContent=g.stack.length?`優先権：PLAYER ${g.priority+1}`:'';
+ const progress=$('drawProgressPanel');progress.hidden=!(g.effectDraw||g.drawPending||g.opponentDrawPending||g.choice&&!g.choice.waiting);
+ if(!progress.hidden)progress.textContent=g.effectDraw?`《${g.effectDraw.source}》：${g.effectDraw.total}枚ドロー / 残り${g.effectDraw.remaining}枚（${g.effectDraw.seat===me?'DRAWを押してください':'相手の処理待ち'}）`:g.drawPending?'DRAW：カードを1枚引いてください':g.opponentDrawPending?'相手がドロー処理中…':'効果処理中：カード選択待ち';
+ $('drawBtn').disabled=g.over||!(g.effectDraw?g.effectDraw.seat===me:g.turn===me&&g.drawPending);
+ $('battleBtn').disabled=g.over||g.turn!==me||g.phase!=='MAIN'||g.drawPending>0||!!g.effectDraw||g.stack.length>0||!!g.block;
+ $('endBtn').disabled=g.over||g.turn!==me||g.drawPending>0||!!g.effectDraw||g.stack.length>0||!!g.block;
  $('passBtn').disabled=g.over||!g.stack.length||g.priority!==me;
- $('summonerBtn').disabled=g.over||g.turn!==me||g.phase!=='MAIN'||g.drawPending>0||g.stack.length>0||!!g.block;
+ $('summonerBtn').disabled=g.over||g.turn!==me||g.phase!=='MAIN'||g.drawPending>0||!!g.effectDraw||g.stack.length>0||!!g.block;
  $('surrenderBtn').disabled=g.over;
- let headline='',explain='';if(g.over){headline=g.winner==null?'引き分け':(g.winner===me?'勝利！':'敗北');explain='対戦は終了しました。';}else if(g.choice){headline=g.choice.waiting?'相手が選択中':'カードを選択してください';explain='選択処理中は操作が停止します。';}else if(g.block){headline=g.block.seat===me?'相手のブロックを待っています':'ブロッカーを選んでください';explain='ブロックしない場合は「NO BLOCK」を選択します。';}else if(g.stack.length){headline=g.priority===me?'あなたの優先権':'相手の優先権';explain='対応する高速詠唱カードを使うかPASSします。';}else if(g.drawPending){headline=g.turn===me?'DRAWでカードを引いてください':'相手がドロー中';explain='ドローを完了するとカードをプレイできます。';}else {headline=g.turn===me?'あなたのターン':'相手のターン';explain='ターン中に流脈を配置し、タップしてマナを作り、カードをプレイします。';}
+ const b=$('noBlockBtn');b.disabled=!(g.block&&g.block.seat!==me&&!g.over);
+ let headline='',explain='';
+ if(g.effectDraw){headline=g.effectDraw.seat===me?'効果のドロー処理':'相手の効果処理';explain=`《${g.effectDraw.source}》：残り${g.effectDraw.remaining}枚のドロー`; }
+ else if(g.over){headline=g.winner==null?'引き分け':g.winner===me?'勝利！':'敗北';explain='対戦は終了しました。';}
+ else if(g.choice){headline=g.choice.waiting?'相手が選択中':'カードを選択してください';explain='効果の選択完了を待っています。';}
+ else if(g.block){headline=g.block.seat===me?'ブロック待ち':'ブロッカーを選択';explain='NO BLOCKを押すとブロックしません。';}
+ else if(g.stack.length){headline=g.priority===me?'あなたの優先権':'相手の優先権';explain='高速詠唱を使うかPASSを押します。';}
+ else if(g.drawPending||g.opponentDrawPending){headline=g.turn===me?'ドローしてください':'相手がドロー中';explain='DRAW後にメインフェイズへ進みます。';}
+ else{headline=g.turn===me?'あなたのターン':'相手のターン';explain=`先攻はPLAYER ${g.firstSeat+1}（サーバーでランダム決定）。`}
  $('turnStatus').textContent=headline;$('turnHelp').textContent=explain;
- const actEl=$('actions');const old=actEl.querySelector('#noBlockBtn');if(old)old.remove();if(g.block&&g.block.seat!==me&&!g.over)button(actEl,'NO BLOCK',()=>act('block',{}),'primary').id='noBlockBtn';
- const logNode=$('gameLog');empty(logNode);for(const line of [...g.log].reverse())logNode.append(CE('div','logline',line));
- if(g.choice&&!g.choice.waiting&&g.choice.seat===me&&!pending){promptChoice(g.choice)};
+ const logs=$('gameLog');logs.replaceChildren();for(const x of [...g.log].reverse())logs.append(CE('div','',x));
+ if(selected){const selectedNode=$('duelView').querySelector(`[data-id="${CSS.escape(selected.c.id)}"]`);if(selectedNode)selectedNode.classList.add('selected');}
+ if(g.choice&&!g.choice.waiting&&g.choice.seat===me&&!pending)promptChoice(g.choice);
 }
 function openGrave(side){const g=view.game;const list=g.players[side].grave;const title=side===view.seat?'自分の墓地':'相手の墓地';const info=list.map(c=>`${c.name}（${c.type}）`).join('\n');$('cardInfo').textContent=title+'\n'+(info||'カードなし');}
-function openCard(c,part,side){const g=view?.game;if(!g)return;selected={c,part,side};const d=DB[c.name];$('cardInfo').textContent=`${c.privateName?'裏向き（自分のみ確認）：'+c.privateName:c.name}\n${c.type||''}  コスト${c.cost||0}\n${c.type==='monster'?`パワー${c.power}  SP${c.sp}\n`:''}${c.txt||d?.txt||''}`;
+function openCard(c,part,side,dom){const g=view?.game;if(!g)return;selected={c,part,side};document.querySelectorAll('#duelView .card.selected').forEach(n=>n.classList.remove('selected'));if(dom)dom.classList.add('selected');const d=DB[c.name];$('cardInfo').textContent=`${c.privateName?'裏向き（自分のみ確認）：'+c.privateName:c.name}\n${c.type||''}  コスト${c.cost||0}\n${c.type==='monster'?`パワー${c.power}  SP${c.sp}\n`:''}${c.txt||d?.txt||''}`;
  const box=$('cardActions');empty(box);const me=view.seat;
  if(g.over)return;
  if(side===me&&part==='hand'){if(c.type!=='summoner')button(box,'流脈として配置',()=>act('land',{card:c.id}));if(c.type==='monster'||c.type==='spell')button(box,'プレイする',()=>playWithTarget(c),'primary');}
@@ -101,10 +142,20 @@ function playWithTarget(c){const key=DB[c.name]?.effectKey;const available=choic
  }
  doDialog('《'+c.name+'》：対象を選択','対象を指定してからスタックへ積みます。',available.map(readable),1,1,ids=>act('play',{card:c.id,target:ids[0]}));
 }
-function attackWithTarget(c){const opp=view.game.players[1-view.seat].field;const list=[{id:'',label:'相手プレイヤーへ直接攻撃（SPダメージ）'},...opp.map(x=>({id:x.id,label:`《${x.name}》 (P${x.power}) ${x.tapped?'タップ':'アンタップ'}`}))];doDialog('攻撃対象を選択','通常、相手モンスターはタップ状態のときだけ攻撃可能です。',list,1,1,ids=>act('attack',{card:c.id,target:ids[0]||null}));}
+function attackWithTarget(c){
+ const g=view.game,me=view.seat,opp=g.players[1-me].field;
+ const chooseTarget=(sacrificeLand=null)=>{
+  const list=[{id:'',label:'相手プレイヤーへ直接攻撃（SPダメージ）'},...opp.map(x=>({id:x.id,label:`《${x.name}》 (P${x.power}) ${x.tapped?'タップ':'アンタップ'}`}))];
+  doDialog('攻撃対象を選択','相手プレイヤー、または攻撃可能な相手モンスターを指定してください。',list,1,1,ids=>act('attack',{card:c.id,target:ids[0]||null,sacrificeLand}));
+ };
+ if(DB[c.name]?.effectKey==='sacLandOnAttack'){
+  const lands=g.players[me].lands;if(!lands.length){status('攻撃に必要な流脈がありません',true);return;}
+  doDialog('《'+c.name+'》：攻撃コスト','墓地に置く自分の流脈を1枚選んでください。',lands.map(readable),1,1,ids=>chooseTarget(ids[0]));
+ }else chooseTarget();
+}
 function summonAbility(){const c=view.game.players[view.seat].summoner;const key=DB[c.name]?.summonerAbilityKey;const opts=choices(key,view.seat);if(opts===null){act('summoner');return;}if(!opts.length){status('能力の対象がいません',true);return;}doDialog('召喚士《'+c.name+'》','同色の流脈≋1で能力を発動します。',opts.map(readable),1,1,x=>act('summoner',{target:x[0]}));}
 function promptChoice(choice){const opts=choice.options.map(x=>({id:x.id,label:x.name}));doDialog('カードを選択','サーバーからの選択処理です。選択順が一部の効果で結果に影響します。',opts,choice.min,choice.max,ids=>attempt({type:'choose',ids}));pending.forced=true;$('dialogCancel').disabled=true;}
-$('drawBtn').onclick=()=>act('draw');$('battleBtn').onclick=()=>act('phase',{to:'BATTLE'});$('endBtn').onclick=()=>act('end_turn');$('passBtn').onclick=()=>act('pass');$('summonerBtn').onclick=summonAbility;
+$('noBlockBtn').onclick=()=>act('block');$('drawBtn').onclick=()=>act('draw');$('battleBtn').onclick=()=>act('phase',{to:'BATTLE'});$('endBtn').onclick=()=>act('end_turn');$('passBtn').onclick=()=>act('pass');$('summonerBtn').onclick=summonAbility;
 $('surrenderBtn').onclick=()=>{if(confirm('降参しますか？'))attempt({type:'surrender'});};
 $('changeServer').onclick=()=>{$('serverConfig').classList.remove('hidden');status('接続先URLを入力し直してください。変更後は必要に応じてルームへ入り直してください。');};
 $('saveServer').onclick=async()=>{const s=server();if(!s){status('HTTPSのCloudflare Worker URLを入力してください',true);return;}localStorage.setItem(SERVER_STORE,s);try{const r=await fetch(s+'/health');if(!r.ok)throw Error('接続先が応答しません');const d=await r.json();status(`接続確認済み：${d.service||'SUMMONER server'}`);$('serverConfig').classList.add('hidden');if(session)connect();}catch(e){status('接続できません：'+e.message,true)}};
@@ -121,5 +172,24 @@ function bootstrap(){refreshDecks();$('hostName').value=currentUser();$('guestNa
  if(session&&q.get('room')&&session.code!==q.get('room').toUpperCase()){session=null;localStorage.removeItem(STORAGE);}
  if(savedServer){$('serverConfig').classList.add('hidden');status('対戦サーバーの設定が読み込まれました。');if(invitationServer&&server())localStorage.setItem(SERVER_STORE,server());if(session)connect();}else status('オンライン対戦には先にCloudflare Workerの無料デプロイが必要です。設定URLを入力してください。');
 }
+
+// Same playmat source and browser-stored field image as the local duel.
+const FIELD_DB='summoner_ui_v1',FIELD_STORE='settings',FIELD_KEY='customFieldImage';
+let fieldObjectUrl=null;
+function fieldStore(mode,fn){return new Promise((resolve,reject)=>{const req=indexedDB.open(FIELD_DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(FIELD_STORE))req.result.createObjectStore(FIELD_STORE)};req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result;const tx=db.transaction(FIELD_STORE,mode);const q=fn(tx.objectStore(FIELD_STORE));q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);tx.oncomplete=()=>db.close();};});}
+function applyField(blob){if(fieldObjectUrl)URL.revokeObjectURL(fieldObjectUrl);fieldObjectUrl=URL.createObjectURL(blob);document.documentElement.style.setProperty('--custom-field-image',`url("${fieldObjectUrl}")`);document.body.classList.add('custom-field-active');}
+async function restoreField(){try{const val=await fieldStore('readonly',s=>s.get(FIELD_KEY));if(val?.blob)applyField(val.blob);}catch(e){console.warn('背景画像の読み込みに失敗',e)}}
+$('onlineFieldBtn').onclick=()=>$('onlineFieldInput').click();
+$('onlineResetField').onclick=async()=>{try{await fieldStore('readwrite',s=>s.delete(FIELD_KEY));}catch(e){console.warn(e)}document.body.classList.remove('custom-field-active');document.documentElement.style.removeProperty('--custom-field-image');if(fieldObjectUrl){URL.revokeObjectURL(fieldObjectUrl);fieldObjectUrl=null;}};
+$('onlineFieldInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>10*1024*1024||!/^image\/(png|jpeg|webp)$/.test(file.type)){status('画像は10MB以内のPNG・JPG・WebPを使用してください',true);return;}try{await fieldStore('readwrite',s=>s.put({blob:file,name:file.name},FIELD_KEY));applyField(file);}catch(e){status('背景画像を保存できませんでした',true)}e.target.value='';};
+$('onlineInfoBtn').onclick=()=>document.body.classList.toggle('info-open');
+// Playmat card interactions do not collapse the hand; clicking other surfaces does.
+document.addEventListener('click',e=>{if(!view?.game)return;const t=e.target;if(!(t instanceof Element))return;
+ if(t.closest('.handbar,.opponent-hand-wrap')){document.body.classList.remove('hands-compact');return;}
+ if(t.closest('#duelView .card,#duelView .card-controls'))return;
+ if(t.closest('#duelView'))document.body.classList.add('hands-compact');
+});
+restoreField();
+
 bootstrap();
 })();

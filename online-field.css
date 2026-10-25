@@ -1,0 +1,1091 @@
+
+:root{
+  --bg:#0b0e13;--panel:#151a22;--panel2:#1c222c;--line:#343c48;
+  --text:#eef2f7;--muted:#9aa5b4;--accent:#69b7ff;--gold:#e8c66a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:inherit}
+#app{height:100%;display:flex;flex-direction:column}
+
+.topbar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background: #11151c;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.brand { font-weight: 900; letter-spacing: .08em; font-size: 16px; color: #eef2f7; }
+.top-info { display: flex; gap: 18px; color: var(--muted); font-size: 12px; }
+
+.nav-btn {
+  background: #246e9f;
+  border: 1px solid #5aade0;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: bold;
+  transition: .2s;
+}
+.nav-btn:hover { background: #3082ba; }
+.nav-btn.btn-sub { background: #242b35; border-color: #46505e; }
+.nav-btn.btn-sub:hover { background: #303a47; }
+
+.main{min-height:0;flex:1;display:grid;grid-template-columns:minmax(0,1fr) 225px;gap:6px;padding:6px}
+.table{min-width:0;min-height:0;position:relative;display:flex;flex-direction:column;border:1px solid #313945;border-radius:12px;overflow-y:auto;background:radial-gradient(circle at 50% 50%,#27303a 0,#171d25 48%,#10141a 100%)}
+.half{min-height:0;display:flex;flex-direction:column;padding:8px 12px;gap:6px;flex:1 0 auto}
+.cpu-half{border-bottom:1px solid #4a5260}
+.you-half{border-top:1px solid #4a5260}
+.player-head{position:relative;display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--muted);flex:0 0 auto}
+.player-head .who{color:var(--text);font-weight:800;font-size:16px}
+
+.hp{font-size:28px;font-weight:900;color:#ff8b8b;cursor:pointer;padding:2px 8px;border-radius:6px;transition:.2s;user-select:none}
+.hp:hover{background:#ff8b8b22;text-shadow:0 0 8px #ff8b8b}
+
+.dmg-pop{
+  position:absolute; right:120px; top:-8px; color:#ff3333; font-size:26px; font-weight:900;
+  text-shadow:0 0 6px #000, 0 0 10px rgba(255,0,0,0.8); opacity:0; pointer-events:none; z-index:99;
+}
+.dmg-pop.lp-pay{color:#c084fc;text-shadow:0 0 6px #000,0 0 10px rgba(192,132,252,.9)}
+.dmg-pop.lp-heal{color:#4ade80;text-shadow:0 0 6px #000,0 0 10px rgba(74,222,128,.9)}
+.dmg-pop.active{ animation:popAnim 1s ease-out forwards; }
+@keyframes popAnim{
+  0%{opacity:1;transform:translateY(0) scale(0.8);}
+  20%{opacity:1;transform:translateY(-8px) scale(1.3);}
+  80%{opacity:1;transform:translateY(-12px) scale(1.1);}
+  100%{opacity:0;transform:translateY(-18px) scale(1);}
+}
+
+.card-dmg-pop {
+  position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+  color: #ff3333; font-size: 26px; font-weight: 900; text-shadow: 0 0 4px #000, 0 0 8px rgba(255, 0, 0, 0.9);
+  pointer-events: none; z-index: 999; white-space: nowrap; animation: cardPopAnim 1s ease-out forwards;
+}
+@keyframes cardPopAnim {
+  0% { opacity: 1; transform: translate(-50%, -35%) scale(0.8); }
+  20% { opacity: 1; transform: translate(-50%, -55%) scale(1.3); }
+  75% { opacity: 1; transform: translate(-50%, -70%) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -85%) scale(1); }
+}
+
+.zone-row{min-height:140px;flex:1;display:grid;grid-template-columns:1fr 90px;grid-template-rows:1fr 1fr;gap:8px}
+.zonebox{min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.zone-label{font-size:10px;color:#7f8998;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.zone-count{font-size:10px;color:#d5dde8;font-weight:900;letter-spacing:0;text-transform:none;white-space:nowrap}
+.cards{display:flex;align-items:center;gap:7px;min-height:0;flex:1;overflow-x:auto;padding:2px 2px}
+.field-cards{min-height:0}
+.centerbar{display:flex;align-items:center;justify-content:center;gap:14px;background:#0d1117aa;border-top:1px solid #3b4450;border-bottom:1px solid #3b4450;padding:6px 0;flex:0 0 auto}
+.turn-pill{padding:6px 18px;border-radius:999px;background:#222a34;border:1px solid #4a5563;font-size:12px;font-weight:800}
+.phase{font-size:11px;color:var(--muted)}
+.card{position:relative;flex:0 0 84px;width:84px;height:112px;aspect-ratio:3/4;border-radius:8px;border:2px solid #66717f;background:linear-gradient(145deg,#303945,#171c23);padding:6px;cursor:pointer;box-shadow:0 4px 10px #0008;transition:.12s}
+.card:hover{transform:translateY(-7px);z-index:3;border-color:#d8e3ee}
+.card.monster{background:linear-gradient(145deg,#4a3a2d,#1d1916);border-color:#a68764}
+.card.spell{background:linear-gradient(145deg,#3b385c,#191827);border-color:#8a82ca}
+.card.summoner{background:linear-gradient(145deg,#2c4937,#151d18);border-color:#6caa7a}
+
+.card.color-red{background:linear-gradient(145deg,#b93a32,#4a1111)!important;border-color:#ff766d!important}
+.card.color-blue{background:linear-gradient(145deg,#2f79b5,#102b46)!important;border-color:#78c7ff!important}
+.card.color-green{background:linear-gradient(145deg,#33804e,#11351e)!important;border-color:#78e39a!important}
+.card.color-yellow{background:linear-gradient(145deg,#b08e25,#4a3b0b)!important;border-color:#ffe275!important}
+.card.color-black{background:linear-gradient(145deg,#4b4055,#141017)!important;border-color:#d0adff!important}
+.card.color-red .art{background:linear-gradient(135deg,#ff7d7044,#0008)}
+.card.color-blue .art{background:linear-gradient(135deg,#6fc5ff44,#0008)}
+.card.color-green .art{background:linear-gradient(135deg,#71eb9444,#0008)}
+.card.color-yellow .art{background:linear-gradient(135deg,#ffe87944,#0008)}
+.card.color-black .art{background:linear-gradient(135deg,#d7b7ff44,#0008)}
+
+.card.face{background:#252a31}
+.card .name{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:18px}
+.card .type{font-size:8px;color:#aeb7c3;margin-top:1px}
+.card .cost{position:absolute;left:4px;top:4px;z-index:1;background:#2b80b9;border-radius:50%;min-width:18px;text-align:center;padding:1px 3px;font-size:9px;font-weight:900}
+.card:has(.cost) .name{padding-left:23px!important;padding-right:0!important}
+.card .art{height:38px;margin:3px 0;border-radius:5px;background:linear-gradient(135deg,#ffffff12,#0005);border:1px solid #ffffff12;display:flex;align-items:center;justify-content:center;font-size:18px}
+.card .rules{font-size:8px;line-height:1.2;color:#d2d8df;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .power-stat,.card .sp-stat{position:absolute;bottom:4px;font-size:13px;font-weight:950;line-height:1;z-index:4;
+  color:#fff;background:rgba(0,0,0,.70);border:1px solid rgba(255,255,255,.82);border-radius:5px;
+  min-width:22px;padding:2px 4px;text-align:center;
+  -webkit-text-stroke:1.5px #000;
+  paint-order:stroke fill;
+  text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 4px #000,0 1px 3px #000
+}
+.card .power-stat{left:5px}
+.card .sp-stat{right:5px}
+.card.selected{outline:3px solid var(--gold);transform:translateY(-8px)}
+.card.tapped{transform:rotate(90deg) translateY(-2px);opacity:.8}
+.card.affordable-red{box-shadow:0 0 8px rgba(105, 183, 255, 0.85); border-width:2px;}
+
+.card-controls{
+  position:absolute;left:50%;bottom:19px;transform:translateX(-50%);display:flex;gap:3px;z-index:8;
+}
+.card-controls button{
+  width:20px;height:20px;padding:0;border-radius:50%;border:1px solid #d9e2ec;
+  background:#111a;color:#fff;font-size:12px;font-weight:900;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+}
+.card-controls button:hover{background:#2d3947}
+.card-controls .ability-btn{border-color:#ffd166;background:#4b3b13}
+.card.tapped .card-controls{opacity:.95}
+.card.pending-play{outline:2px dashed #e8c66a;box-shadow:0 0 0 2px #e8c66a33,0 4px 10px #0008}
+.card .pending-badge{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);padding:2px 5px;border-radius:5px;background:#111d;color:#ffe59a;border:1px solid #c39b3c;font-size:7px;font-weight:900;white-space:nowrap;z-index:7}
+.card-controls .place-btn{border-color:#79d69a;background:#163d24;color:#dfffea}
+
+
+.back{background:repeating-linear-gradient(45deg,#17283c 0 6px,#1e3852 6px 12px)!important;border-color:#50789c!important;}
+.side{min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:7px}
+.side h2{font-size:12px;margin:0;color:#b9c2ce;text-transform:uppercase;letter-spacing:.08em}
+.inspector{background:#10151c;border:1px solid #303946;border-radius:10px;padding:9px;min-height:125px}
+.inspector .big{font-size:18px;font-weight:900}.inspector .sub{font-size:11px;color:var(--muted);margin:2px 0 10px}.inspector p{font-size:11px;line-height:1.45;color:#d5dbe3;margin:0}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat{background:#10151c;border:1px solid #303946;border-radius:8px;padding:7px}.stat b{display:block;font-size:16px}.stat span{font-size:9px;color:var(--muted)}
+
+.log{flex:1;min-height:100px;overflow:auto;background:#0d1117;border:1px solid #303946;border-radius:8px;padding:8px;font-size:13px;line-height:1.4}
+.log div{margin:5px 0;color:#bbc4cf}
+
+.actions{display:flex;flex-wrap:wrap;gap:6px}.actions button{flex:1;border:1px solid #46505e;background:#242b35;border-radius:7px;padding:8px 6px;font-size:11px;cursor:pointer}.actions button:hover{background:#303a47}.actions .primary{background:#246e9f;border-color:#5aade0}
+.handbar{height:184px;flex:0 0 auto;background:#10141b;border-top:1px solid #303844;padding:8px 14px;display:flex;align-items:center;gap:10px}
+.hand-info{width:82px;flex:0 0 82px;font-size:10px;color:var(--muted)}.hand-info b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+.hand{min-width:0;flex:1;display:flex;align-items:flex-end;gap:8px;overflow-x:auto;height:168px;padding:10px 8px 2px}
+.hand .card{flex-basis:112px;width:112px;height:149px;aspect-ratio:3/4}.hand .card .art{height:58px}.hand .card .rules{-webkit-line-clamp:4;font-size:9px}
+.toast{position:fixed;left:50%;top:60px;transform:translateX(-50%);background:#171c24;border:1px solid #687585;border-radius:99px;padding:10px 18px;display:none;z-index:50;box-shadow:0 10px 30px #0009;font-size:12px}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:40}.modalbox{width:min(620px,92vw);background:#1a2029;border:1px solid #596575;border-radius:12px;padding:18px}.modalbox h3{margin:0 0 12px;color:#fff}.targets{display:flex;gap:8px;flex-wrap:wrap}.targets button{border:1px solid #596575;background:#252e39;border-radius:8px;padding:9px 12px;cursor:pointer}
+.modal-footer{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#modalCancelBtn{color:#000!important;background:#f2f2f2;border:1px solid #aab2bd;border-radius:8px;padding:9px 14px;font-weight:800;cursor:pointer}
+#modalCancelBtn:disabled{color:#555!important;background:#c9cdd2;cursor:not-allowed}
+#modalPeekBtn{display:none;color:#fff;background:#245d88;border:1px solid #5ba7dc;border-radius:8px;padding:9px 14px;font-weight:800;cursor:pointer}
+.effect-peek-return{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;display:none;align-items:center;gap:10px;background:#121923;border:1px solid #6da8d0;border-radius:999px;padding:8px 10px 8px 16px;box-shadow:0 8px 28px #000b;font-size:12px}
+.effect-peek-return b{white-space:nowrap}.effect-peek-return button{border:1px solid #6da8d0;background:#245d88;color:#fff;border-radius:999px;padding:9px 15px;font-weight:900;cursor:pointer}
+body.effect-peek-mode .card-controls{display:none!important}
+body.effect-peek-mode .actions button,body.effect-peek-mode .mobile-actions button,body.effect-peek-mode .resource-zone{pointer-events:none;opacity:.55}
+body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cursor:default}
+@media(max-width:900px){.main{grid-template-columns:1fr}.side{display:none}.handbar{height:170px}.hand{height:154px}.hand .card{height:136px;width:102px}.card{flex-basis:82px;width:82px;height:109px}}
+
+.resource-col{display:flex;flex-direction:column;gap:6px;justify-content:center}
+.resource-zone{width:100%;height:100%;max-height:80px;border:1px solid #3d4552;border-radius:8px;background:#10151c;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px #161c24}
+.resource-zone b{font-size:9px;color:#8e98a7;letter-spacing:.8px}.resource-zone span{font-size:16px;font-weight:800;margin-top:2px}
+.resource-zone#youGraveZone,.resource-zone#cpuGraveZone{cursor:pointer}
+.resource-zone#youGraveZone:hover,.resource-zone#cpuGraveZone:hover{border-color:#697586}
+
+.opponent-hand-wrap{margin-top:8px;padding:6px 8px;background:#10141b;border:1px solid #303844;border-radius:8px;flex:0 0 auto}
+.opponent-hand-title{font-size:10px;color:#8e98a7;margin-bottom:5px}
+.opponent-hand{display:flex;align-items:flex-end;gap:8px;overflow-x:auto;height:160px;padding:4px 8px 2px}
+.opponent-hand .card{flex-basis:112px;width:112px;height:149px;aspect-ratio:3/4}
+.opponent-hand .card .art{height:58px}
+.opponent-hand .card .rules{-webkit-line-clamp:4;font-size:9px}
+
+.mana-pool-container { display: inline-flex; gap: 4px; align-items: center; margin-left: 6px; }
+.mana-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: bold; color: #fff;
+  box-shadow: 0 0 4px rgba(0,0,0,0.6);
+}
+.mana-icon.red { background: #e74c3c; }
+.mana-icon.blue { background: #3498db; }
+.mana-icon.yellow { background: #f1c40f; color: #000; }
+.mana-icon.green { background: #2ecc71; }
+.mana-icon.black { background: #9b59b6; }
+.mana-icon.colorless { background: #7f8c8d; }
+
+/* 対戦開始デッキ選択 */
+.deck-setup{
+  position:fixed;inset:0;z-index:5000;background:rgba(5,8,12,.94);
+  display:flex;align-items:center;justify-content:center;padding:24px
+}
+.deck-setup.hidden{display:none}
+.deck-setup-box{
+  width:min(720px,94vw);background:#151a22;border:1px solid #46505e;border-radius:16px;
+  box-shadow:0 24px 80px #000;padding:24px
+}
+.deck-setup-title{font-size:25px;font-weight:900;letter-spacing:.08em;margin-bottom:6px}
+.deck-setup-sub{font-size:12px;color:#9aa5b4;margin-bottom:20px}
+.deck-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.deck-choice{background:#10151c;border:1px solid #303946;border-radius:10px;padding:14px}
+.deck-choice h3{margin:0 0 10px;font-size:14px}
+.deck-choice select{
+  width:100%;background:#1a202c;border:1px solid #46505e;color:#fff;border-radius:7px;padding:9px
+}
+.deck-choice .deck-info{margin-top:8px;color:#9aa5b4;font-size:11px;min-height:18px}
+.start-battle-btn{
+  width:100%;margin-top:18px;padding:11px;border-radius:8px;border:1px solid #5aade0;
+  background:#246e9f;color:#fff;font-weight:900;cursor:pointer
+}
+.start-battle-btn:hover{background:#3082ba}
+@media(max-width:650px){.deck-choice-grid{grid-template-columns:1fr}}
+.first-player-choice{margin-top:14px;background:#10151c;border:1px solid #303946;border-radius:10px;padding:14px}
+.first-player-choice label{display:block;font-size:13px;font-weight:900;margin-bottom:8px}
+.first-player-choice select{width:100%;background:#1a202c;border:1px solid #46505e;color:#fff;border-radius:7px;padding:9px}
+
+.stack-box{
+  background:#0d1117;border:1px solid #303946;border-radius:8px;padding:7px;
+  min-height:54px;max-height:116px;overflow-y:auto;font-size:10px
+}
+.stack-empty{color:#697586;padding:9px;text-align:center}
+.stack-entry{
+  display:flex;justify-content:space-between;gap:8px;padding:5px 7px;margin:3px 0;
+  background:#171e27;border:1px solid #384453;border-radius:6px
+}
+.stack-entry.top{border-color:#e8c66a;box-shadow:0 0 0 1px #e8c66a33}
+.stack-owner{color:#9aa5b4;white-space:nowrap}
+.priority-line{font-size:10px;color:#aeb8c5;margin-top:5px}
+.actions .stack-pass{background:#543e12;border-color:#b78b2f}
+.actions .stack-pass:disabled{opacity:.45;cursor:not-allowed}
+.card-controls .locked-btn{opacity:.55;border-color:#777;cursor:not-allowed}
+
+
+.mobile-actions{display:none}
+.mobile-hand-toggle{display:none}
+
+@media(max-width:900px){
+  html,body{
+    width:100%;height:auto;min-height:100%;
+    overflow:auto;
+    overscroll-behavior-y:contain;
+    -webkit-text-size-adjust:100%;
+  }
+  body{padding-bottom:calc(204px + env(safe-area-inset-bottom))}
+  body.hand-collapsed{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+  #app{height:auto;min-height:100dvh}
+
+  .topbar{
+    height:auto;min-height:48px;padding:7px 8px;
+    flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:35
+  }
+  .brand{font-size:13px}
+  .top-info{display:none}
+  .nav-btn{font-size:10px;padding:6px 8px}
+
+  .main{
+    min-height:auto;overflow:visible;
+    display:flex;flex-direction:column;
+    padding:4px;gap:6px
+  }
+  .table{
+    overflow:visible;min-height:auto;border-radius:8px
+  }
+  .half{padding:6px 5px;gap:5px}
+  .player-head .who{font-size:14px}
+  .hp{font-size:22px;padding:2px 5px}
+  .zone-row{
+    min-height:0;
+    grid-template-columns:minmax(0,1fr) 64px;
+    grid-template-rows:auto auto;
+    gap:5px
+  }
+  .resource-col{gap:4px}
+  .resource-zone{min-height:45px;padding:5px 3px}
+  .resource-zone b{font-size:7px}
+  .resource-zone span{font-size:15px}
+  .zone-label{font-size:9px}
+  .cards{min-height:105px;gap:5px;scrollbar-width:thin}
+  .card{
+    flex:0 0 74px;width:74px;height:99px;
+    padding:5px;border-radius:7px
+  }
+  .card:hover{transform:none}
+  .card.selected{transform:translateY(-3px)}
+  .card .name{font-size:9px}
+  .card .type{font-size:7px}
+  .card .cost{min-width:16px;font-size:8px}
+  .card .art{height:31px;font-size:15px}
+  .card .rules{font-size:7px;-webkit-line-clamp:2}
+  .card .power-stat,.card .sp-stat{font-size:11px}
+  .card-controls button{width:24px;height:24px;font-size:13px}
+
+  .opponent-hand-wrap{padding:4px 0 1px}
+  .opponent-hand-title{font-size:9px}
+  .opponent-hand{gap:5px;padding:5px 2px;overflow-x:auto}
+  .opponent-hand .card{
+    flex:0 0 82px;width:82px;height:109px
+  }
+  .opponent-hand .card .art{height:37px}
+  .opponent-hand .card .rules{-webkit-line-clamp:2;font-size:7px}
+
+  .centerbar{
+    position:sticky;top:48px;z-index:24;
+    gap:8px;padding:5px;background:#0d1117e8
+  }
+  .turn-pill{padding:5px 10px;font-size:10px}
+  .phase{font-size:9px}
+
+  /* PCでは右側だった情報欄を、スマホでは盤面の下に表示 */
+  .side{
+    display:flex!important;
+    min-height:auto;
+    padding:7px;gap:6px;border-radius:8px
+  }
+  .side h2{font-size:10px}
+  .inspector{min-height:90px}
+  .inspector .big{font-size:16px}
+  .inspector p{font-size:10px}
+  .stack-box{max-height:100px}
+  .log{min-height:90px;max-height:150px;font-size:11px}
+  .side .actions{display:none}
+
+  /* PLAYER 1の手札を画面下部に固定 */
+  .handbar{
+    position:fixed;left:0;right:0;
+    bottom:calc(52px + env(safe-area-inset-bottom));
+    z-index:30;
+    height:152px;
+    padding:6px 6px;
+    gap:6px;
+    background:#10141bf5;
+    box-shadow:0 -8px 20px #0008
+  }
+  .hand-info{
+    width:64px;flex:0 0 64px;
+    font-size:8px
+  }
+  .hand-info b{font-size:11px}
+  .hand{height:140px;padding:5px 2px;gap:6px}
+  .hand .card{
+    flex:0 0 88px;width:88px;height:117px
+  }
+  .hand .card .art{height:40px}
+  .hand .card .rules{-webkit-line-clamp:3;font-size:7px}
+
+  .mobile-hand-toggle{
+    display:block;margin-top:6px;width:100%;
+    border:1px solid #46505e;background:#242b35;color:#fff;
+    border-radius:5px;padding:4px 2px;font-size:8px
+  }
+
+  body.hand-collapsed .handbar{height:48px}
+  body.hand-collapsed .hand{display:none}
+  body.hand-collapsed .hand-info{
+    width:100%;flex:1;display:flex;align-items:center;gap:10px
+  }
+  body.hand-collapsed .hand-info br,
+  body.hand-collapsed .hand-info>span:not(#handCount){display:none}
+  body.hand-collapsed .mobile-hand-toggle{
+    width:auto;margin:0 0 0 auto;padding:5px 10px
+  }
+
+  /* スマホ専用の常時表示操作バー */
+  .mobile-actions{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:3px;
+    position:fixed;left:0;right:0;bottom:0;
+    z-index:32;
+    min-height:52px;
+    padding:5px 5px calc(5px + env(safe-area-inset-bottom));
+    background:#0d1117f7;border-top:1px solid #46505e
+  }
+  .mobile-actions button{
+    min-width:0;border:1px solid #46505e;background:#242b35;
+    color:#fff;border-radius:6px;padding:7px 2px;
+    font-size:8px;font-weight:800;line-height:1.1
+  }
+  .mobile-actions .primary{background:#246e9f;border-color:#5aade0}
+  .mobile-actions .pass{background:#543e12;border-color:#b78b2f}
+
+  .modal{align-items:flex-end}
+  .modalbox{
+    width:100%;max-height:80dvh;overflow:auto;
+    border-radius:14px 14px 0 0;
+    padding:16px 14px calc(16px + env(safe-area-inset-bottom))
+  }
+  .targets{display:grid;grid-template-columns:1fr;gap:7px}
+  .targets button{min-height:44px;text-align:left}
+
+  .deck-setup{padding:10px;align-items:flex-start;overflow:auto}
+  .deck-setup-box{margin-top:20px;padding:16px}
+  .deck-setup-title{font-size:20px}
+  .deck-choice-grid{grid-template-columns:1fr}
+  .deck-choice select,.first-player-choice select,.start-battle-btn{min-height:44px}
+}
+
+@media(max-width:900px) and (max-height:520px){
+  body{padding-bottom:calc(158px + env(safe-area-inset-bottom))}
+  body.hand-collapsed{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  .handbar{
+    height:108px;
+    bottom:calc(46px + env(safe-area-inset-bottom))
+  }
+  .hand{height:96px}
+  .hand .card{flex-basis:72px;width:72px;height:96px}
+  .hand .card .art{height:28px}
+  .mobile-actions{min-height:46px}
+  .mobile-actions button{padding:5px 2px}
+  .cards{min-height:92px}
+}
+
+
+/* ===== Beta2 v17: tabletop layout inspired by the supplied playmat reference ===== */
+.desktop-actions{display:none}
+@media(min-width:901px){
+  html,body{background:#171712;overflow:hidden;color:#171712}
+  #app{height:100vh;position:relative;background:#171712}
+
+  .topbar{
+    position:absolute;top:10px;left:16px;right:16px;z-index:90;height:34px;
+    padding:0;background:transparent;border:0;pointer-events:none
+  }
+  .brand,.top-info{display:none}
+  .topbar>div:nth-child(2){margin-left:auto;pointer-events:auto;display:flex;gap:6px}
+  .nav-btn{background:rgba(32,31,27,.78);border-color:#777267;color:#f2efe5;padding:6px 10px;border-radius:4px;box-shadow:0 2px 7px #0008}
+  .nav-btn:hover{background:rgba(58,55,48,.92)}
+  .nav-btn.btn-sub{background:rgba(32,31,27,.78);border-color:#777267}
+
+  .main{position:relative;display:block;height:100vh;padding:0;overflow:hidden}
+  .table{
+    position:absolute;inset:0;min-width:0;min-height:0;display:block;overflow:hidden;
+    border:14px solid #45443e;border-radius:18px;
+    box-shadow:inset 0 0 0 2px #181814,inset 0 0 54px rgba(54,52,44,.55),0 0 28px #000b;
+    background:
+      linear-gradient(to bottom,
+        transparent 24.85%,rgba(91,89,80,.34) 24.95%,rgba(91,89,80,.34) 25.08%,transparent 25.18%,
+        transparent 49.82%,rgba(91,89,80,.38) 49.93%,rgba(91,89,80,.38) 50.08%,transparent 50.18%,
+        transparent 74.82%,rgba(91,89,80,.30) 74.93%,rgba(91,89,80,.30) 75.08%,transparent 75.18%),
+      radial-gradient(circle at 17% 18%,rgba(255,255,255,.26) 0 1px,transparent 1.8px),
+      radial-gradient(circle at 73% 61%,rgba(47,45,39,.11) 0 1px,transparent 1.5px),
+      repeating-linear-gradient(8deg,rgba(50,48,42,.018) 0 1px,transparent 1px 5px),
+      linear-gradient(135deg,#d9d6c9 0%,#c9c6b9 46%,#dedbd0 100%);
+    background-size:auto,31px 31px,41px 41px,auto,auto
+  }
+  .table::after{
+    content:"";position:absolute;inset:9px;border:1px solid rgba(47,46,40,.5);border-radius:8px;
+    box-shadow:inset 0 0 32px rgba(41,39,34,.22);pointer-events:none;z-index:1
+  }
+
+  .half{position:absolute;left:0;right:0;padding:0;gap:0;display:block;border:0;min-height:0;z-index:3}
+  .cpu-half{top:0;height:50%;border:0}
+  .you-half{top:50%;height:50%;border:0}
+
+  .player-head{position:absolute;z-index:24;width:auto;display:flex;align-items:center;gap:8px;justify-content:flex-start;color:#292822}
+  .cpu-half .player-head{top:45px;left:28px}
+  .you-half .player-head{bottom:126px;left:28px}
+  .player-head .who{font:800 13px/1.1 Georgia,"Yu Mincho",serif;color:#24231f;letter-spacing:.05em}
+  .hp{font:900 18px/1 Georgia,"Yu Mincho",serif;color:#22211d;background:rgba(236,232,217,.76);border:1px solid rgba(65,63,55,.38);padding:5px 8px;border-radius:4px;box-shadow:0 2px 4px #0003}
+  .hp:hover{background:rgba(250,246,231,.9);text-shadow:none}
+  .dmg-pop{right:-58px;top:-5px}
+
+  .zone-row{position:absolute;inset:0;display:block;min-height:0}
+  .zonebox,.resource-col{position:absolute;display:block;min-width:0;min-height:0}
+  .zonebox{justify-content:initial}
+  .zone-label{
+    position:absolute;left:0;top:-18px;margin:0;color:#36352f;font:700 9px/1 Georgia,"Yu Mincho",serif;
+    letter-spacing:.08em;text-transform:none;text-shadow:0 1px rgba(255,255,255,.45);white-space:nowrap
+  }
+  .zone-count{font-size:9px;color:#36352f}
+  .mana-pool-container{margin-left:5px;vertical-align:middle}
+  .mana-icon{width:15px;height:15px;font-size:8px;box-shadow:0 1px 2px #0005}
+
+  .cpu-half .zonebox:nth-child(1){top:28%;left:19%;right:19%;height:84px}
+  .cpu-half .zonebox:nth-child(3){top:60%;left:17%;right:17%;height:88px}
+  .cpu-half .resource-col:nth-child(2){top:28%;left:5.4%;width:58px;height:80px}
+  .cpu-half .resource-col:nth-child(4){top:28%;left:11.6%;width:58px;height:80px}
+  .cpu-half .resource-col:nth-child(4) .resource-zone:nth-child(2){display:none}
+
+  .you-half .zonebox:nth-child(1){top:4%;left:17%;right:17%;height:88px}
+  .you-half .zonebox:nth-child(3){top:37%;left:17%;right:17%;height:84px}
+  .you-half .resource-col:nth-child(2){top:37%;right:8.4%;width:58px;height:80px}
+  .you-half .resource-col:nth-child(4){top:37%;right:2.0%;width:58px;height:80px}
+
+  .cards{display:flex;align-items:center;justify-content:center;gap:10px;overflow-x:auto;overflow-y:visible;padding:4px 2px;height:100%;scrollbar-width:none}
+  .cards::-webkit-scrollbar{display:none}
+  .field-cards{min-height:0}
+
+  .resource-zone{
+    width:58px;height:78px;max-height:none;padding:0;border:1px solid rgba(54,52,45,.38);border-radius:4px;
+    background:rgba(224,221,208,.38);box-shadow:inset 0 0 12px rgba(38,36,31,.08),0 1px 3px #0002;
+    color:#272620;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:7px
+  }
+  .resource-zone b{font:800 7px/1 Georgia,"Yu Mincho",serif;color:#35342d;letter-spacing:.06em}
+  .resource-zone span{font:900 12px/1 Georgia,"Yu Mincho",serif;color:#1d1c19;margin-top:3px}
+  .resource-col{display:flex;flex-direction:column;gap:5px;justify-content:center}
+
+  .card{
+    flex:0 0 62px;width:62px;height:83px;aspect-ratio:3/4;border-radius:3px;border-width:1px;padding:4px;
+    box-shadow:0 2px 5px #0008;transition:transform .12s,filter .12s,box-shadow .12s
+  }
+  .card:hover{transform:translateY(-6px) scale(1.04);z-index:60;box-shadow:0 6px 12px #0009}
+  .card .name{font-size:7px;padding-right:13px}
+  .card .type{font-size:5.5px}
+  .card .cost{left:2px;top:2px;min-width:14px;font-size:7px;padding:1px 2px}
+  .card .art{height:27px;margin:2px 0;border-radius:2px;font-size:13px}
+  .card .power-stat,.card .sp-stat{font-size:10px;bottom:3px}
+  .card .power-stat{left:3px}.card .sp-stat{right:3px}
+  .card.selected{outline:3px solid #f06427;transform:translateY(-7px)}
+  .card.tapped{transform:rotate(90deg);z-index:6}
+  .card.pending-play{outline:2px dashed #a56e24}
+  .card .pending-badge{bottom:14px;font-size:6px;padding:1px 3px}
+  .card-controls{bottom:14px}
+  .card-controls button{width:18px;height:18px;font-size:10px}
+
+  .opponent-hand-wrap{
+    position:absolute;top:-8px;left:50%;transform:translateX(-50%);z-index:25;
+    margin:0;padding:0;background:transparent;border:0;border-radius:0;width:min(760px,70vw)
+  }
+  .opponent-hand-title{display:none}
+  .opponent-hand{height:94px;padding:0;overflow:visible;justify-content:center;gap:0;align-items:flex-start}
+  .opponent-hand .card{flex:0 0 61px;width:61px;height:81px;margin-left:-2px;border-radius:2px}
+  .opponent-hand .card:first-child{margin-left:0}
+  .opponent-hand .card .art{height:26px}
+  .opponent-hand .card:hover{transform:translateY(5px) scale(1.04)}
+
+  .centerbar{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;
+    display:flex;align-items:center;gap:9px;background:rgba(38,37,32,.82);border:1px solid rgba(240,236,220,.45);
+    border-radius:999px;padding:4px 10px;box-shadow:0 2px 7px #0007
+  }
+  .turn-pill{padding:0;background:transparent;border:0;color:#f2efe3;font-size:10px}
+  .phase{color:#d1cdc0;font-size:9px}
+
+  .handbar{
+    position:absolute;left:50%;bottom:-26px;transform:translateX(-50%);z-index:45;
+    width:min(820px,82vw);height:184px;padding:0;background:transparent;border:0;display:block;overflow:visible
+  }
+  .hand-info{display:none}
+  .hand{height:184px;overflow:visible;display:flex;justify-content:center;align-items:flex-end;gap:0;padding:0 0 0 24px}
+  .hand .card{
+    flex:0 0 108px;width:108px;height:144px;margin-left:-24px;border-radius:4px;padding:5px;
+    transform:rotate(var(--fan-angle,0deg)) translateY(var(--fan-y,0px));
+    transform-origin:50% 112%;box-shadow:0 7px 12px #0008
+  }
+  .hand .card:first-child{margin-left:0}
+  .hand .card .name{font-size:9px;padding-right:18px}
+  .hand .card .type{font-size:7px}
+  .hand .card .cost{min-width:18px;font-size:9px}
+  .hand .card .art{height:55px;font-size:20px}
+  .hand .card .power-stat,.hand .card .sp-stat{font-size:13px}
+  .hand .card:hover{
+    transform:rotate(var(--fan-angle,0deg)) translateY(calc(var(--fan-y,0px) - 28px)) scale(1.05);
+    z-index:90;box-shadow:0 12px 22px #000b
+  }
+  .hand .card.selected{outline:3px solid #f06427;transform:rotate(var(--fan-angle,0deg)) translateY(calc(var(--fan-y,0px) - 22px))}
+
+  .side{
+    position:absolute;right:16px;top:52px;bottom:66px;z-index:75;width:286px;min-height:0;
+    background:rgba(24,24,21,.93);border:1px solid #777267;border-radius:7px;color:#eef2f7;
+    box-shadow:0 10px 28px #000b;backdrop-filter:blur(8px);
+    transform:translateX(calc(100% + 38px));transition:transform .18s ease
+  }
+  body.info-open .side{transform:translateX(0)}
+  .side .actions{display:none}
+  .inspector,.stack-box,.log{background:rgba(12,13,12,.84)}
+
+  .desktop-actions{
+    position:absolute;right:16px;bottom:15px;z-index:85;display:flex;gap:4px;align-items:center;
+    padding:5px;background:rgba(31,30,26,.78);border:1px solid rgba(119,114,103,.7);border-radius:6px;box-shadow:0 3px 9px #0008
+  }
+  .desktop-actions button{
+    border:1px solid #777267;background:#34332d;color:#f3f0e5;border-radius:4px;padding:6px 8px;
+    font-size:9px;font-weight:800;cursor:pointer
+  }
+  .desktop-actions button.primary{background:#596b72;border-color:#8ca1a7}
+  .desktop-actions button.pass{background:#665329;border-color:#9d8246}
+  .desktop-actions button:hover{filter:brightness(1.12)}
+
+  /* ===== Tabletop UI: larger cards / controls / stacked grave+deck ===== */
+  .nav-btn{padding:8px 13px;font-size:12px;font-weight:850}
+
+  .cpu-half .zonebox:nth-child(1){top:27%;left:18%;right:18%;height:102px}
+  .cpu-half .zonebox:nth-child(3){top:57%;left:16%;right:16%;height:108px}
+  .cpu-half .resource-col:nth-child(2){top:24%;left:5.2%;width:66px;height:178px}
+  .cpu-half .resource-col:nth-child(4){top:30%;left:12.1%;width:66px;height:48px}
+
+  .you-half .zonebox:nth-child(1){top:3%;left:16%;right:16%;height:108px}
+  .you-half .resource-col:nth-child(2){top:22%;right:5.2%;width:66px;height:178px}
+  .you-half .zonebox:nth-child(3){top:35%;left:16%;right:16%;height:102px}
+
+  .cards{gap:12px}
+  .resource-zone{width:64px;height:84px;padding-bottom:8px}
+  .resource-zone b{font-size:8px}
+  .resource-zone span{font-size:14px}
+  .deck-grave-stack{gap:6px}
+  .hand-count-stack{justify-content:flex-start}
+  .hand-count-stack .resource-zone{width:64px}
+
+  .card{flex-basis:74px;width:74px;height:99px;padding:5px;border-radius:4px}
+  .card .name{font-size:8px;padding-right:15px}
+  .card .type{font-size:6.2px}
+  .card .cost{min-width:16px;font-size:8px}
+  .card .art{height:33px;font-size:15px}
+  .card .power-stat,.card .sp-stat{font-size:12px}
+  .card-controls{bottom:16px}
+  .card-controls button{width:23px;height:23px;font-size:12px}
+  .card.selected .name,.card.selected .type,.card.selected .power-stat,.card.selected .sp-stat{color:#fff!important;text-shadow:0 1px 2px #000,0 0 3px #000}
+
+  .opponent-hand{height:106px}
+  .opponent-hand .card{flex-basis:70px;width:70px;height:93px;margin-left:-2px}
+  .opponent-hand .card .art{height:31px}
+
+  .handbar{bottom:-24px;width:min(900px,85vw);height:202px}
+  .hand{height:202px;padding-left:28px}
+  .hand .card{flex-basis:120px;width:120px;height:160px;margin-left:-26px;padding:6px}
+  .hand .card .name{font-size:10px}
+  .hand .card .type{font-size:7.5px}
+  .hand .card .cost{min-width:19px;font-size:10px}
+  .hand .card .art{height:62px;font-size:22px}
+  .hand .card .power-stat,.hand .card .sp-stat{font-size:15px}
+
+  .side{top:58px;bottom:104px;width:278px}
+
+  .desktop-actions{right:16px;bottom:16px;gap:6px;padding:8px;border-radius:8px}
+  .desktop-actions button{padding:10px 12px;min-height:40px;font-size:11px;border-radius:6px}
+
+  /* ===== Tabletop UI: equal hand sizes / stronger stats / larger navigation & dock ===== */
+  .topbar{height:52px}
+  .topbar>div:nth-child(2){gap:9px}
+  .nav-btn{padding:12px 18px;min-height:46px;font-size:14px;font-weight:900;border-width:2px}
+
+  /* PLAYER 2の手札をPLAYER 1と同じカードサイズに統一 */
+  .opponent-hand-wrap{top:-24px;width:min(900px,85vw);height:202px}
+  .opponent-hand{height:202px;padding-left:28px;align-items:flex-start;overflow:visible}
+  .opponent-hand .card{flex-basis:120px;width:120px;height:160px;margin-left:-26px;padding:6px;border-radius:4px}
+  .opponent-hand .card:first-child{margin-left:0}
+  .opponent-hand .card .name{font-size:10px;padding-right:18px}
+  .opponent-hand .card .type{font-size:7.5px}
+  .opponent-hand .card .cost{min-width:19px;font-size:10px}
+  .opponent-hand .card .art{height:62px;font-size:22px}
+  .opponent-hand .card .power-stat,.opponent-hand .card .sp-stat{font-size:18px;min-width:28px;padding:3px 5px}
+  .opponent-hand .card:hover{transform:translateY(8px) scale(1.04)}
+
+  /* 大きくした相手手札と上段ゾーンの干渉を避ける */
+  .cpu-half .zonebox:nth-child(1){top:34%;left:18%;right:18%;height:102px}
+  .cpu-half .zonebox:nth-child(3){top:63%;left:16%;right:16%;height:108px}
+  .cpu-half .resource-col:nth-child(2){top:34%;left:5.2%;width:66px;height:178px}
+  .cpu-half .resource-col:nth-child(4){top:38%;left:12.1%;width:66px;height:48px}
+
+  /* パワー / SP の視認性：パワーは最大4桁以上 */
+  .card .power-stat,.card .sp-stat{font-size:15px;min-width:24px;padding:2px 4px;-webkit-text-stroke:1.7px #000}
+  .hand .card .power-stat,.hand .card .sp-stat{font-size:18px;min-width:28px;padding:3px 5px}
+
+  /* 操作ドックをさらに一回り拡大。INFOパネルはその分だけ短くする */
+  .side{top:68px;bottom:132px;width:278px}
+  .desktop-actions{right:16px;bottom:16px;gap:8px;padding:10px;border-radius:10px}
+  .desktop-actions button{padding:12px 16px;min-height:48px;min-width:66px;font-size:13px;border-radius:7px;font-weight:900}
+
+  .modalbox{width:min(680px,92vw);padding:22px}
+  .modalbox h3{font-size:18px}
+  .targets{gap:10px}
+  .targets button{padding:12px 16px;min-height:44px;font-size:13px;color:#fff}
+  .targets button:disabled{color:#fff!important;opacity:1;background:#4a5563;border-color:#8e9bab}
+  #modalCancelBtn,#modalPeekBtn{padding:12px 18px;font-size:13px;min-height:44px}
+
+  /* ===== Tabletop UI: hand readability / forward placement ===== */
+  #modalTitle{color:#fff!important;text-shadow:0 1px 2px #000}
+
+  /* 両プレイヤーの手札を110×140に統一し、盤面側へ少し前に出す */
+  .opponent-hand-wrap{top:-2px;width:min(980px,90vw);height:176px}
+  .opponent-hand{height:176px;padding:0 8px;align-items:flex-start;overflow:visible}
+  .opponent-hand .card{flex:0 0 110px;width:110px;height:140px;margin-left:-10px;padding:6px}
+  .opponent-hand .card:first-child{margin-left:0}
+  .opponent-hand .card .name{font-size:10px;line-height:1.15;padding-right:18px}
+  .opponent-hand .card .type{font-size:7px}
+  .opponent-hand .card .cost{min-width:19px;font-size:10px}
+  .opponent-hand .card .art{height:51px;font-size:20px}
+  .opponent-hand .card .power-stat,.opponent-hand .card .sp-stat{font-size:17px;min-width:27px;padding:3px 5px}
+
+  .handbar{bottom:6px;width:min(980px,90vw);height:176px}
+  .hand{height:176px;padding:0 8px;align-items:flex-end;overflow:visible}
+  .hand .card{flex:0 0 110px;width:110px;height:140px;margin-left:-10px;padding:6px;transform-origin:50% 118%}
+  .hand .card:first-child{margin-left:0}
+  .hand .card .name{font-size:10px;line-height:1.15;padding-right:18px}
+  .hand .card .type{font-size:7px}
+  .hand .card .cost{min-width:19px;font-size:10px}
+  .hand .card .art{height:51px;font-size:20px}
+  .hand .card .power-stat,.hand .card .sp-stat{font-size:17px;min-width:27px;padding:3px 5px}
+  .hand .card:hover{transform:rotate(var(--fan-angle,0deg)) translateY(calc(var(--fan-y,0px) - 20px)) scale(1.05)}
+  .hand .card.selected{transform:rotate(var(--fan-angle,0deg)) translateY(calc(var(--fan-y,0px) - 17px))}
+
+  .deck-setup{z-index:5000}
+  .toast,.modal,.effect-peek-return{z-index:6000}
+}
+@media(max-width:900px){#infoToggleBtn{display:none}.desktop-actions{display:none}}
+
+
+
+/* ===== Smartphone tabletop layout unified with desktop ===== */
+@media(max-width:900px){
+  html,body{
+    width:100%;height:100%;min-height:100%;overflow:hidden!important;
+    background:#171712!important;color:#171712;
+  }
+  body{padding:0!important}
+  body.hand-collapsed{padding:0!important}
+  #app{height:100dvh;min-height:100dvh;position:relative;background:#171712;overflow:hidden}
+
+  .topbar{
+    position:absolute;top:6px;left:8px;right:8px;z-index:95;
+    height:auto;min-height:40px;padding:0;background:transparent;border:0;
+    display:flex;justify-content:flex-end;pointer-events:none
+  }
+  .brand,.top-info{display:none!important}
+  .topbar>div:nth-child(2){margin-left:auto;display:flex;gap:5px;flex-wrap:nowrap;pointer-events:auto}
+  .nav-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:38px;padding:8px 10px;border-radius:6px;border:1px solid #777267;
+    background:rgba(32,31,27,.88);color:#f2efe5!important;
+    font-size:10px;font-weight:900;box-shadow:0 2px 7px #0008;white-space:nowrap
+  }
+  .nav-btn.btn-sub{background:rgba(32,31,27,.88);border-color:#777267}
+  #infoToggleBtn{display:inline-flex!important}
+
+  .main{position:relative;display:block;height:100dvh;min-height:0;padding:0;overflow:hidden}
+  .table{
+    position:absolute;inset:0;display:block;overflow:hidden;min-height:0;border:8px solid #45443e;border-radius:11px;
+    box-shadow:inset 0 0 0 1px #181814,inset 0 0 32px rgba(54,52,44,.42),0 0 18px #0009;
+    background:
+      linear-gradient(to bottom,
+        transparent 24.82%,rgba(91,89,80,.30) 24.95%,rgba(91,89,80,.30) 25.08%,transparent 25.2%,
+        transparent 49.82%,rgba(91,89,80,.35) 49.94%,rgba(91,89,80,.35) 50.08%,transparent 50.2%,
+        transparent 74.82%,rgba(91,89,80,.28) 74.94%,rgba(91,89,80,.28) 75.08%,transparent 75.2%),
+      radial-gradient(circle at 17% 18%,rgba(255,255,255,.24) 0 1px,transparent 1.7px),
+      radial-gradient(circle at 73% 61%,rgba(47,45,39,.10) 0 1px,transparent 1.5px),
+      repeating-linear-gradient(8deg,rgba(50,48,42,.018) 0 1px,transparent 1px 5px),
+      linear-gradient(135deg,#d9d6c9 0%,#c9c6b9 46%,#dedbd0 100%);
+    background-size:auto,31px 31px,41px 41px,auto,auto
+  }
+  .table::after{
+    content:"";position:absolute;inset:6px;border:1px solid rgba(47,46,40,.45);border-radius:6px;
+    box-shadow:inset 0 0 22px rgba(41,39,34,.18);pointer-events:none;z-index:1
+  }
+
+  .half{position:absolute;left:0;right:0;padding:0;gap:0;display:block;border:0;min-height:0;z-index:3;background:transparent}
+  .cpu-half{top:0;height:50%;border:0}
+  .you-half{top:50%;height:50%;border:0}
+
+  .player-head{position:absolute;z-index:32;width:auto;display:flex;align-items:center;gap:5px;justify-content:flex-start;color:#292822}
+  .cpu-half .player-head{top:150px;left:10px}
+  .you-half .player-head{bottom:166px;left:10px}
+  .player-head .who{font:800 10px/1.1 Georgia,"Yu Mincho",serif;color:#24231f;letter-spacing:.03em}
+  .hp{font:900 15px/1 Georgia,"Yu Mincho",serif;color:#22211d;background:rgba(236,232,217,.82);border:1px solid rgba(65,63,55,.42);padding:5px 7px;border-radius:4px;box-shadow:0 2px 4px #0003}
+  .dmg-pop{right:-50px;top:-5px}
+
+  .zone-row{position:absolute;inset:0;display:block;min-height:0}
+  .zonebox,.resource-col{position:absolute;display:block;min-width:0;min-height:0}
+  .zonebox{justify-content:initial}
+  .zone-label{
+    position:absolute;left:0;top:-15px;margin:0;color:#36352f;font:700 8px/1 Georgia,"Yu Mincho",serif;
+    letter-spacing:.04em;text-transform:none;text-shadow:0 1px rgba(255,255,255,.45);white-space:nowrap
+  }
+  .zone-count{font-size:8px;color:#36352f}
+  .mana-pool-container{margin-left:3px;vertical-align:middle}
+  .mana-icon{width:13px;height:13px;font-size:7px;box-shadow:0 1px 2px #0005}
+
+  /* PLAYER 2: hand -> summoner -> battlefield */
+  .cpu-half .zonebox:nth-child(1){top:45%;left:16%;right:16%;height:62px}
+  .cpu-half .zonebox:nth-child(3){top:70%;left:9%;right:9%;height:72px}
+  .cpu-half .resource-col:nth-child(2){top:47%;left:2.5%;width:46px;height:116px}
+  .cpu-half .resource-col:nth-child(4){display:none}
+
+  /* PLAYER 1: battlefield -> summoner -> hand */
+  .you-half .zonebox:nth-child(1){top:4%;left:9%;right:9%;height:72px}
+  .you-half .zonebox:nth-child(3){top:30%;left:16%;right:16%;height:62px}
+  .you-half .resource-col:nth-child(2){top:6%;right:2.5%;width:46px;height:116px}
+
+  .cards{display:flex;align-items:center;justify-content:center;gap:5px;overflow-x:auto;overflow-y:visible;padding:3px 1px;height:100%;scrollbar-width:none}
+  .cards::-webkit-scrollbar{display:none}
+  .field-cards{min-height:0}
+
+  .resource-zone{
+    width:44px;height:52px;max-height:none;padding:0 0 5px;border:1px solid rgba(54,52,45,.38);border-radius:4px;
+    background:rgba(224,221,208,.42);box-shadow:inset 0 0 8px rgba(38,36,31,.08),0 1px 3px #0002;
+    color:#272620;display:flex;flex-direction:column;align-items:center;justify-content:flex-end
+  }
+  .resource-zone b{font:800 5.5px/1 Georgia,"Yu Mincho",serif;color:#35342d;letter-spacing:.02em}
+  .resource-zone span{font:900 10px/1 Georgia,"Yu Mincho",serif;color:#1d1c19;margin-top:2px}
+  .resource-col{display:flex;flex-direction:column;gap:5px;justify-content:flex-start}
+  .deck-grave-stack{gap:5px}
+
+  .card{
+    flex:0 0 54px;width:54px;height:72px;padding:4px;border-radius:3px;border-width:1px;
+    box-shadow:0 2px 4px #0007;transition:transform .12s,filter .12s,box-shadow .12s
+  }
+  .card:hover{transform:none}
+  .card.selected{outline:2px solid #f06427;transform:translateY(-3px)}
+  .card.tapped{transform:rotate(90deg);z-index:6}
+  .card .name{font-size:6.4px;line-height:1.05;padding-right:11px}
+  .card .type{font-size:5px}
+  .card .cost{left:2px;top:2px;min-width:12px;font-size:6px;padding:1px 2px}
+  .card .art{height:22px;margin:2px 0;border-radius:2px;font-size:11px}
+  .card .power-stat,.card .sp-stat{font-size:11px;min-width:19px;padding:2px 3px;bottom:2px;-webkit-text-stroke:1.3px #000}
+  .card .power-stat{left:2px}.card .sp-stat{right:2px}
+  .card-controls{bottom:12px}
+  .card-controls button{width:20px;height:20px;font-size:10px}
+  .card .pending-badge{bottom:12px;font-size:5px;padding:1px 2px}
+  .card.selected .name,.card.selected .type,.card.selected .power-stat,.card.selected .sp-stat{color:#fff!important;text-shadow:0 1px 2px #000,0 0 3px #000}
+
+  .opponent-hand-wrap{
+    position:absolute;top:48px;left:50%;transform:translateX(-50%);z-index:28;
+    margin:0;padding:0;background:transparent;border:0;border-radius:0;width:calc(100% - 22px);height:112px
+  }
+  .opponent-hand-title{display:none}
+  .opponent-hand{height:112px;padding:0 2px;overflow:visible;justify-content:center;gap:0;align-items:flex-start}
+  .opponent-hand .card{
+    flex:0 0 clamp(78px,23vw,110px);width:clamp(78px,23vw,110px);height:clamp(100px,29vw,140px);
+    margin-left:-40px;padding:5px;border-radius:4px;box-shadow:0 5px 9px #0007
+  }
+  .opponent-hand .card:first-child{margin-left:0}
+  .opponent-hand .card .name{font-size:8px;line-height:1.1;padding-right:15px}
+  .opponent-hand .card .type{font-size:6px}
+  .opponent-hand .card .cost{min-width:16px;font-size:8px}
+  .opponent-hand .card .art{height:38px;font-size:16px}
+  .opponent-hand .card .power-stat,.opponent-hand .card .sp-stat{font-size:14px;min-width:23px;padding:2px 4px}
+
+  .centerbar{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:36;
+    display:flex;align-items:center;gap:6px;background:rgba(38,37,32,.84);border:1px solid rgba(240,236,220,.45);
+    border-radius:999px;padding:5px 9px;box-shadow:0 2px 6px #0007;white-space:nowrap
+  }
+  .turn-pill{padding:0;background:transparent;border:0;color:#f2efe3;font-size:9px}
+  .phase{color:#d1cdc0;font-size:8px}
+
+  .handbar{
+    position:absolute;left:50%;bottom:52px;transform:translateX(-50%);z-index:48;
+    width:calc(100% - 18px);height:126px;padding:0;background:transparent;border:0;display:block;overflow:visible;box-shadow:none
+  }
+  .hand-info{display:none!important}
+  .hand{height:126px;overflow:visible;display:flex;justify-content:center;align-items:flex-end;gap:0;padding:0 2px}
+  .hand .card{
+    flex:0 0 clamp(78px,23vw,110px);width:clamp(78px,23vw,110px);height:clamp(100px,29vw,140px);
+    margin-left:-40px;padding:5px;border-radius:4px;
+    transform:rotate(var(--fan-angle,0deg)) translateY(var(--fan-y,0px));transform-origin:50% 118%;box-shadow:0 6px 11px #0008
+  }
+  .hand .card:first-child{margin-left:0}
+  .hand .card .name{font-size:8px;line-height:1.1;padding-right:15px}
+  .hand .card .type{font-size:6px}
+  .hand .card .cost{min-width:16px;font-size:8px}
+  .hand .card .art{height:38px;font-size:16px}
+  .hand .card .power-stat,.hand .card .sp-stat{font-size:14px;min-width:23px;padding:2px 4px}
+  .hand .card.selected{outline:2px solid #f06427;transform:rotate(var(--fan-angle,0deg)) translateY(calc(var(--fan-y,0px) - 10px))}
+  .mobile-hand-toggle{display:none!important}
+  body.hand-collapsed .handbar{height:126px}
+  body.hand-collapsed .hand{display:flex}
+
+  /* INFO is now a slide-over panel on mobile too */
+  .side{
+    display:flex!important;position:fixed;right:7px;top:52px;bottom:66px;z-index:110;width:min(320px,88vw);min-height:0;
+    padding:8px;gap:6px;border:1px solid #777267;border-radius:8px;background:rgba(24,24,21,.96);color:#eef2f7;
+    box-shadow:0 10px 28px #000b;backdrop-filter:blur(8px);transform:translateX(calc(100% + 20px));transition:transform .18s ease
+  }
+  body.info-open .side{transform:translateX(0)}
+  .side h2{font-size:10px}
+  .inspector,.stack-box,.log{background:rgba(12,13,12,.88)}
+  .inspector{min-height:90px}
+  .stack-box{max-height:110px}
+  .log{min-height:80px;max-height:none;font-size:10px;flex:1}
+  .side .actions{display:none}
+
+  .mobile-actions{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:4px;position:fixed;left:6px;right:6px;bottom:5px;z-index:105;
+    min-height:46px;padding:5px;background:rgba(31,30,26,.9);border:1px solid rgba(119,114,103,.75);border-radius:8px;box-shadow:0 3px 9px #0008
+  }
+  .mobile-actions button{
+    min-width:0;min-height:38px;border:1px solid #777267;background:#34332d;color:#f3f0e5;border-radius:5px;
+    padding:6px 2px;font-size:8px;font-weight:900;line-height:1.05
+  }
+  .mobile-actions .primary{background:#596b72;border-color:#8ca1a7}
+  .mobile-actions .pass{background:#665329;border-color:#9d8246}
+
+  .modal{align-items:center;z-index:6000}
+  .modalbox{width:min(94vw,680px);max-height:82dvh;overflow:auto;border-radius:12px;padding:16px 14px}
+  .modalbox h3,#modalTitle{color:#fff!important;text-shadow:0 1px 2px #000}
+  .targets{display:grid;grid-template-columns:1fr;gap:7px}
+  .targets button{min-height:44px;text-align:left;color:#fff}
+  #modalCancelBtn,#modalPeekBtn{min-height:42px;padding:10px 14px}
+
+  .deck-setup{padding:10px;align-items:flex-start;overflow:auto;z-index:5000}
+  .deck-setup-box{margin-top:20px;padding:16px}
+  .deck-setup-title{font-size:20px}
+  .deck-choice-grid{grid-template-columns:1fr}
+  .deck-choice select,.first-player-choice select,.start-battle-btn{min-height:44px}
+}
+
+/* portrait phones need more overlap so names/stats stay visible while the hand still fits */
+@media(max-width:900px) and (orientation:portrait){
+  .opponent-hand .card,.hand .card{margin-left:-42px}
+  .opponent-hand .card:first-child,.hand .card:first-child{margin-left:0}
+}
+
+/* landscape phones keep the same tabletop but compress vertically */
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+  .topbar{top:4px;left:6px;right:6px}
+  .nav-btn{min-height:32px;padding:6px 8px;font-size:9px}
+  .opponent-hand-wrap{top:8px;height:92px;width:68%}
+  .opponent-hand{height:92px}
+  .opponent-hand .card,.hand .card{flex-basis:74px;width:74px;height:96px;margin-left:-18px;padding:4px}
+  .opponent-hand .card .art,.hand .card .art{height:30px}
+  .opponent-hand .card .name,.hand .card .name{font-size:7px}
+  .opponent-hand .card .power-stat,.opponent-hand .card .sp-stat,.hand .card .power-stat,.hand .card .sp-stat{font-size:12px;min-width:20px}
+  .cpu-half .player-head{top:92px}
+  .cpu-half .zonebox:nth-child(1){top:45%;height:48px}
+  .cpu-half .zonebox:nth-child(3){top:72%;height:52px}
+  .you-half .zonebox:nth-child(1){top:5%;height:52px}
+  .you-half .zonebox:nth-child(3){top:34%;height:48px}
+  .card{flex-basis:46px;width:46px;height:61px;padding:3px}
+  .card .art{height:18px}
+  .card .name{font-size:5.8px}
+  .card .power-stat,.card .sp-stat{font-size:9px;min-width:17px;padding:1px 2px}
+  .resource-zone{width:38px;height:42px}
+  .cpu-half .resource-col:nth-child(2),.you-half .resource-col:nth-child(2){width:40px;height:92px}
+  .handbar{bottom:50px;height:104px;width:72%}
+  .hand{height:104px}
+  .you-half .player-head{bottom:112px}
+  .mobile-actions{min-height:42px}
+  .mobile-actions button{min-height:32px;padding:4px 2px;font-size:7px}
+  .side{top:42px;bottom:58px;width:min(300px,72vw)}
+}
+
+
+
+/* ===== Beta2 v17: custom field image ===== */
+.field-settings{
+  position:fixed;inset:0;z-index:7000;display:none;align-items:center;justify-content:center;
+  padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)
+}
+.field-settings.open{display:flex}
+.field-settings-box{
+  width:min(520px,94vw);max-height:90dvh;overflow:auto;padding:20px;border-radius:14px;
+  border:1px solid #626d7b;background:#171d25;color:#eef2f7;box-shadow:0 22px 70px #000c
+}
+.field-settings-title{font-size:20px;font-weight:950;letter-spacing:.05em;margin-bottom:8px}
+.field-settings-text{font-size:12px;line-height:1.7;color:#c5ced9;margin-bottom:14px}
+.field-image-guide{
+  margin:12px 0;padding:12px 14px;border-radius:9px;border:1px solid #465564;background:#10161e;
+  font-size:12px;line-height:1.7;color:#dce4ec
+}
+.field-image-guide b{color:#fff}
+.field-image-status{margin:10px 0 14px;min-height:18px;font-size:11px;color:#9fb4c7}
+.field-settings-actions{display:flex;flex-wrap:wrap;gap:8px}
+.field-settings-actions button,.field-upload-label{
+  display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 14px;
+  border-radius:7px;border:1px solid #536174;background:#252e3a;color:#fff;font:800 12px/1 system-ui,-apple-system,"Segoe UI",sans-serif;
+  cursor:pointer;text-decoration:none
+}
+.field-settings-actions button:hover,.field-upload-label:hover{background:#344253}
+.field-upload-label{background:#246e9f;border-color:#5aade0}
+.field-settings-actions .field-reset{background:#5b342f;border-color:#936159}
+.field-settings-actions .field-close{margin-left:auto}
+#fieldImageInput{display:none}
+
+/* Custom image replaces only the v17 tabletop surface. All game UI remains unchanged. */
+body.custom-field-active .table{
+  background-image:var(--custom-field-image)!important;
+  background-size:cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+  background-color:#171712!important;
+}
+body.custom-field-active .zone-label{
+  color:#fff!important;text-shadow:0 1px 3px #000,0 0 5px #000!important;
+  background:rgba(0,0,0,.38);padding:3px 5px;border-radius:4px
+}
+body.custom-field-active .zone-count{color:#fff!important}
+body.custom-field-active .player-head .who{color:#fff!important;text-shadow:0 1px 3px #000,0 0 5px #000!important}
+
+@media(max-width:650px){
+  .field-settings{padding:10px}
+  .field-settings-box{padding:16px}
+  .field-settings-title{font-size:17px}
+  .field-settings-actions{display:grid;grid-template-columns:1fr 1fr}
+  .field-settings-actions .field-close{margin-left:0}
+}
+
+
+/* ===== v18: three independent rows, battlefield > summoner > vein ===== */
+.summoner-choice-label{display:block;margin:12px 0 6px;color:#d9c58d;font-size:12px;font-weight:800}
+.summoner-select{width:100%;max-width:100%;padding:9px 8px;background:#151d26;color:#f8f6ef;border:1px solid #b29a5f;border-radius:7px;font-size:13px}
+.summoner-cards{overflow:visible;justify-content:center}
+.zonebox.zone-summoner .zone-label{color:#805221;font-weight:900}
+.zonebox.zone-land .zone-label{font-weight:850}
+.card.land{background:linear-gradient(140deg,#2b5148,#132b2a);border-color:#9ed9c8}
+.zonebox.zone-summoner .card{box-shadow:0 0 0 2px #deb96b,0 4px 12px #0008}
+@media(min-width:901px){
+  .cpu-half .zonebox.zone-land{top:34%;left:16%;right:16%;height:clamp(64px,9vh,95px)}
+  .cpu-half .zonebox.zone-summoner{top:55%;left:25%;right:25%;height:clamp(58px,8vh,82px)}
+  .cpu-half .zonebox.zone-field{top:74%;left:9%;right:9%;height:clamp(75px,10vh,105px)}
+  .you-half .zonebox.zone-field{top:3%;left:9%;right:9%;height:clamp(75px,10vh,105px)}
+  .you-half .zonebox.zone-summoner{top:25%;left:25%;right:25%;height:clamp(58px,8vh,82px)}
+  .you-half .zonebox.zone-land{top:44%;left:16%;right:16%;height:clamp(64px,9vh,95px)}
+  .cpu-half .resource-col.deck-grave-stack{top:39%;left:2.6%}
+  .you-half .resource-col.deck-grave-stack{top:27%;right:2.6%}
+  .zonebox.zone-summoner .card{flex:0 0 66px;width:66px;height:85px}
+  .zonebox.zone-summoner .card .art{height:25px}
+}
+@media(max-width:900px){
+  .cpu-half .zonebox.zone-land{top:41%;left:17%;right:17%;height:15%}
+  .cpu-half .zonebox.zone-summoner{top:59%;left:22%;right:22%;height:15%}
+  .cpu-half .zonebox.zone-field{top:78%;left:10%;right:10%;height:17%}
+  .you-half .zonebox.zone-field{top:3%;left:10%;right:10%;height:18%}
+  .you-half .zonebox.zone-summoner{top:26%;left:22%;right:22%;height:15%}
+  .you-half .zonebox.zone-land{top:46%;left:17%;right:17%;height:15%}
+  .zonebox.zone-summoner .card{flex:0 0 40px;width:40px;height:53px}
+  .zonebox.zone-summoner .card .art{height:17px}
+  .zonebox.zone-summoner .card .name{font-size:6px}
+  .zonebox.zone-summoner .card .type{font-size:5px}
+  .zonebox.zone-summoner .card-controls{bottom:5px}
+  .zonebox.zone-summoner .card-controls button{width:16px;height:16px;font-size:9px}
+  .cpu-half .resource-col.deck-grave-stack{top:50%;left:2.5%}
+  .you-half .resource-col.deck-grave-stack{top:16%;right:2.5%}
+  .zone-label{white-space:nowrap}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+  .cpu-half .zonebox.zone-land{top:42%;height:15%}
+  .cpu-half .zonebox.zone-summoner{top:60%;height:15%}
+  .cpu-half .zonebox.zone-field{top:78%;height:17%}
+  .you-half .zonebox.zone-field{top:3%;height:18%}
+  .you-half .zonebox.zone-summoner{top:26%;height:15%}
+  .you-half .zonebox.zone-land{top:46%;height:15%}
+}
+
+/* ===== v31: tap the battlefield to minimize both hands; tap a hand to expand ===== */
+.handbar,.opponent-hand-wrap{cursor:pointer;transition:height .18s ease, bottom .18s ease,top .18s ease,width .18s ease}
+.handbar .card,.opponent-hand-wrap .card{transition:width .18s ease,height .18s ease,transform .18s ease}
+body.hands-compact .handbar{height:56px!important;bottom:8px!important;width:min(740px,78vw)!important;z-index:47}
+body.hands-compact .hand{height:54px!important;overflow:visible!important;align-items:flex-end!important;padding:0!important;gap:3px!important}
+body.hands-compact .hand .card{flex:0 0 43px!important;width:43px!important;height:49px!important;margin-left:0!important;padding:3px!important;transform:none!important}
+body.hands-compact .hand .card:hover{transform:translateY(-3px)!important}
+body.hands-compact .hand .card .name{font-size:6px!important}
+body.hands-compact .hand .card .type{font-size:5px!important}
+body.hands-compact .hand .card .art{height:14px!important;margin:1px 0!important;font-size:9px!important}
+body.hands-compact .hand .card .power-stat,body.hands-compact .hand .card .sp-stat{font-size:8px!important;min-width:0!important;padding:1px!important}
+body.hands-compact .opponent-hand-wrap{height:54px!important;top:45px!important;width:min(740px,78vw)!important;z-index:47}
+body.hands-compact .opponent-hand{height:54px!important;align-items:flex-start!important;gap:3px!important;padding:0!important;overflow:visible!important}
+body.hands-compact .opponent-hand .card{flex:0 0 43px!important;width:43px!important;height:49px!important;margin-left:0!important;padding:3px!important;transform:none!important}
+body.hands-compact .opponent-hand .card:hover{transform:translateY(3px)!important}
+body.hands-compact .opponent-hand .card .name{font-size:6px!important}
+body.hands-compact .opponent-hand .card .type{font-size:5px!important}
+body.hands-compact .opponent-hand .card .art{height:14px!important;margin:1px 0!important;font-size:9px!important}
+body.hands-compact .opponent-hand .card .power-stat,body.hands-compact .opponent-hand .card .sp-stat{font-size:8px!important;min-width:0!important;padding:1px!important}
+/* battlefield-centered stack, completely separate from INFO */
+.central-stack-panel,.draw-progress-panel{position:absolute;left:50%;transform:translateX(-50%);box-shadow:0 4px 18px #000a;background:rgba(19,24,31,.94);color:#eef2f7;border:1px solid #d3bc76;border-radius:8px;z-index:49;font:700 11px/1.4 system-ui,sans-serif;max-width:86%;pointer-events:none}
+.central-stack-panel[hidden],.draw-progress-panel[hidden]{display:none!important}
+.central-stack-panel{top:50%;transform:translate(-50%,-50%);width:min(510px,83vw);padding:5px 10px;max-height:min(165px,24dvh);overflow-y:auto}
+.central-stack-title{text-align:center;font-size:10px;color:#e5ce83;letter-spacing:.06em}
+.central-stack-panel .stack-box{overflow:visible;max-height:none!important;background:transparent!important;padding:0;margin:0}
+.central-stack-panel .stack-entry{padding:4px 5px;font-size:10px;gap:9px;color:#fff}
+.central-stack-panel .priority-line{text-align:center;color:#d9dfef;margin-top:3px;font-size:10px}
+.draw-progress-panel{top:calc(50% - 76px);width:max-content;min-width:230px;text-align:center;padding:9px 12px;border-color:#83b8dc}
+.draw-progress-line+ .draw-progress-line{margin-top:5px}
+.table:has(.central-stack-panel:not([hidden])) .centerbar{opacity:.2;pointer-events:none}
+body.hands-compact .handbar::before,body.hands-compact .opponent-hand-wrap::before{
+ content:"手札をタップして拡大";position:absolute;left:50%;transform:translateX(-50%);
+ white-space:nowrap;color:#fff;background:#172333dd;border:1px solid #889eb3;border-radius:8px;
+ padding:1px 7px;font:bold 9px/1.4 system-ui;z-index:1;pointer-events:none
+}
+body.hands-compact .handbar::before{top:-15px}
+body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
+@media(max-width:900px){
+ body.hands-compact .handbar{width:min(340px,84vw)!important;bottom:53px!important;height:48px!important}
+ body.hands-compact .hand{height:45px!important;justify-content:center!important}
+ body.hands-compact .hand .card{flex-basis:29px!important;width:29px!important;height:40px!important;margin-left:0!important}
+ body.hands-compact .opponent-hand-wrap{width:min(340px,84vw)!important;top:43px!important;height:44px!important}
+ body.hands-compact .opponent-hand{height:44px!important;justify-content:center!important}
+ body.hands-compact .opponent-hand .card{flex-basis:29px!important;width:29px!important;height:40px!important;margin-left:0!important}
+ .central-stack-panel{width:88vw;top:50%;max-height:22dvh;padding:4px 6px;font-size:9px}
+ .central-stack-panel .stack-entry{font-size:9px;padding:3px}
+ .draw-progress-panel{top:calc(50% - 57px);font-size:9px;min-width:0;padding:6px 9px;max-width:90vw}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ .central-stack-panel{max-height:28dvh;top:50%}
+ .draw-progress-panel{top:calc(50% - 45px)}
+}

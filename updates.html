@@ -47,11 +47,22 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v32 (オンライン対戦アルファ)</div>
+    <div class="latest">LATEST · Beta2 v33 (オンライン盤面統一・ランダム先攻)</div>
   </section>
 
   <section class="timeline">
     <article class="release latest-release">
+      <div class="release-head"><div><div class="version">Beta2 v33</div><div class="release-title">オンライン盤面・カードデザインを通常対戦版と統一、先攻ランダム化</div></div><div class="tag">ONLINE ALPHA</div></div>
+      <ul>
+        <li>通常対戦と同じ盤面CSS、カラー別のカード表示、召喚士・流脈・戦場の位置、手札のサイズ切替をオンライン画面へ移植。</li>
+        <li>先攻はサーバー側でPLAYER 1/2をランダム決定。相手の手札や山札は引き続き非公開。</li>
+        <li>ドロー効果は指定枚数だけDRAWを実行するまで中央に残数を表示。流脈を墓地に置く攻撃コストを選択できるよう改善。</li>
+        <li>効果処理は既存ルールに近づける修正を追加。すべての特殊効果まで完全一致することは未検証（ONLINE_LIMITATIONS.md）。</li>
+        <li>更新にはCloudflare Workers側とGitHub Pages側の両方の再公開が必要。</li>
+      </ul>
+    </article>
+
+    <article class="release">
       <div class="release-head"><div><div class="version">Beta2 v32</div><div class="release-title">サーバー管理・非公開手札のオンライン対戦アルファ版</div></div><div class="tag">ONLINE ALPHA</div></div>
       <ul>
         <li>無料枠のCloudflare Workers＋Durable Objects（WebSocket）用サーバーを追加。招待コードで2人が別端末から参加できます。</li>

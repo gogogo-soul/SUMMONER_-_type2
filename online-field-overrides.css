@@ -46,3 +46,6 @@ body.online-active{margin:0!important;overflow:hidden!important;height:100dvh!im
 #duelView .match-end-actions button.primary{background:#286c9d;border-color:#4eb9ef;color:#fff}
 #duelView .match-end-actions button:disabled{opacity:.56;cursor:not-allowed}
 #duelView .match-end-card .match-end-footnote{font-size:12px;color:#acbfd3;line-height:1.6}
+
+#duelView .match-end-error{background:#542830;color:#ffe6e6;border:1px solid #ec9090;border-radius:8px;padding:10px;text-align:left;font-size:13px;line-height:1.6;}
+#duelView .match-end-error[hidden]{display:none!important;}

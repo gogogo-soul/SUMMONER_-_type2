@@ -47,11 +47,17 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v34 (オンライン試合終了・再戦・マッチング復帰)</div>
+    <div class="latest">LATEST · Beta2 v35 (再戦・退出の不具合を修正)</div>
   </section>
 
   <section class="timeline">
-    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v34</div><div class="release-title">オンライン対戦終了後の選択画面・同じルームでの再戦</div></div><div class="tag">ONLINE ALPHA</div></div>
+    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v35</div><div class="release-title">再戦とマッチング復帰の不具合を修正</div></div><div class="tag">ONLINE ALPHA</div></div>
+      <ul><li>再戦希望は双方の同意をCloudflare Worker側で処理。旧版サーバー・切断エラーは終了画面内に表示。</li>
+      <li>「マッチングに戻る」は画面をすぐ復帰させ、認証付きHTTPでサーバーに退出を通知。</li>
+      <li>Cloudflareの <code>/health</code> で <code>alpha2-v35</code> を確認。</li>
+      <li>CloudflareとGitHubの両方の更新が必須。詳細は同梱ONLINE_UPDATE_v35.md。</li></ul></article>
+    
+    <article class="release"><div class="release-head"><div><div class="version">Beta2 v34</div><div class="release-title">オンライン対戦終了後の選択画面・同じルームでの再戦</div></div><div class="tag">ONLINE ALPHA</div></div>
       <ul><li>試合終了後、双方の端末に「続けて遊ぶ（再戦）」「マッチングに戻る」を表示。</li>
       <li>両者が再戦を希望したら、同じルーム・デッキで盤面と山札をリセットし、先攻後攻を再抽選。</li>
       <li>再戦待機・希望取消・相手の退出を通知。退出した接続トークンをサーバーで無効化。</li>
@@ -77,7 +83,7 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
         <li>GitHub Pagesに静的ファイルを公開するだけでは動きません。Cloudflareの無料アカウントでサーバーをデプロイする必要があります（ONLINE_DEPLOY.md）。</li>
       </ul>
     </article>
-    <article class="release latest-release">
+    <article class="release">
       <div class="release-head"><div><div class="version">Beta2 v31.1</div><div class="release-title">手札表示切替のクリック判定を修正</div></div><div class="tag">LATEST</div></div>
       <ul>
         <li>戦場・流脈ゾーン・召喚士ゾーンのカードと操作アイコンをクリック／タップしても手札の大きさは変わりません。</li>

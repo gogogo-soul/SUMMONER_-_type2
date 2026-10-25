@@ -24,11 +24,11 @@
     "code": "SMN2-AzIMVQJXBFoEWwRdBGAEYQRiBGcEaASAAYcM-Q"
   },
   {
-    "name": "赤青緑・フェヌグリーク",
+    "name": "赤青緑アレキサンダー",
     "code": "SMN2-AzIODQQPBBMCHwMlBCYELwQ4AjsEPgRtAYMFhAWFBZY"
   },
   {
-    "name": "青緑黒・ルフナ",
+    "name": "青緑黒コントロール",
     "code": "SMN2-AzIOHwIgBCUEJgQvBDgEPQRaBF0EYAJvAYQFhQWHBHg"
   }
 ];

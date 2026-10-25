@@ -1,0 +1,16 @@
+name = "summoner-online-duel"
+main = "src/worker.mjs"
+compatibility_date = "2026-10-20"
+
+[vars]
+# ここをGitHub Pagesのドメインに変更してください。例：https://YOURNAME.github.io
+ALLOWED_ORIGINS = "https://YOURNAME.github.io"
+ALLOW_LOCAL = "true"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "DuelRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DuelRoom"]

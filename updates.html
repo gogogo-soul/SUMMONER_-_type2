@@ -47,11 +47,21 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v37 (オンライン対戦のUIと操作を通常版に統一)</div>
+    <div class="latest">LATEST · Beta2 v38 (オンライン対戦の流脈・召喚士・手札表示とLP通知を修正)</div>
   </section>
 
   <section class="timeline">
-    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v37</div><div class="release-title">オンライン版のカード操作・フィールドUIを通常版に統一</div></div><div class="tag">ONLINE ALPHA</div></div>
+    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v38</div><div class="release-title">裏向き流脈・召喚士発動・直接攻撃・手札スクロール・LP増減表示</div></div><div class="tag">ONLINE ALPHA</div></div>
+      <ul>
+        <li>モンスター・魔法を選択した際に「通常プレイ」または「裏向きで流脈ゾーンに置く」を選択可能に変更。</li>
+        <li>召喚士カードのクリック／タップから起動能力の対象選択へ。発動に必要な同色流脈／追加マナの不足、終了時能力の発動タイミングを案内。</li>
+        <li>防御側フィールドのモンスターが0体なら、直接攻撃時にNO BLOCKを要求せずSPダメージを即時確定。</li>
+        <li>手札が増えても横スクロールとスマホの横スワイプで全カードを確認可能。縮小時は引き続き左下に収納。</li>
+        <li>LPの増減をダメージは赤字、回復は緑字、LP支払いは紫字の数値で表示。</li>
+        <li>サーバーの版は <code>alpha2-v38</code>。GitHubとCloudflareの両方を更新してください。</li>
+      </ul>
+    </article><section class="timeline">
+    <article class="release"><div class="release-head"><div><div class="version">Beta2 v37</div><div class="release-title">オンライン版のカード操作・フィールドUIを通常版に統一</div></div><div class="tag">ONLINE ALPHA</div></div>
       <ul><li>通常版 summoner.html と完全に同じフィールドCSSを継続使用。上部メニュー、Card Inspector、フィールド設定画面、手札表示を通常版の構造に合わせた。</li>
       <li>手札の流脈「置」、流脈とモンスターの「↷／↶」、召喚士の「効」をカード本体上へ配置。手札の通常カードはクリックでプレイ・対象選択へ進む。</li>
       <li>攻撃は自分のモンスター→相手モンスター／相手LPの順に選択。ブロックもカード選択で実行。</li>

@@ -28,6 +28,9 @@ function currentUser(){return localStorage.getItem('arcana_duel_current_user')||
 function listDecks(){const list=[];for(const st of window.SUMMONER_STARTER_DECKS||[]){list.push({label:'初期：'+st.name,deck:st.counts});}
  const saved=JSON.parse(localStorage.getItem(`arcana_duel_decks_${currentUser()}`)||'{}');for(const [name,counts] of Object.entries(saved)){list.push({label:'保存：'+name,deck:counts});}return list;}
 let availableDecks=[];
+let lastLifeSeq=0;
+function updateLpText(id,amount){const el=$(id),text=`${amount} LP`,old=el.querySelector('.online-lp-value');if(old){old.textContent=text;}else{el.textContent='';el.append(CE('span','online-lp-value',text));}}
+function showLifeEvents(events,me){const fresh=(events||[]).filter(x=>x.seq>lastLifeSeq),offsets={0:0,1:0};for(const evt of fresh){lastLifeSeq=Math.max(lastLifeSeq,evt.seq);if(!Number(evt.amount))continue;const badge=CE('span','online-lp-delta '+(evt.kind==='heal'?'life-heal':evt.kind==='cost'?'life-cost':'life-damage'),(evt.amount>0?'+':'')+evt.amount);badge.style.setProperty('--life-offset',(offsets[evt.side]++*23)+'px');badge.setAttribute('aria-label',(evt.kind==='cost'?'LPコスト':evt.kind==='heal'?'回復':'ダメージ')+' '+evt.amount);const anchor=$(evt.side===me?'myLP':'opLP');anchor.append(badge);badge.addEventListener('animationend',()=>badge.remove(),{once:true});setTimeout(()=>badge.remove(),2600);}}
 function refreshDecks(){availableDecks=listDecks();const select=$('deckPick');select.replaceChildren();availableDecks.forEach((item,i)=>{const o=CE('option','',item.label);o.value=String(i);select.append(o)});}
 function deckAsNames(counts){const d=[];for(const [name,num] of Object.entries(counts||{}))for(let i=0;i<Number(num);i++)d.push(name);return d;}
 function renderLobby(){if(!view)return;const playerList=$('roomPlayers');playerList.replaceChildren();view.players.forEach((p,i)=>{const row=CE('div','player-info');row.append(CE('span','',`PLAYER ${i+1}：${p.name||'参加待ち'}`),CE('span','',`${p.hasDeck?'デッキ登録済み':'未登録'}／${p.ready?'準備完了':'未準備'}`));playerList.append(row)});const mine=view.players[view.seat];$('ready').textContent=mine.ready?'準備完了を取り消す':'準備完了';$('roomLabel').textContent=view.room;$('lobbyWait').classList.remove('hidden');}
@@ -38,6 +41,7 @@ function isInstant(c){return DB[c.name]?.timing==='instant'||String(c.txt||DB[c.
 function canCastNow(c){const g=view?.game;if(!g||g.over||g.drawPending||g.effectDraw||g.choice)return false;
  const me=view.seat;if(!isInstant(c))return g.turn===me&&g.phase==='MAIN'&&!g.stack.length&&!g.block;
  return !g.stack.length||g.priority===me;}
+function canPlaceFlowVein(){const g=view?.game,me=view?.seat;if(!g||me==null||g.over)return false;const p=g.players[me];return g.turn===me&&g.phase==='MAIN'&&!g.drawPending&&!g.effectDraw&&!g.choice&&!g.stack.length&&!g.block&&!p.landsPlaced&&!p.playedThisTurn;}
 function hasMana(c){const me=view?.seat;if(me==null)return false;const mana=view.game.players[me].mana||[],n=Number(c.cost)||0;
  return mana.length>=n&&(n===0||!c.color||c.color==='none'||mana.includes(c.color));}
 function makeCard(c,handler=null,back=false,part=null,side=null){
@@ -69,11 +73,14 @@ function syncCardControls(){
  const dom=[...$('duelView').querySelectorAll('.card[data-id]')].find(n=>n.dataset.id===c.id);if(!dom)return;dom.classList.add('selected');
  if(side!==me)return;
  const isLand=part==='lands',isField=part==='field',isHandVein=part==='hand'&&c.type==='land',isSummoner=part==='summoner';
- if(!isLand&&!isField&&!isHandVein&&!isSummoner)return;
+ if(!isLand&&!isField&&part!=='hand'&&!isSummoner)return;
  const controls=CE('div','card-controls');
- if(isHandVein){let b=cardAction(controls,'置',()=>act('land',{card:c.id}),'流脈ゾーンに置く','place-btn');b.disabled=g.turn!==me||g.phase!=='MAIN'||!!g.drawPending||!!g.effectDraw||!!g.stack.length||g.players[me].landsPlaced;}
+ if(part==='hand'&&c.type!=='summoner'){
+  const b=cardAction(controls,'置',()=>act('land',{card:c.id}),c.type==='land'?'流脈を表向きで置く':'このカードを裏向きの流脈として置く','place-btn');b.disabled=!canPlaceFlowVein();
+  if(c.type!=='land'){const play=cardAction(controls,'▶',()=>playWithTarget(c),'カードを通常プレイ','play-btn');play.disabled=!canCastNow(c)||!hasMana(c);}
+ }
  else if(isLand){const locked=!!c.tapped&&!!c.spent;const b=cardAction(controls,locked?'🔒':c.tapped?'↶':'↷',()=>act(c.tapped?'untap_land':'tap_land',{card:c.id}),locked?'使用済み流脈はアンタップできません':c.tapped?'未使用マナを取り消す':'タップしてマナを生成');b.disabled=locked||!!g.choice;}
- else if(isSummoner){const d=DB[c.name];const b=cardAction(controls,'効',summonAbility,'召喚士能力を発動','ability-btn');b.disabled=!!g.stack.length||g.turn!==me||g.phase!=='MAIN'||!!g.drawPending||!!g.effectDraw||!!d?.summonerAbilityKey||d.summonerTrigger==='turnEnd';}
+ else if(isSummoner){const d=DB[c.name],automatic=d?.summonerTrigger==='turnEnd';const b=cardAction(controls,'効',summonAbility,automatic?'ターン終了時に発動条件を確認する召喚士です':'召喚士能力を発動','ability-btn');b.disabled=!d?.summonerAbilityKey||!automatic&&(!canActivateSummoner());}
  else if(isField&&c.type==='monster'){
   const locked=!!c.tapped&&!!c.spent;
   const b=cardAction(controls,locked?'🔒':c.tapped?'↶':'↷',()=>act(c.tapped?'untap_monster':'tap_monster',{card:c.id}),locked?'攻撃・ブロックなどで使用済み':'タップ／アンタップ');b.disabled=locked||g.over;
@@ -94,10 +101,9 @@ function onBoardCard(c,part,side,dom){
  openCard(c,part,side,dom);
  if(side!==me)return;
  if(part==='hand'&&c.type!=='land'&&c.type!=='summoner'){
-   // Like summoner.html, selecting a playable non-vein card proceeds to casting.
-   if(canCastNow(c))playWithTarget(c);
-   else if(!g.drawPending&&!g.effectDraw)status('現在このカードをプレイできません。ターン・フェイズ・優先権を確認してください。',true);
+   openPlayMethod(c);return;
  }
+ if(part==='summoner'&&side===me){summonAbility();return;}
  if(part==='field'&&c.type==='monster'&&g.turn===me&&g.phase==='BATTLE'&&!g.block){
     if(c.tapped||c.summonSick&&!DB[c.name]?.haste){status('このモンスターは現在攻撃できません',true);return;}
     armedAttack={id:c.id};document.body.classList.add('attack-targeting');$('turnHelp').textContent=`《${c.name}》で攻撃：相手のモンスターまたはLPを選択してください。`;
@@ -120,12 +126,12 @@ function prettyMana(m){return (m||[]).length?m.map(c=>colorWord(c)).join(' / '):
 function button(parent,text,fn,klass){const b=CE('button',klass||'',text);b.onclick=fn;parent.append(b);return b;}
 function renderDuel(){
  const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];
- if(lastMatchId!==g.matchId){lastMatchId=g.matchId;clearCardSelection();armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
+ if(lastMatchId!==g.matchId){lastMatchId=g.matchId;lastLifeSeq=Math.max(0,...(g.lifeEvents||[]).map(e=>e.seq));clearCardSelection();armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
  $('lobbyView').classList.add('hidden');$('duelView').classList.remove('hidden');
  document.body.classList.add('online-active');$('onlineFieldCss').disabled=false;$('onlineOverrideCss').disabled=false;
  $('myName').textContent=`PLAYER ${me+1}：${view.players[me].name}（自分）`;
  $('opName').textContent=`PLAYER ${enemy+1}：${view.players[enemy].name}`;
- $('myLP').textContent=`${mine.lp} LP`;$('opLP').textContent=`${op.lp} LP`;
+ updateLpText('myLP',mine.lp);updateLpText('opLP',op.lp);showLifeEvents(g.lifeEvents,me);
  $('myMana').replaceChildren();for(const m of mine.mana||[]){const icon=CE('span','mana-icon '+m,({red:'🔴',blue:'🔵',green:'🟢',yellow:'🟡',black:'🟣',none:'⚪'})[m]||'⚪');$('myMana').append(icon);} 
  $('opHandLabel').textContent=`相手の手札 ${op.handCount}枚 — 非公開`;
  $('opHandCount').textContent=String(op.handCount);$('handCount').textContent=mine.hand.length+' cards';$('topTurn').textContent='TURN '+g.turnNo;
@@ -134,7 +140,7 @@ function renderDuel(){
  putCards($('opField'),op.field,'field',enemy);putCards($('myField'),mine.field,'field',me);
  putCards($('opLands'),op.lands,'lands',enemy);putCards($('myLands'),mine.lands,'lands',me);
  putCards($('opSummoner'),[op.summoner],'summoner',enemy);putCards($('mySummoner'),[mine.summoner],'summoner',me);
- putCards($('myHand'),mine.hand,'hand',me);
+ const handScroll=$('myHand').scrollLeft;putCards($('myHand'),mine.hand,'hand',me);$('myHand').scrollLeft=handScroll;
  $('opDeckCount').textContent=String(op.deckCount);$('myDeckCount').textContent=String(mine.deckCount);
  $('opGraveCount').textContent=String(op.grave.length);$('myGraveCount').textContent=String(mine.grave.length);
  $('opGrave').onclick=()=>openGrave(enemy);$('myGrave').onclick=()=>openGrave(me);$('opDeck').onclick=()=>status('山札の中身を見ることはできません。');$('myDeck').onclick=()=>status('山札の中身を見ることはできません。');
@@ -247,6 +253,12 @@ function choices(key,side){const g=view.game,own=g.players[side],enemy=g.players
  }
 }
 function readable(o){return {id:o.id,label:(o.name||'裏向き')+(o.power?` / POWER ${o.power}`:'')};}
+function openPlayMethod(c){
+ const options=[];if(canCastNow(c)&&hasMana(c))options.push({id:'play',label:`通常プレイ（コスト ${c.cost||0}）`});
+ if(canPlaceFlowVein())options.push({id:'land',label:'裏向きで流脈ゾーンに置く（無色マナ）'});
+ if(!options.length){status('通常プレイに必要なマナ、流脈配置のタイミングを確認してください。',true);return;}
+ doDialog(`《${c.name}》のプレイ方法を選択`,'通常プレイ、または手札から裏向き流脈として配置します。',options,1,1,ids=>{if(ids[0]==='land')act('land',{card:c.id});else playWithTarget(c);});
+}
 function playWithTarget(c){const key=DB[c.name]?.effectKey;const available=choices(key,view.seat);
  if(key==='destroyOneEach'){
   const own=view.game.players[view.seat].field,opp=view.game.players[1-view.seat].field;
@@ -272,7 +284,13 @@ function attackWithTarget(c){
   doDialog('《'+c.name+'》：攻撃コスト','墓地に置く自分の流脈を1枚選んでください。',lands.map(readable),1,1,ids=>chooseTarget(ids[0]));
  }else chooseTarget();
 }
-function summonAbility(){const c=view.game.players[view.seat].summoner;const key=DB[c.name]?.summonerAbilityKey;const opts=choices(key,view.seat);if(opts===null){act('summoner');return;}if(!opts.length){status('能力の対象がいません',true);return;}doDialog('召喚士《'+c.name+'》','同色の流脈≋1で能力を発動します。',opts.map(readable),1,1,x=>act('summoner',{target:x[0]}));}
+function canActivateSummoner(){const g=view?.game;if(!g||g.over)return false;const me=view.seat,sd=DB[g.players[me].summoner.name];if(!sd||sd.summonerTrigger==='turnEnd'||!sd.summonerAbilityKey)return false;return g.turn===me&&g.phase==='MAIN'&&!g.drawPending&&!g.effectDraw&&!g.block&&!g.choice&&!g.stack.length;}
+function summonAbility(){const g=view?.game;if(!g||g.over)return;const me=view.seat,c=g.players[me].summoner,d=DB[c.name],key=d?.summonerAbilityKey;if(!key){status('この召喚士には起動能力がありません',true);return;}
+ if(d.summonerTrigger==='turnEnd'){status(`《${c.name}》はターン終了時に判定される能力です。条件を満たしてEND TURNを押すと発動を選べます。`);return;}
+ if(!canActivateSummoner()){status('召喚士能力は自分のメインフェイズ、他の処理がないときに発動できます。',true);return;}
+ const land=g.players[me].lands.find(l=>!l.faceDown&&!l.tapped&&l.color===d.color);if(!land){status(`${colorWord(d.color)}の未タップ流脈が1枚必要です。裏向き流脈は無色なので使えません。`,true);return;}
+ if((d.summonerAbilityCost||0)>1&&!(g.players[me].mana||[]).length){status('追加マナが1つ必要です。別の流脈をタップしてから発動してください。',true);return;}
+ const opts=choices(key,me);if(opts===null){act('summoner');return;}if(!opts.length){status('召喚士能力の対象がいません',true);return;}doDialog('召喚士《'+c.name+'》',`${colorWord(d.color)}の流脈≋1をコストとしてタップします。`,opts.map(readable),1,1,x=>act('summoner',{target:x[0]}));}
 function promptChoice(choice){const opts=choice.options.map(x=>({id:x.id,label:x.name}));doDialog('カードを選択','サーバーからの選択処理です。選択順が一部の効果で結果に影響します。',opts,choice.min,choice.max,ids=>attempt({type:'choose',ids}));pending.forced=true;$('dialogCancel').disabled=true;}
 $('noBlockBtn').onclick=()=>act('block');$('drawBtn').onclick=()=>act('draw');$('battleBtn').onclick=()=>act('phase',{to:'BATTLE'});$('endBtn').onclick=()=>act('end_turn');$('passBtn').onclick=()=>act('pass');$('summonerBtn').onclick=summonAbility;
 $('surrenderBtn').onclick=()=>{if(confirm('降参しますか？'))attempt({type:'surrender'});};

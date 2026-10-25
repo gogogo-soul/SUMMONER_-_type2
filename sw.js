@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v38-online-fixes-r1";
+const CACHE_NAME = "summoner-pwa-v39-duel-ui-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",

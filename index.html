@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-<title>SUMMONER</title>
+<title>SUMMONER-βversion</title>
 <style>
 :root{
   --bg:#0b0e13;--panel:#151a22;--line:#343c48;
@@ -36,7 +36,7 @@ button,select{font:inherit;color:inherit}
   margin-bottom:40px;
 }
 .logo-title{
-  font-size:48px;
+  font-size:clamp(28px,5vw,48px);
   font-weight:900;
   letter-spacing:.15em;
   color:#fff;
@@ -175,7 +175,7 @@ button,select{font:inherit;color:inherit}
   html,body{height:auto;min-height:100%;overflow:auto}
   .title-container{height:auto;min-height:100dvh;padding:24px 16px calc(24px + env(safe-area-inset-bottom))}
   .logo-area{margin-bottom:24px}
-  .logo-title{font-size:34px;letter-spacing:.11em}
+  .logo-title{font-size:clamp(20px,5.9vw,34px);letter-spacing:.025em;white-space:nowrap}
   .logo-sub{font-size:11px}
   .user-card{margin-bottom:22px;padding:14px 16px}
   .user-row{align-items:stretch;flex-direction:column;gap:8px}
@@ -192,7 +192,7 @@ button,select{font:inherit;color:inherit}
 
 <div class="title-container">
   <div class="logo-area">
-    <h1 class="logo-title">SUMMONER</h1>
+    <h1 class="logo-title">SUMMONER-βversion</h1>
     <div class="logo-sub">TRADING CARD GAME</div>
   </div>
 
@@ -213,7 +213,7 @@ button,select{font:inherit;color:inherit}
 
   <!-- メインメニュー -->
   <div class="menu-buttons">
-    <a href="summoner.html" class="menu-btn btn-start">対戦開始 (DUEL)</a>
+    <a href="summoner.html" class="menu-btn btn-start">一人で対戦 (SOLO DUEL)</a>
     <a href="online.html" class="menu-btn btn-online">オンライン対戦 (ONLINE DUEL)</a>
     <a href="deckbuilder.html" class="menu-btn btn-builder">デッキ構築 (DECK BUILDER)</a>
     <a href="decklibrary.html" class="menu-btn btn-library">デッキ置き場 (DECK LIBRARY)</a>

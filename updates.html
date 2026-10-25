@@ -47,11 +47,21 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v38 (オンライン対戦の流脈・召喚士・手札表示とLP通知を修正)</div>
+    <div class="latest">LATEST · Beta2 v39 (エラー固定表示・自動直接攻撃・勝敗演出・スマホカード縮小)</div>
   </section>
 
   <section class="timeline">
-    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v38</div><div class="release-title">裏向き流脈・召喚士発動・直接攻撃・手札スクロール・LP増減表示</div></div><div class="tag">ONLINE ALPHA</div></div>
+    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v39</div><div class="release-title">オンライン操作改善・WIN/LOSE演出・スマホサイズ・タイトル更新</div></div><div class="tag">ONLINE ALPHA</div></div>
+      <ul>
+        <li>オンライン対戦中のエラーは、別の盤面更新を受けても消えず、「閉じる」で終了するまで表示。カード上の操作ボタンをカード中央へ配置。</li>
+        <li>ブロック可能（未タップ）の防御モンスターが0体なら、相手のモンスターが場にいてもNO BLOCKを待たず直接攻撃を処理。ブロック可能なモンスターが1体でもいれば従来どおり選択可能。</li>
+        <li>試合終了後、各端末へWIN／LOSE（引き分けはDRAW）を先に約3秒表示してから、再戦／マッチングに戻る選択肢を表示。</li>
+        <li>スマホ等の小さなタッチ画面のみ、戦場・召喚士・流脈・手札などのカードサイズを縮小。PCのカードサイズは維持。</li>
+        <li>オンライン画面のフィールド設定ボタンを廃止。保存済みの背景画像データは削除しない。LPが減った際のガラスが砕けるような演出を追加。</li>
+        <li>タイトルにSUMMONER-βversionを表示。「対戦開始」を「一人で対戦」に変更。7種の初期デッキのうち2種を「赤青緑アレキサンダー」「青緑黒コントロール」へ名称変更（コードと内容はそのまま）。</li>
+        <li>Workerの<code>/health</code>は<code>alpha2-v39</code>。GitHubとCloudflareの両方を更新。</li>
+      </ul></article>
+    <article class="release"><div class="release-head"><div><div class="version">Beta2 v38</div><div class="release-title">裏向き流脈・召喚士発動・直接攻撃・手札スクロール・LP増減表示</div></div><div class="tag">ONLINE ALPHA</div></div>
       <ul>
         <li>モンスター・魔法を選択した際に「通常プレイ」または「裏向きで流脈ゾーンに置く」を選択可能に変更。</li>
         <li>召喚士カードのクリック／タップから起動能力の対象選択へ。発動に必要な同色流脈／追加マナの不足、終了時能力の発動タイミングを案内。</li>

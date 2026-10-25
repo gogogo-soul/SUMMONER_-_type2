@@ -1,20 +1,21 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const STORAGE='summoner_online_pvp_session_v1',SERVER_STORE='summoner_online_worker_url_v1';
-let session=null,ws=null,view=null,pending=null,selected=null,armedAttack=null,dialogCb=null,dialogChosen=[],dialogMax=1,dialogMin=1,reconnect=0,manualClose=false,lastMatchId=null,leavingRoom=false,serverVersion='',matchEndError='';
+let session=null,ws=null,view=null,pending=null,selected=null,armedAttack=null,dialogCb=null,dialogChosen=[],dialogMax=1,dialogMin=1,reconnect=0,manualClose=false,lastMatchId=null,leavingRoom=false,serverVersion='',matchEndError='',resultIntroMatch=null,resultIntroDone=false,resultIntroTimer=null;
 const CE=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};
 const n=v=>String(v||'');
-const status=(msg,err=false)=>{const n=$('status');n.textContent=msg;n.classList.toggle('err',err);const hud=$('onlineNotice');if(view?.game&&hud){hud.hidden=false;hud.textContent=err?'通信エラー：'+msg:msg;hud.classList.toggle('error',err);if(!err)hud.hidden=true;}};
+const status=(msg,err=false)=>{const n=$('status');n.textContent=msg;n.classList.toggle('err',err);const hud=$('onlineNotice');if(view?.game&&hud&&err){hud.hidden=false;hud.replaceChildren();const message=CE('span','online-notice-text','エラー：'+msg);const close=CE('button','online-notice-close','閉じる ×');close.type='button';close.setAttribute('aria-label','エラー表示を閉じる');close.onclick=()=>{hud.hidden=true;hud.classList.remove('error');};hud.append(message,close);hud.classList.add('error');}};
+function dismissError(){const hud=$('onlineNotice');if(hud){hud.hidden=true;hud.classList.remove('error');}}
 const server=()=>{const raw=($('serverUrl').value||'').trim().replace(/\/$/,'');if(!raw)return null;try{const u=new URL(raw);if(u.protocol!=='https:'&&!(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname)))return null;return u.origin;}catch{return null;}};
 function getServer(){return server()}
 function saveSession(r){session=r;localStorage.setItem(STORAGE,JSON.stringify(r));}
-function forget(){lastMatchId=null;leavingRoom=false;matchEndError='';selected=null;armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('matchEndPanel').classList.add('hidden');$('roomCode').value='';try{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u.href);}catch(_){}manualClose=true;const oldSocket=ws;ws=null;if(oldSocket)try{oldSocket.close()}catch(_){}session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active','info-open','hands-compact','attack-targeting');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('マッチング画面に戻りました。');}
+function forget(){clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;$('onlineOutcome').classList.add('hidden');dismissError();lastMatchId=null;leavingRoom=false;matchEndError='';selected=null;armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('matchEndPanel').classList.add('hidden');$('roomCode').value='';try{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u.href);}catch(_){}manualClose=true;const oldSocket=ws;ws=null;if(oldSocket)try{oldSocket.close()}catch(_){}session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active','info-open','hands-compact','attack-targeting');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('マッチング画面に戻りました。');}
 function titleRoom(){const code=session?.code;if(!code)return '';return code;}
 function roomInvite(){const u=new URL('online.html',location.href);u.searchParams.set('room',titleRoom());if(getServer())u.searchParams.set('server',getServer());return u.href;}
 async function rest(path,data){const root=getServer();if(!root)throw Error('Cloudflare WorkerのURLを設定してください');const r=await fetch(root+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error||`通信エラー HTTP ${r.status}`);return body;}
 function send(data){if(!ws||ws.readyState!==WebSocket.OPEN)throw Error('サーバー未接続です');ws.send(JSON.stringify(data));}
 function attempt(data){try{send(data)}catch(e){showMatchError(e.message)}}
-function showMatchError(msg){const oldWorker=/不正な命令|unknown|unsupported|rematch|leave_room/i.test(msg);matchEndError=oldWorker?'Cloudflareサーバーが旧版の可能性があります。v35のWorker更新後に新しいルームでお試しください。':msg;status(matchEndError,true);if(view?.game?.over)renderMatchEnd(view.game,view.seat);}
+function showMatchError(msg){const oldWorker=/不正な命令|unknown|unsupported|rematch|leave_room/i.test(msg);matchEndError=oldWorker?'Cloudflareサーバーが旧版の可能性があります。v39のWorker更新後に新しいルームでお試しください。':msg;status(matchEndError,true);if(view?.game?.over)renderMatchEnd(view.game,view.seat);}
 async function checkWorkerVersion(){const root=getServer();if(!root)return;try{const r=await fetch(root+'/health',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const info=await r.json();if(root!==getServer())return;serverVersion=info.version||'不明';const compatible=/^alpha2-v(?:3[4-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion);if(!compatible&&view?.game?.over){matchEndError=`Cloudflareは ${serverVersion} です。再戦にはv34以降、確実な退出にはv35が必要です。`;renderMatchEnd(view.game,view.seat);}return info;}catch(e){serverVersion='確認不可';return null;}}
 function act(type,extra={}){attempt({type:'action',action:{type,...extra}});}
 function connect(){if(!session||!getServer())return;manualClose=false; if(ws&&ws.readyState<=1)ws.close(); const url=getServer().replace(/^http/,'ws')+`/api/rooms/${session.code}/socket`;ws=new WebSocket(url);const thisSocket=ws;
@@ -30,7 +31,15 @@ function listDecks(){const list=[];for(const st of window.SUMMONER_STARTER_DECKS
 let availableDecks=[];
 let lastLifeSeq=0;
 function updateLpText(id,amount){const el=$(id),text=`${amount} LP`,old=el.querySelector('.online-lp-value');if(old){old.textContent=text;}else{el.textContent='';el.append(CE('span','online-lp-value',text));}}
-function showLifeEvents(events,me){const fresh=(events||[]).filter(x=>x.seq>lastLifeSeq),offsets={0:0,1:0};for(const evt of fresh){lastLifeSeq=Math.max(lastLifeSeq,evt.seq);if(!Number(evt.amount))continue;const badge=CE('span','online-lp-delta '+(evt.kind==='heal'?'life-heal':evt.kind==='cost'?'life-cost':'life-damage'),(evt.amount>0?'+':'')+evt.amount);badge.style.setProperty('--life-offset',(offsets[evt.side]++*23)+'px');badge.setAttribute('aria-label',(evt.kind==='cost'?'LPコスト':evt.kind==='heal'?'回復':'ダメージ')+' '+evt.amount);const anchor=$(evt.side===me?'myLP':'opLP');anchor.append(badge);badge.addEventListener('animationend',()=>badge.remove(),{once:true});setTimeout(()=>badge.remove(),2600);}}
+function showLifeEvents(events,me){const fresh=(events||[]).filter(x=>x.seq>lastLifeSeq),offsets={0:0,1:0};for(const evt of fresh){lastLifeSeq=Math.max(lastLifeSeq,evt.seq);if(!Number(evt.amount))continue;const badge=CE('span','online-lp-delta '+(evt.kind==='heal'?'life-heal':evt.kind==='cost'?'life-cost':'life-damage'),(evt.amount>0?'+':'')+evt.amount);badge.style.setProperty('--life-offset',(offsets[evt.side]++*23)+'px');badge.setAttribute('aria-label',(evt.kind==='cost'?'LPコスト':evt.kind==='heal'?'回復':'ダメージ')+' '+evt.amount);const anchor=$(evt.side===me?'myLP':'opLP');anchor.append(badge);if(evt.amount<0)lifeShatter(anchor);badge.addEventListener('animationend',()=>badge.remove(),{once:true});setTimeout(()=>badge.remove(),2600);}}
+function lifeShatter(anchor){
+ // Short glass-break animation, anchored to the damaged player's LP, no effect on game state.
+ anchor.classList.remove('online-lp-impact');void anchor.offsetWidth;anchor.classList.add('online-lp-impact');
+ const layer=CE('span','online-shatter-layer');layer.setAttribute('aria-hidden','true');
+ const shards=11;
+ for(let i=0;i<shards;i++){const piece=CE('i','online-glass-piece');const angle=(Math.PI*2*i/shards);const d=25+(i%4)*12;piece.style.setProperty('--dx',Math.round(Math.cos(angle)*d)+'px');piece.style.setProperty('--dy',Math.round(Math.sin(angle)*d)+'px');piece.style.setProperty('--spin',(i%2?-1:1)*(110+i*37)+'deg');piece.style.setProperty('--delay',(i%3)*22+'ms');layer.append(piece);}
+ anchor.append(layer);setTimeout(()=>{layer.remove();anchor.classList.remove('online-lp-impact')},820);
+}
 function refreshDecks(){availableDecks=listDecks();const select=$('deckPick');select.replaceChildren();availableDecks.forEach((item,i)=>{const o=CE('option','',item.label);o.value=String(i);select.append(o)});}
 function deckAsNames(counts){const d=[];for(const [name,num] of Object.entries(counts||{}))for(let i=0;i<Number(num);i++)d.push(name);return d;}
 function renderLobby(){if(!view)return;const playerList=$('roomPlayers');playerList.replaceChildren();view.players.forEach((p,i)=>{const row=CE('div','player-info');row.append(CE('span','',`PLAYER ${i+1}：${p.name||'参加待ち'}`),CE('span','',`${p.hasDeck?'デッキ登録済み':'未登録'}／${p.ready?'準備完了':'未準備'}`));playerList.append(row)});const mine=view.players[view.seat];$('ready').textContent=mine.ready?'準備完了を取り消す':'準備完了';$('roomLabel').textContent=view.room;$('lobbyWait').classList.remove('hidden');}
@@ -126,7 +135,7 @@ function prettyMana(m){return (m||[]).length?m.map(c=>colorWord(c)).join(' / '):
 function button(parent,text,fn,klass){const b=CE('button',klass||'',text);b.onclick=fn;parent.append(b);return b;}
 function renderDuel(){
  const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];
- if(lastMatchId!==g.matchId){lastMatchId=g.matchId;lastLifeSeq=Math.max(0,...(g.lifeEvents||[]).map(e=>e.seq));clearCardSelection();armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
+ if(lastMatchId!==g.matchId){clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;$('onlineOutcome').classList.add('hidden');dismissError();lastMatchId=g.matchId;lastLifeSeq=Math.max(0,...(g.lifeEvents||[]).map(e=>e.seq));clearCardSelection();armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
  $('lobbyView').classList.add('hidden');$('duelView').classList.remove('hidden');
  document.body.classList.add('online-active');$('onlineFieldCss').disabled=false;$('onlineOverrideCss').disabled=false;
  $('myName').textContent=`PLAYER ${me+1}：${view.players[me].name}（自分）`;
@@ -176,9 +185,18 @@ function renderDuel(){
 }
 function renderMatchEnd(g,me){
  const box=$('matchEndPanel'),result=$('matchEndTitle'),details=$('matchEndDetails'),waiting=$('matchEndWaitStatus'),rematch=$('rematchBtn'),back=$('backToMatchBtn'),error=$('matchEndError');
- box.classList.toggle('hidden',!g.over);
- if(!g.over){leavingRoom=false;matchEndError='';return;}
- if(!matchEndError&&serverVersion&&serverVersion!=='確認不可'&&!/^alpha2-v(?:3[5-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion))matchEndError=`Cloudflareのサーバーは ${serverVersion} です。最新v35へ更新してください（再戦・退出にはサーバー側の更新も必要です）。`;
+ if(!g.over){box.classList.add('hidden');$('onlineOutcome').classList.add('hidden');clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;leavingRoom=false;matchEndError='';return;}
+ if(resultIntroMatch!==g.matchId){
+   resultIntroMatch=g.matchId;resultIntroDone=false;
+   const intro=$('onlineOutcome');intro.classList.remove('hidden','outcome-win','outcome-lose','outcome-draw');
+   const kind=g.winner==null?'draw':g.winner===me?'win':'lose';intro.classList.add('outcome-'+kind);
+   $('onlineOutcomeText').textContent=kind==='win'?'WIN':kind==='lose'?'LOSE':'DRAW';
+   box.classList.add('hidden');clearTimeout(resultIntroTimer);
+   resultIntroTimer=setTimeout(()=>{resultIntroDone=true;intro.classList.add('hidden');if(view?.game?.over&&view.game.matchId===resultIntroMatch)renderMatchEnd(view.game,view.seat)},2900);
+ }
+ if(!resultIntroDone){box.classList.add('hidden');return;}
+ box.classList.remove('hidden');
+ if(!matchEndError&&serverVersion&&serverVersion!=='確認不可'&&!/^alpha2-v(?:3[5-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion))matchEndError=`Cloudflareのサーバーは ${serverVersion} です。最新v39へ更新してください（再戦・退出にはサーバー側の更新も必要です）。`;
  result.textContent=g.winner==null?'引き分け':g.winner===me?'勝利！':'敗北';
  details.textContent=g.winner==null?'引き分けで対戦が終了しました。':g.winner===me?'対戦に勝利しました。':'対戦に敗北しました。';
  const r=view.rematch||{},own=!!r.accepted?.[me],op=!!r.accepted?.[1-me];
@@ -205,7 +223,7 @@ function backToMatching(){
   body:JSON.stringify({token:s.token}),keepalive:true
  }).then(async r=>{const body=await r.json().catch(()=>({}));if(!r.ok)throw Error(body.error||`HTTP ${r.status}`);return body;})
  .then(()=>{if(!session)status('マッチングに戻りました。ルームから退出しました。');})
- .catch(e=>{if(!session)status('マッチングには戻りましたが、サーバーへの退出通知は未完了です。Cloudflareをv35に更新してください。 ('+e.message+')',true);});
+ .catch(e=>{if(!session)status('マッチングには戻りましたが、サーバーへの退出通知は未完了です。Cloudflareをv39に更新してください。 ('+e.message+')',true);});
 }
 $('rematchBtn').onclick=()=>{
  if(!view?.game?.over||view.rematch?.closed)return;
@@ -316,7 +334,8 @@ let fieldObjectUrl=null;
 function fieldStore(mode,fn){return new Promise((resolve,reject)=>{const req=indexedDB.open(FIELD_DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(FIELD_STORE))req.result.createObjectStore(FIELD_STORE)};req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result;const tx=db.transaction(FIELD_STORE,mode);const q=fn(tx.objectStore(FIELD_STORE));q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);tx.oncomplete=()=>db.close();};});}
 function applyField(blob){if(fieldObjectUrl)URL.revokeObjectURL(fieldObjectUrl);fieldObjectUrl=URL.createObjectURL(blob);document.documentElement.style.setProperty('--custom-field-image',`url("${fieldObjectUrl}")`);document.body.classList.add('custom-field-active');$('onlineFieldImageStatus').textContent='現在：カスタム背景';}
 async function restoreField(){try{const val=await fieldStore('readonly',s=>s.get(FIELD_KEY));if(val?.blob)applyField(val.blob);}catch(e){console.warn('背景画像の読み込みに失敗',e)}}
-$('onlineFieldBtn').onclick=()=>{$('onlineFieldImageStatus').textContent=document.body.classList.contains('custom-field-active')?'現在：カスタム背景':'現在：v17標準フィールド';$('onlineFieldSettings').classList.add('open');};$('onlineFieldClose').onclick=()=>$('onlineFieldSettings').classList.remove('open');$('onlineFieldSettings').addEventListener('click',e=>{if(e.target===$('onlineFieldSettings'))$('onlineFieldSettings').classList.remove('open');});
+// Background customization is retained in IndexedDB, but no Field button is shown.
+function openOnlineFieldSettings(){$('onlineFieldImageStatus').textContent=document.body.classList.contains('custom-field-active')?'現在：カスタム背景':'現在：v17標準フィールド';$('onlineFieldSettings').classList.add('open');};$('onlineFieldClose').onclick=()=>$('onlineFieldSettings').classList.remove('open');$('onlineFieldSettings').addEventListener('click',e=>{if(e.target===$('onlineFieldSettings'))$('onlineFieldSettings').classList.remove('open');});
 $('onlineResetField').onclick=async()=>{try{await fieldStore('readwrite',s=>s.delete(FIELD_KEY));}catch(e){console.warn(e)}document.body.classList.remove('custom-field-active');$('onlineFieldImageStatus').textContent='現在：v17標準フィールド';document.documentElement.style.removeProperty('--custom-field-image');if(fieldObjectUrl){URL.revokeObjectURL(fieldObjectUrl);fieldObjectUrl=null;}};
 $('onlineFieldInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>10*1024*1024||!/^image\/(png|jpeg|webp)$/.test(file.type)){status('画像は10MB以内のPNG・JPG・WebPを使用してください',true);return;}try{await fieldStore('readwrite',s=>s.put({blob:file,name:file.name},FIELD_KEY));applyField(file);}catch(e){status('背景画像を保存できませんでした',true)}e.target.value='';};
 $('onlineInfoBtn').onclick=()=>document.body.classList.toggle('info-open');

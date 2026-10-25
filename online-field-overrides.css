@@ -154,3 +154,47 @@ body.online-active:not(.hands-compact) #duelView .handbar .hand::-webkit-scrollb
 #duelView .life-cost{color:#ba76ff}
 @keyframes onlineLifeDelta{0%{opacity:0;transform:translate(0,-25%) scale(.78)}12%{opacity:1;transform:translate(0,-50%) scale(1.15)}55%{opacity:1;transform:translate(4px,-85%) scale(1)}100%{opacity:0;transform:translate(6px,-145%) scale(.92)}}
 @media(max-width:900px){#duelView .online-lp-delta{font-size:17px;left:calc(100% + 3px)}}
+
+/* v39: Keep error visible until the player explicitly dismisses it. */
+#duelView .online-game-note{position:fixed!important;z-index:8900!important;top:clamp(56px,11vh,110px)!important;bottom:auto!important;left:50%!important;transform:translateX(-50%)!important;width:min(540px,calc(100vw - 24px))!important;max-width:none!important;background:#601e2a!important;border:2px solid #ff7584!important;color:#fff!important;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 15px!important;box-shadow:0 10px 40px #000b;line-height:1.5}
+#duelView .online-game-note[hidden]{display:none!important}
+#duelView .online-notice-text{flex:1;overflow-wrap:anywhere;font-size:13px;font-weight:700}
+#duelView .online-notice-close{flex:none;border:1px solid #f9bec7;border-radius:6px;background:#241219;color:#fff;min-width:66px;padding:9px 6px;font-size:12px;font-weight:800}
+/* Place on-card action icons in the middle of the selected card. */
+#duelView .card-controls{top:50%!important;bottom:auto!important;left:50%!important;transform:translate(-50%,-50%)!important;display:flex;justify-content:center;align-items:center;gap:3px;background:rgba(12,19,27,.74);padding:4px;border:1px solid #dce9f4;border-radius:999px;max-width:96%;box-shadow:0 3px 10px #000b;z-index:70!important}
+#duelView .card-controls button{flex:none;border-color:#e8f0ff;background:#1b4262;color:#fff}
+/* Shattered-glass flash for damage, without changes to LP arithmetic. */
+#duelView .online-lp-impact{animation:onlineLpImpact .45s ease-out}
+@keyframes onlineLpImpact{0%,100%{filter:none}18%{filter:brightness(2.5) drop-shadow(0 0 8px #fb465b)}55%{filter:brightness(.9)}}
+#duelView .online-shatter-layer{position:absolute;top:50%;left:50%;pointer-events:none;z-index:600;width:0;height:0;overflow:visible}
+#duelView .online-glass-piece{position:absolute;left:0;top:0;display:block;width:12px;height:14px;background:linear-gradient(130deg,#ffffffd9,#bde9ff99 55%,#ef7b8b82);clip-path:polygon(17% 0,96% 25%,59% 100%,0 56%);border:1px solid #fff9;box-shadow:0 0 9px #fff8;animation:onlineGlassScatter .7s ease-out forwards;animation-delay:var(--delay,0ms)}
+@keyframes onlineGlassScatter{0%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1.15)}60%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--spin)) scale(.3)}}
+/* Show WIN / LOSE to each player before presenting rematch options. */
+#duelView .online-outcome{position:fixed;inset:0;z-index:8600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at center,#243750ef,#050a11f5 74%);pointer-events:auto;color:#fff}
+#duelView .online-outcome.hidden{display:none!important}
+#duelView .online-outcome strong{font:900 clamp(84px,18vw,200px)/1 system-ui,sans-serif;letter-spacing:.1em;text-shadow:0 4px 20px #000b;animation:onlineOutcomeReveal 1.2s cubic-bezier(.2,1.4,.4,1) both}
+#duelView .online-outcome span{font-size:18px;letter-spacing:.35em;opacity:.85}
+#duelView .online-outcome.outcome-win strong{color:#f6d778;text-shadow:0 0 34px #d7a64a9c}
+#duelView .online-outcome.outcome-lose strong{color:#ff7a89;text-shadow:0 0 34px #d83c559c}
+#duelView .online-outcome.outcome-draw strong{color:#dce4ef}
+@keyframes onlineOutcomeReveal{from{opacity:0;transform:scale(1.8);filter:blur(12px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+/* v39: shrink card geometry ONLY on touch/small-screen online play. Desktop dimensions unchanged. */
+@media (max-width:900px) and (pointer:coarse){
+ #duelView .zonebox .cards .card{flex:0 0 42px!important;width:42px!important;height:57px!important;min-width:0!important;min-height:0!important;padding:2px!important;border-radius:3px!important}
+ #duelView .zonebox .cards{min-height:60px!important;gap:3px!important;overflow-x:auto!important}
+ #duelView .card .name{font-size:6px!important;padding-right:0}
+ #duelView .zonebox .card .type{font-size:5px!important}
+ #duelView .zonebox .card .art{height:18px!important;font-size:10px!important;margin:1px 0!important}
+ #duelView .zonebox .card .cost{left:1px!important;top:1px!important;min-width:11px!important;padding:0 1px!important;font-size:7px!important}
+ #duelView .zonebox .card .power-stat,#duelView .zonebox .card .sp-stat{font-size:8px!important;min-width:0!important;padding:1px 2px!important;bottom:1px!important;-webkit-text-stroke:.6px #000}
+ #duelView .opponent-hand .card{flex:0 0 44px!important;width:44px!important;height:60px!important;min-width:0!important;min-height:0!important;padding:2px!important;margin-left:-5px!important}
+ #duelView .opponent-hand .card:first-child{margin-left:0!important}
+ #duelView .opponent-hand .card .art{height:18px!important;font-size:10px!important}
+ body.online-active:not(.hands-compact) #duelView .handbar .hand .card{flex:0 0 67px!important;width:67px!important;height:90px!important;min-width:0!important;min-height:0!important;padding:3px!important;margin-left:0!important}
+ #duelView .handbar .hand{align-items:flex-end;max-width:100%;}
+ #duelView .hand .card .art{height:29px!important;font-size:12px!important}
+ #duelView .hand .card .power-stat,#duelView .hand .card .sp-stat{font-size:10px!important;min-width:0!important;padding:1px 2px!important}
+ #duelView .card-controls{padding:2px!important;gap:1px!important;max-width:100%!important}
+ #duelView .card-controls button{width:19px!important;height:19px!important;min-width:19px!important;min-height:19px!important;font-size:10px!important}
+}
+@media(prefers-reduced-motion:reduce){#duelView .online-glass-piece,#duelView .online-outcome strong,#duelView .online-lp-impact{animation:none}}

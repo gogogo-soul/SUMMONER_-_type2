@@ -15,7 +15,7 @@ function roomInvite(){const u=new URL('online.html',location.href);u.searchParam
 async function rest(path,data){const root=getServer();if(!root)throw Error('Cloudflare WorkerのURLを設定してください');const r=await fetch(root+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error||`通信エラー HTTP ${r.status}`);return body;}
 function send(data){if(!ws||ws.readyState!==WebSocket.OPEN)throw Error('サーバー未接続です');ws.send(JSON.stringify(data));}
 function attempt(data){try{send(data)}catch(e){showMatchError(e.message)}}
-function showMatchError(msg){const oldWorker=/不正な命令|unknown|unsupported|rematch|leave_room/i.test(msg);matchEndError=oldWorker?'Cloudflareサーバーが旧版の可能性があります。v39のWorker更新後に新しいルームでお試しください。':msg;status(matchEndError,true);if(view?.game?.over)renderMatchEnd(view.game,view.seat);}
+function showMatchError(msg){const oldWorker=/不正な命令|unknown|unsupported|rematch|leave_room/i.test(msg);matchEndError=oldWorker?'Cloudflareサーバーが旧版の可能性があります。v40のWorker更新後に新しいルームでお試しください。':msg;status(matchEndError,true);if(view?.game?.over)renderMatchEnd(view.game,view.seat);}
 async function checkWorkerVersion(){const root=getServer();if(!root)return;try{const r=await fetch(root+'/health',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const info=await r.json();if(root!==getServer())return;serverVersion=info.version||'不明';const compatible=/^alpha2-v(?:3[4-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion);if(!compatible&&view?.game?.over){matchEndError=`Cloudflareは ${serverVersion} です。再戦にはv34以降、確実な退出にはv35が必要です。`;renderMatchEnd(view.game,view.seat);}return info;}catch(e){serverVersion='確認不可';return null;}}
 function act(type,extra={}){attempt({type:'action',action:{type,...extra}});}
 function connect(){if(!session||!getServer())return;manualClose=false; if(ws&&ws.readyState<=1)ws.close(); const url=getServer().replace(/^http/,'ws')+`/api/rooms/${session.code}/socket`;ws=new WebSocket(url);const thisSocket=ws;
@@ -57,7 +57,7 @@ function makeCard(c,handler=null,back=false,part=null,side=null){
  const d=DB[c.name]||{};
  const hidden=back||c.faceDown;
  const affordable=part==='hand'&&side===view?.seat&&c.type!=='land'&&canCastNow(c)&&hasMana(c);
- const klass='card '+(hidden?'back':c.type||'')+(!hidden&&c.color&&c.color!=='none'?' color-'+c.color:'')+(c.tapped?' tapped':'')+(affordable?' affordable-red':'')+(armedAttack&&c.id===armedAttack.id?' attack-ready':'');
+ const klass='card '+(hidden?'back':c.type||'')+(!hidden&&c.color&&c.color!=='none'?' color-'+c.color:'')+(c.tapped?' tapped':'')+(c.summonSick&&c.type==='monster'?' summon-sick':'')+(affordable?' affordable-red':'')+(armedAttack&&c.id===armedAttack.id?' attack-ready':'');
  const node=CE('div',klass);node.dataset.id=c.id||'';
  if(hidden){node.append(CE('div','name',back?'裏向きカード':'裏向き流脈'),CE('div','art',back?'✦':'≋'));}
  else{
@@ -91,8 +91,7 @@ function syncCardControls(){
  else if(isLand){const locked=!!c.tapped&&!!c.spent;const b=cardAction(controls,locked?'🔒':c.tapped?'↶':'↷',()=>act(c.tapped?'untap_land':'tap_land',{card:c.id}),locked?'使用済み流脈はアンタップできません':c.tapped?'未使用マナを取り消す':'タップしてマナを生成');b.disabled=locked||!!g.choice;}
  else if(isSummoner){const d=DB[c.name],automatic=d?.summonerTrigger==='turnEnd';const b=cardAction(controls,'効',summonAbility,automatic?'ターン終了時に発動条件を確認する召喚士です':'召喚士能力を発動','ability-btn');b.disabled=!d?.summonerAbilityKey||!automatic&&(!canActivateSummoner());}
  else if(isField&&c.type==='monster'){
-  const locked=!!c.tapped&&!!c.spent;
-  const b=cardAction(controls,locked?'🔒':c.tapped?'↶':'↷',()=>act(c.tapped?'untap_monster':'tap_monster',{card:c.id}),locked?'攻撃・ブロックなどで使用済み':'タップ／アンタップ');b.disabled=locked||g.over;
+  // Manual tapping/untapping of battlefield monsters is not allowed.
   if(DB[c.name]?.effectKey==='tapBurn2'){
     const x=cardAction(controls,'⚡',()=>act('monster_ability',{card:c.id}),'このモンスターのタップ能力','ability-btn');x.disabled=g.turn!==me||c.tapped;
   }
@@ -103,6 +102,7 @@ function onBoardCard(c,part,side,dom){
  const g=view?.game;if(!g||g.over)return;
  const me=view.seat;
  if(g.block&&g.block.seat!==me&&side===me&&part==='field'&&!c.tapped){act('block',{card:c.id});return;}
+ if(armedAttack&&side===1-me&&part==='summoner'){const attacker=g.players[me].field.find(x=>x.id===armedAttack.id);if(attacker){attackOnTarget(attacker,null);return;}}
  if(armedAttack&&side===1-me&&part==='field'){
    const attacker=g.players[me].field.find(x=>x.id===armedAttack.id);
    if(attacker){attackOnTarget(attacker,c.id);return;}
@@ -112,11 +112,11 @@ function onBoardCard(c,part,side,dom){
  if(part==='hand'&&c.type!=='land'&&c.type!=='summoner'){
    openPlayMethod(c);return;
  }
- if(part==='summoner'&&side===me){summonAbility();return;}
+ // Click selects a Summoner; the '効' marker activates its ability.
  if(part==='field'&&c.type==='monster'&&g.turn===me&&g.phase==='BATTLE'&&!g.block){
     if(c.tapped||c.summonSick&&!DB[c.name]?.haste){status('このモンスターは現在攻撃できません',true);return;}
-    armedAttack={id:c.id};document.body.classList.add('attack-targeting');$('turnHelp').textContent=`《${c.name}》で攻撃：相手のモンスターまたはLPを選択してください。`;
-    $('opLP').title='クリックすると相手プレイヤーへ攻撃';
+    armedAttack={id:c.id};document.body.classList.add('attack-targeting');$('turnHelp').textContent=`《${c.name}》で攻撃：相手のモンスターまたは召喚士を選択してください。`;
+    $('opSummoner').title='召喚士をクリックしてプレイヤーへ直接攻撃';
     $('duelView').querySelectorAll('.card.attack-ready').forEach(n=>n.classList.remove('attack-ready'));
     dom.classList.add('attack-ready');
  }
@@ -135,7 +135,7 @@ function prettyMana(m){return (m||[]).length?m.map(c=>colorWord(c)).join(' / '):
 function button(parent,text,fn,klass){const b=CE('button',klass||'',text);b.onclick=fn;parent.append(b);return b;}
 function renderDuel(){
  const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];
- if(lastMatchId!==g.matchId){clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;$('onlineOutcome').classList.add('hidden');dismissError();lastMatchId=g.matchId;lastLifeSeq=Math.max(0,...(g.lifeEvents||[]).map(e=>e.seq));clearCardSelection();armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
+ if(lastMatchId!==g.matchId){clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;$('onlineOutcome').classList.add('hidden');dismissError();lastMatchId=g.matchId;if($('onlineCardPopup'))$('onlineCardPopup').hidden=true;lastLifeSeq=Math.max(0,...(g.lifeEvents||[]).map(e=>e.seq));clearCardSelection();armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
  $('lobbyView').classList.add('hidden');$('duelView').classList.remove('hidden');
  document.body.classList.add('online-active');$('onlineFieldCss').disabled=false;$('onlineOverrideCss').disabled=false;
  $('myName').textContent=`PLAYER ${me+1}：${view.players[me].name}（自分）`;
@@ -166,6 +166,7 @@ function renderDuel(){
  $('passBtn').disabled=g.over||!g.stack.length||g.priority!==me;
  $('summonerBtn').disabled=g.over||g.turn!==me||g.phase!=='MAIN'||g.drawPending>0||!!g.effectDraw||g.stack.length>0||!!g.block;
  $('surrenderBtn').disabled=g.over;
+ if($('surrenderConfirm')&&g.over)$('surrenderConfirm').classList.add('hidden');
  const b=$('noBlockBtn');b.disabled=!(g.block&&g.block.seat!==me&&!g.over);
  let headline='',explain='';
  if(g.effectDraw){headline=g.effectDraw.seat===me?'効果のドロー処理':'相手の効果処理';explain=`《${g.effectDraw.source}》：残り${g.effectDraw.remaining}枚のドロー`; }
@@ -196,7 +197,7 @@ function renderMatchEnd(g,me){
  }
  if(!resultIntroDone){box.classList.add('hidden');return;}
  box.classList.remove('hidden');
- if(!matchEndError&&serverVersion&&serverVersion!=='確認不可'&&!/^alpha2-v(?:3[5-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion))matchEndError=`Cloudflareのサーバーは ${serverVersion} です。最新v39へ更新してください（再戦・退出にはサーバー側の更新も必要です）。`;
+ if(!matchEndError&&serverVersion&&serverVersion!=='確認不可'&&!/^alpha2-v(?:3[5-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion))matchEndError=`Cloudflareのサーバーは ${serverVersion} です。最新v40へ更新してください（再戦・退出にはサーバー側の更新も必要です）。`;
  result.textContent=g.winner==null?'引き分け':g.winner===me?'勝利！':'敗北';
  details.textContent=g.winner==null?'引き分けで対戦が終了しました。':g.winner===me?'対戦に勝利しました。':'対戦に敗北しました。';
  const r=view.rematch||{},own=!!r.accepted?.[me],op=!!r.accepted?.[1-me];
@@ -223,7 +224,7 @@ function backToMatching(){
   body:JSON.stringify({token:s.token}),keepalive:true
  }).then(async r=>{const body=await r.json().catch(()=>({}));if(!r.ok)throw Error(body.error||`HTTP ${r.status}`);return body;})
  .then(()=>{if(!session)status('マッチングに戻りました。ルームから退出しました。');})
- .catch(e=>{if(!session)status('マッチングには戻りましたが、サーバーへの退出通知は未完了です。Cloudflareをv39に更新してください。 ('+e.message+')',true);});
+ .catch(e=>{if(!session)status('マッチングには戻りましたが、サーバーへの退出通知は未完了です。Cloudflareをv40に更新してください。 ('+e.message+')',true);});
 }
 $('rematchBtn').onclick=()=>{
  if(!view?.game?.over||view.rematch?.closed)return;
@@ -245,15 +246,16 @@ function openGrave(side){const g=view.game;const list=g.players[side].grave;cons
  doDialog(title,`${list.length}枚。選択するとカードの詳細を表示します。`,[...list].reverse().map(readable),1,1,ids=>{const x=list.find(c=>c.id===ids[0]);if(x)inspectCard(x);});
 }
 function clearCardSelection(){selected=null;syncCardControls();}
+function showCardPopup(c){const box=$('onlineCardPopup');if(!box||!c)return;const d=DB[c.name]||{};box.replaceChildren();const close=CE('button','online-popup-close','×');close.type='button';close.setAttribute('aria-label','閉じる');close.onclick=()=>{box.hidden=true;};box.append(close,CE('h3','',c.faceDown?'裏向き流脈':c.name),CE('div','online-popup-meta',c.type==='monster'?`パワー ${c.power??d.power??0} / SP ${c.sp??d.sp??0}`:`${jpType[c.type]||''} / コスト ${c.cost??d.c??0}`),CE('p','',c.faceDown?'無色の流脈として扱います':c.txt||d.txt||'効果なし'));box.hidden=false;}
 function openCard(c,part,side,dom){
- if(!view?.game)return;selected={c,part,side};inspectCard(c);if(window.innerWidth>900)document.body.classList.add('info-open');syncCardControls();
+ if(!view?.game)return;selected={c,part,side};inspectCard(c);showCardPopup(c);if(window.innerWidth>900)document.body.classList.add('info-open');syncCardControls();
 }
-$('opLP').addEventListener('click',()=>{if(!armedAttack||!view?.game)return;const c=view.game.players[view.seat].field.find(c=>c.id===armedAttack.id);if(c)attackOnTarget(c,null);});
-function doDialog(title,help,opts,min,max,callback){pending={title};dialogCb=callback;dialogChosen=[];dialogMin=min;dialogMax=max;$('dialogCancel').disabled=false;$('dialogTitle').textContent=title;$('dialogHelp').textContent=help;$('dialog').classList.remove('hidden');const area=$('dialogOptions');empty(area);for(const opt of opts){const b=button(area,opt.label,()=>{if(dialogMax===1){dialogChosen=[opt.id];update();return}if(dialogChosen.includes(opt.id))dialogChosen=dialogChosen.filter(x=>x!==opt.id);else if(dialogChosen.length<dialogMax)dialogChosen.push(opt.id);update();});b.dataset.id=opt.id;}
- function update(){for(const b of area.querySelectorAll('button'))b.classList.toggle('active',dialogChosen.includes(b.dataset.id));$('dialogOk').disabled=dialogChosen.length<min||dialogChosen.length>max;}
+// Direct attack is selected by clicking the opponent Summoner, not their LP.
+function doDialog(title,help,opts,min,max,callback){pending={title};dialogCb=callback;dialogChosen=[];dialogMin=min;dialogMax=max;$('dialogCancel').disabled=false;$('dialogTitle').textContent=title;$('dialogHelp').textContent=help;$('dialog').classList.remove('hidden');const area=$('dialogOptions');empty(area);for(const opt of opts){const b=button(area,opt.label,()=>{if(dialogMax===1){dialogChosen=[opt.id];update();return}if(dialogChosen.includes(opt.id))dialogChosen=dialogChosen.filter(x=>x!==opt.id);else if(dialogChosen.length<dialogMax)dialogChosen.push(opt.id);update();});b.dataset.id=opt.id;b.dataset.label=opt.label;}
+ function update(){for(const b of area.querySelectorAll('button')){const i=dialogChosen.indexOf(b.dataset.id);b.classList.toggle('active',i>=0);b.textContent=(i>=0&&dialogMax>1?`${i+1}. `:'')+(b.dataset.label||b.textContent.replace(/^\d+\. /,''));}$('dialogOk').disabled=dialogChosen.length<min||dialogChosen.length>max;}
  update();}
-function clearDialog(){pending=null;dialogCb=null;$('dialog').classList.add('hidden');$('onlineEffectPeekReturn').style.display='none';}
-$('dialogCancel').onclick=()=>{if(pending?.forced)return;clearDialog();};$('dialogPeek').onclick=()=>{if(!pending)return;$('dialog').classList.add('hidden');$('onlineEffectPeekReturn').style.display='flex';};$('onlineEffectReturn').onclick=()=>{$('onlineEffectPeekReturn').style.display='none';if(pending)$('dialog').classList.remove('hidden');};$('dialogOk').onclick=()=>{const cb=dialogCb,sel=[...dialogChosen];clearDialog();cb?.(sel);};
+function clearDialog(){pending=null;dialogCb=null;$('dialog').classList.add('hidden');}
+$('dialogCancel').onclick=()=>{if(pending?.forced)return;clearDialog();};$('dialogOk').onclick=()=>{const cb=dialogCb,sel=[...dialogChosen];clearDialog();cb?.(sel);};
 function choices(key,side){const g=view.game,own=g.players[side],enemy=g.players[1-side];const ownMon=own.field,oppMon=enemy.field;
  switch(key){
  case 'damageOpp2':case 'hpMinus1EOT':case 'hpMinus2EOT':case 'destroyOppMonster':case 'tapOppOnSummon':case 'oppToFaceDownLand':case 'hpMinus1NextEnd':case 'oppSpMinus1NextEnd':case 'oppBlockPowerPlus2NextEnd':return oppMon;
@@ -277,7 +279,7 @@ function openPlayMethod(c){
  if(!options.length){status('通常プレイに必要なマナ、流脈配置のタイミングを確認してください。',true);return;}
  doDialog(`《${c.name}》のプレイ方法を選択`,'通常プレイ、または手札から裏向き流脈として配置します。',options,1,1,ids=>{if(ids[0]==='land')act('land',{card:c.id});else playWithTarget(c);});
 }
-function playWithTarget(c){const key=DB[c.name]?.effectKey;const available=choices(key,view.seat);
+function playWithTarget(c){if(c.type==='monster'&&String(c.txt||DB[c.name]?.txt||'').includes('登場時')){act('play',{card:c.id});return;}const key=DB[c.name]?.effectKey;const available=choices(key,view.seat);
  if(key==='destroyOneEach'){
   const own=view.game.players[view.seat].field,opp=view.game.players[1-view.seat].field;
   if(!own.length||!opp.length)return status('自分と相手に対象モンスターが必要です',true);
@@ -309,9 +311,11 @@ function summonAbility(){const g=view?.game;if(!g||g.over)return;const me=view.s
  const land=g.players[me].lands.find(l=>!l.faceDown&&!l.tapped&&l.color===d.color);if(!land){status(`${colorWord(d.color)}の未タップ流脈が1枚必要です。裏向き流脈は無色なので使えません。`,true);return;}
  if((d.summonerAbilityCost||0)>1&&!(g.players[me].mana||[]).length){status('追加マナが1つ必要です。別の流脈をタップしてから発動してください。',true);return;}
  const opts=choices(key,me);if(opts===null){act('summoner');return;}if(!opts.length){status('召喚士能力の対象がいません',true);return;}doDialog('召喚士《'+c.name+'》',`${colorWord(d.color)}の流脈≋1をコストとしてタップします。`,opts.map(readable),1,1,x=>act('summoner',{target:x[0]}));}
-function promptChoice(choice){const opts=choice.options.map(x=>({id:x.id,label:x.name}));doDialog('カードを選択','サーバーからの選択処理です。選択順が一部の効果で結果に影響します。',opts,choice.min,choice.max,ids=>attempt({type:'choose',ids}));pending.forced=true;$('dialogCancel').disabled=true;}
+function promptChoice(choice){const opts=choice.options.map(x=>({id:x.id,label:x.name}));doDialog(choice.type==='reorderTop3'?'山札の上からの順番を指定':'カードを選択',choice.type==='reorderTop3'?'1→2→3の順にカードを選んでください。番号1が山札の一番上です。':'選択順は1、2、3…の数字で表示します。',opts,choice.min,choice.max,ids=>attempt({type:'choose',ids}));pending.forced=true;$('dialogCancel').disabled=true;}
 $('noBlockBtn').onclick=()=>act('block');$('drawBtn').onclick=()=>act('draw');$('battleBtn').onclick=()=>act('phase',{to:'BATTLE'});$('endBtn').onclick=()=>act('end_turn');$('passBtn').onclick=()=>act('pass');$('summonerBtn').onclick=summonAbility;
-$('surrenderBtn').onclick=()=>{if(confirm('降参しますか？'))attempt({type:'surrender'});};
+$('surrenderBtn').onclick=()=>{const modal=$('surrenderConfirm');if(!modal||!view?.game||view.game.over)return;modal.classList.remove('hidden');};
+$('surrenderYes').onclick=()=>{$('surrenderConfirm').classList.add('hidden');};
+$('surrenderNo').onclick=()=>{$('surrenderConfirm').classList.add('hidden');attempt({type:'surrender'});};
 $('changeServer').onclick=()=>{$('serverConfig').classList.remove('hidden');status('接続先URLを入力し直してください。変更後は必要に応じてルームへ入り直してください。');};
 $('saveServer').onclick=async()=>{const s=server();if(!s){status('HTTPSのCloudflare Worker URLを入力してください',true);return;}localStorage.setItem(SERVER_STORE,s);try{const r=await fetch(s+'/health');if(!r.ok)throw Error('接続先が応答しません');const d=await r.json();status(`接続確認済み：${d.service||'SUMMONER server'}`);$('serverConfig').classList.add('hidden');if(session)connect();}catch(e){status('接続できません：'+e.message,true)}};
 $('create').onclick=async()=>{try{const data=await rest('/api/rooms',{name:$('hostName').value});saveSession(data);connect();}catch(e){status(e.message,true)}};
@@ -323,7 +327,7 @@ $('ready').onclick=()=>attempt({type:'ready',ready:!view?.players[view.seat].rea
 function render(){if(!view)return;renderLobby();if(view.game)renderDuel();else{$('lobbyView').classList.remove('hidden');$('duelView').classList.add('hidden');}}
 function bootstrap(){refreshDecks();$('hostName').value=currentUser();$('guestName').value=currentUser();$('roomCode').value=(new URLSearchParams(location.search).get('room')||'').toUpperCase();
  const q=new URLSearchParams(location.search);const invitationServer=q.get('server');const savedServer=invitationServer||window.SUMMONER_ONLINE_SERVER||localStorage.getItem(SERVER_STORE)||'';$('serverUrl').value=savedServer;
- try{session=JSON.parse(localStorage.getItem(STORAGE)||'null');if(session&&!session.token)session=null;}catch{session=null}
+ try{session=JSON.parse(localStorage.getItem(STORAGE)||'null');if(session&&!session.token)session=null;if(session&&!/^[A-Z0-9]{6}$/.test(session.code||'')){session=null;localStorage.removeItem(STORAGE);}}catch{session=null}
  if(session&&q.get('room')&&session.code!==q.get('room').toUpperCase()){session=null;localStorage.removeItem(STORAGE);}
  if(savedServer){$('serverConfig').classList.add('hidden');status('対戦サーバーの設定が読み込まれました。');if(invitationServer&&server())localStorage.setItem(SERVER_STORE,server());if(session)connect();}else status('オンライン対戦には先にCloudflare Workerの無料デプロイが必要です。設定URLを入力してください。');
 }

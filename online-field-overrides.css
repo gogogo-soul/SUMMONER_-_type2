@@ -198,3 +198,29 @@ body.online-active:not(.hands-compact) #duelView .handbar .hand::-webkit-scrollb
  #duelView .card-controls button{width:19px!important;height:19px!important;min-width:19px!important;min-height:19px!important;font-size:10px!important}
 }
 @media(prefers-reduced-motion:reduce){#duelView .online-glass-piece,#duelView .online-outcome strong,#duelView .online-lp-impact{animation:none}}
+
+/* v40 */
+#onlineEffectPeekReturn{display:none!important}
+#duelView .online-card-popup{display:block}
+.online-card-popup{position:fixed;z-index:9100;right:14px;top:55px;width:min(300px,calc(100vw - 28px));max-height:45dvh;overflow:auto;padding:12px 14px;background:#142235f3;border:2px solid #6e8dab;border-radius:10px;color:#f3f6fa;box-shadow:0 10px 40px #0009;pointer-events:auto}
+.online-card-popup[hidden]{display:none!important}
+.online-card-popup h3{margin:0 24px 7px 0;font-size:14px;line-height:1.3}
+.online-card-popup p{margin:8px 0 0;font-size:12px;white-space:pre-wrap;line-height:1.6}
+.online-popup-meta{font-weight:800;font-size:12px;color:#f5d594}
+.online-popup-close{position:absolute;right:5px;top:5px;padding:1px 9px;font-size:19px;border:1px solid #667c98;background:#263b56;border-radius:5px}
+#surrenderConfirm{z-index:9500!important}
+#surrenderConfirm .online-surrender{background:#b32135;color:#fff;border:1px solid #f88;border-radius:7px;padding:12px}
+#duelView .card.monster.summon-sick:after{content:'Zz';position:absolute;right:3px;top:3px;background:#563bb9;color:#fff;font-size:10px;font-weight:900;padding:2px 3px;border-radius:4px;z-index:10;pointer-events:none}
+#duelView .card.land .art{writing-mode:vertical-rl;transform:rotate(90deg);transform-origin:center}
+#duelView #opSummoner{cursor:crosshair}
+#duelView .online-card-popup{pointer-events:auto}
+@media(max-width:900px){
+ .online-card-popup{right:7px;top:45px;width:min(240px,58vw);font-size:11px;padding:10px;max-height:30dvh}
+ /* The opposing hand, resources and field move one compact card-depth farther away. */
+ #duelView .cpu-half .zone-row,#duelView .cpu-half .opponent-hand-wrap{transform:translateY(-50px)}
+ #duelView .cpu-half{padding-top:48px}
+}
+
+#duelView .online-surrender{background:#b51c36!important;border:1px solid #ff728c!important;color:#fff!important;font-weight:900}
+#duelView .online-surrender:hover{background:#d52b4e!important}
+#duelView .online-surrender:disabled{opacity:.45}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v35-postmatch-repair-r1";
+const CACHE_NAME = "summoner-pwa-v36-mobile-actions-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",

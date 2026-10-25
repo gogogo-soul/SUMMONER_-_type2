@@ -49,3 +49,46 @@ body.online-active{margin:0!important;overflow:hidden!important;height:100dvh!im
 
 #duelView .match-end-error{background:#542830;color:#ffe6e6;border:1px solid #ec9090;border-radius:8px;padding:10px;text-align:left;font-size:13px;line-height:1.6;}
 #duelView .match-end-error[hidden]{display:none!important;}
+
+/* v36: Direct card controls. v35 hid .side .actions on narrow screens,
+   making it impossible to place a flow vein or cast from the hand. */
+#duelView .online-card-toolbar{position:fixed;z-index:350;right:10px;bottom:194px;max-width:min(470px,70vw);padding:9px 11px;background:rgba(18,31,44,.96);border:1px solid #78a7cb;border-radius:10px;box-shadow:0 4px 18px #000b;pointer-events:auto;color:#f3f6fc}
+#duelView .online-card-toolbar.hidden{display:none!important}
+#duelView .online-card-toolbar-head{display:grid;gap:3px;margin-bottom:6px;line-height:1.3}
+#duelView .online-card-toolbar-head strong{font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#duelView .online-card-toolbar-head span{font-size:10px;color:#c8d9e8}
+#duelView .online-card-toolbar-buttons{display:flex;flex-wrap:wrap;gap:6px}
+#duelView .online-card-toolbar-buttons button{flex:1 1 auto;padding:8px 9px;min-height:42px;border-radius:6px;border:1px solid #87a4c4;background:#314663;color:#fff;font-size:12px;font-weight:800;touch-action:manipulation}
+#duelView .online-card-toolbar-buttons button.primary{background:#236d97;border-color:#70cdfb}
+#duelView .online-hand-toggle{display:none}
+@media(max-width:900px){
+ #duelView .online-hand-toggle{display:block;position:fixed;z-index:380;left:8px;bottom:195px;min-height:31px;line-height:1.1;padding:6px 9px;font-size:11px;font-weight:900;border:1px solid #cfc3a0;border-radius:6px;color:#fafafa;background:rgba(31,41,47,.95);box-shadow:0 3px 10px #0009}
+ #duelView .online-card-toolbar{bottom:190px;right:6px;max-width:min(280px,68vw);padding:7px}
+ #duelView .online-card-toolbar-buttons{display:grid;grid-template-columns:1fr;gap:4px}
+ #duelView .online-card-toolbar-buttons button{font-size:11px;min-height:36px;padding:6px 9px}
+ #duelView .side .actions#cardActions{display:flex!important;flex-wrap:wrap;gap:5px} /* INFO also works */
+ body.online-active.hands-compact #duelView .handbar{
+   left:7px!important;right:auto!important;bottom:53px!important;transform:none!important;
+   width:min(156px,42vw)!important;height:55px!important;max-width:156px!important;
+   background:rgba(22,29,38,.92)!important;border:1px solid #b2b6bb!important;
+   border-radius:7px!important;padding:3px!important;z-index:160!important;
+ }
+ body.online-active.hands-compact #duelView .hand{height:46px!important;display:flex!important;justify-content:flex-start!important;align-items:flex-end!important;overflow:hidden!important;padding:0 3px!important;gap:0!important}
+ body.online-active.hands-compact #duelView .hand .card{
+   flex:0 0 31px!important;width:31px!important;height:42px!important;min-width:0!important;min-height:0!important;
+   margin-left:-13px!important;padding:2px!important;transform:none!important;border-radius:3px!important;
+ }
+ body.online-active.hands-compact #duelView .hand .card:first-child{margin-left:0!important}
+ body.online-active.hands-compact #duelView .handbar::before{content:'手札をタップで拡大';font-size:9px;top:-18px!important;left:0!important;right:auto!important;width:auto}
+ body.online-active.hands-compact #duelView .online-hand-toggle{bottom:115px!important;left:8px!important}
+ body.online-active.hands-compact #duelView .online-card-toolbar{bottom:55px!important;max-width:calc(100vw - 178px)!important;right:6px!important}
+ body.online-active.hands-compact #duelView .online-card-toolbar-head span{display:none}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ #duelView .online-hand-toggle{bottom:155px}
+ #duelView .online-card-toolbar{bottom:110px}
+ body.online-active.hands-compact #duelView .online-card-toolbar{bottom:55px!important}
+}
+/* Prevent legacy card minimums overriding compact size on desktop as well. */
+body.online-active.hands-compact #duelView .hand .card{min-width:0!important;min-height:0!important}
+body.online-active.hands-compact #duelView .opponent-hand .card{min-width:0!important;min-height:0!important}

@@ -47,11 +47,17 @@ ul{margin:0;padding:15px 20px 17px 38px;color:#d7dde6;line-height:1.65;font-size
     <div class="eyebrow">PLAYTEST CHANGELOG</div>
     <h1>更新内容</h1>
     <p>SUMMONER Beta2 の主な変更点をまとめています。新しい更新を公開したときは、このページへ追記します。</p>
-    <div class="latest">LATEST · Beta2 v35 (再戦・退出の不具合を修正)</div>
+    <div class="latest">LATEST · Beta2 v36 (オンライン対戦のカード操作とスマホ手札を修正)</div>
   </section>
 
   <section class="timeline">
-    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v35</div><div class="release-title">再戦とマッチング復帰の不具合を修正</div></div><div class="tag">ONLINE ALPHA</div></div>
+    <article class="release latest-release"><div class="release-head"><div><div class="version">Beta2 v36</div><div class="release-title">オンライン対戦のカードプレイ・スマホ手札表示を修正</div></div><div class="tag">ONLINE ALPHA</div></div>
+      <ul><li>スマホでは「流脈として配置」「プレイする」がINFO内の非表示ボタンになっていたため、カード選択時に盤面上へ直接操作メニューを表示。</li>
+      <li>流脈カードから「タップしてマナ生成」、戦場のモンスターから攻撃・ブロックも同様に操作可能に。</li>
+      <li>スマホの縮小手札を画面左下に小さく収納。「手札を縮小／広げる」ボタンも追加。</li>
+      <li>カードの最小サイズ指定が縮小を妨げる不具合を修正。今回の更新はGitHubのみで、Cloudflareの再デプロイ不要。</li></ul></article>
+
+    <article class="release"><div class="release-head"><div><div class="version">Beta2 v35</div><div class="release-title">再戦とマッチング復帰の不具合を修正</div></div><div class="tag">ONLINE ALPHA</div></div>
       <ul><li>再戦希望は双方の同意をCloudflare Worker側で処理。旧版サーバー・切断エラーは終了画面内に表示。</li>
       <li>「マッチングに戻る」は画面をすぐ復帰させ、認証付きHTTPでサーバーに退出を通知。</li>
       <li>Cloudflareの <code>/health</code> で <code>alpha2-v35</code> を確認。</li>

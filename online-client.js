@@ -8,7 +8,7 @@ const status=(msg,err=false)=>{const n=$('status');n.textContent=msg;n.classList
 const server=()=>{const raw=($('serverUrl').value||'').trim().replace(/\/$/,'');if(!raw)return null;try{const u=new URL(raw);if(u.protocol!=='https:'&&!(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname)))return null;return u.origin;}catch{return null;}};
 function getServer(){return server()}
 function saveSession(r){session=r;localStorage.setItem(STORAGE,JSON.stringify(r));}
-function forget(){lastMatchId=null;leavingRoom=false;matchEndError='';selected=null;pending=null;$('dialog').classList.add('hidden');$('matchEndPanel').classList.add('hidden');$('roomCode').value='';try{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u.href);}catch(_){}manualClose=true;const oldSocket=ws;ws=null;if(oldSocket)try{oldSocket.close()}catch(_){}session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active','info-open','hands-compact');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('マッチング画面に戻りました。');}
+function forget(){lastMatchId=null;leavingRoom=false;matchEndError='';selected=null;pending=null;$('dialog').classList.add('hidden');$('quickCardDock').classList.add('hidden');$('matchEndPanel').classList.add('hidden');$('roomCode').value='';try{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u.href);}catch(_){}manualClose=true;const oldSocket=ws;ws=null;if(oldSocket)try{oldSocket.close()}catch(_){}session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active','info-open','hands-compact');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('マッチング画面に戻りました。');}
 function titleRoom(){const code=session?.code;if(!code)return '';return code;}
 function roomInvite(){const u=new URL('online.html',location.href);u.searchParams.set('room',titleRoom());if(getServer())u.searchParams.set('server',getServer());return u.href;}
 async function rest(path,data){const root=getServer();if(!root)throw Error('Cloudflare WorkerのURLを設定してください');const r=await fetch(root+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error||`通信エラー HTTP ${r.status}`);return body;}
@@ -55,7 +55,7 @@ function prettyMana(m){return (m||[]).length?m.map(c=>colorWord(c)).join(' / '):
 function button(parent,text,fn,klass){const b=CE('button',klass||'',text);b.onclick=fn;parent.append(b);return b;}
 function renderDuel(){
  const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];
- if(lastMatchId!==g.matchId){lastMatchId=g.matchId;selected=null;pending=null;$('dialog').classList.add('hidden');$('cardActions').replaceChildren();$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
+ if(lastMatchId!==g.matchId){lastMatchId=g.matchId;clearCardSelection();pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
  $('lobbyView').classList.add('hidden');$('duelView').classList.remove('hidden');
  document.body.classList.add('online-active');$('onlineFieldCss').disabled=false;$('onlineOverrideCss').disabled=false;
  $('myName').textContent=`PLAYER ${me+1}：${view.players[me].name}（自分）`;
@@ -98,7 +98,7 @@ function renderDuel(){
  $('turnStatus').textContent=headline;$('turnHelp').textContent=explain;
  renderMatchEnd(g,me);
  const logs=$('gameLog');logs.replaceChildren();for(const x of [...g.log].reverse())logs.append(CE('div','',x));
- if(selected){const selectedNode=$('duelView').querySelector(`[data-id="${CSS.escape(selected.c.id)}"]`);if(selectedNode)selectedNode.classList.add('selected');}
+ if(selected){const selectedNode=$('duelView').querySelector(`[data-id="${CSS.escape(selected.c.id)}"]`);if(selectedNode){const fresh=view.game.players[selected.side]?.[selected.part==='hand'?'hand':selected.part==='field'?'field':selected.part==='lands'?'lands':'summoner'];const next=Array.isArray(fresh)?fresh.find(x=>x.id===selected.c.id):null;if(next)openCard(next,selected.part,selected.side,selectedNode);else clearCardSelection();}else clearCardSelection();}
  if(g.choice&&!g.choice.waiting&&g.choice.seat===me&&!pending)promptChoice(g.choice);
 }
 function renderMatchEnd(g,me){
@@ -143,14 +143,34 @@ $('rematchBtn').onclick=()=>{
 };
 $('backToMatchBtn').onclick=backToMatching;
 function openGrave(side){const g=view.game;const list=g.players[side].grave;const title=side===view.seat?'自分の墓地':'相手の墓地';const info=list.map(c=>`${c.name}（${c.type}）`).join('\n');$('cardInfo').textContent=title+'\n'+(info||'カードなし');}
-function openCard(c,part,side,dom){const g=view?.game;if(!g)return;selected={c,part,side};document.querySelectorAll('#duelView .card.selected').forEach(n=>n.classList.remove('selected'));if(dom)dom.classList.add('selected');const d=DB[c.name];$('cardInfo').textContent=`${c.privateName?'裏向き（自分のみ確認）：'+c.privateName:c.name}\n${c.type||''}  コスト${c.cost||0}\n${c.type==='monster'?`パワー${c.power}  SP${c.sp}\n`:''}${c.txt||d?.txt||''}`;
- const box=$('cardActions');empty(box);const me=view.seat;
- if(g.over)return;
- if(side===me&&part==='hand'){if(c.type!=='summoner')button(box,'流脈として配置',()=>act('land',{card:c.id}));if(c.type==='monster'||c.type==='spell')button(box,'プレイする',()=>playWithTarget(c),'primary');}
- if(side===me&&part==='lands')button(box,c.tapped?'タップを戻す':'タップしてマナ生成',()=>act(c.tapped?'untap_land':'tap_land',{card:c.id}));
- if(side===me&&part==='field'&&g.phase==='BATTLE'&&g.turn===me)button(box,'攻撃する',()=>attackWithTarget(c),'primary');
- if(side===me&&part==='field'&&g.block&&g.block.seat!==me&&!c.tapped)button(box,'このモンスターでブロック',()=>act('block',{card:c.id}),'primary');
+function clearCardSelection(){selected=null;$('cardActions').replaceChildren();$('quickCardActions').replaceChildren();$('quickCardDock').classList.add('hidden');document.querySelectorAll('#duelView .card.selected').forEach(n=>n.classList.remove('selected'));}
+function openCard(c,part,side,dom){
+ const g=view?.game;if(!g)return;
+ selected={c,part,side};document.querySelectorAll('#duelView .card.selected').forEach(n=>n.classList.remove('selected'));
+ if(dom)dom.classList.add('selected');
+ const d=DB[c.name];$('cardInfo').textContent=`${c.privateName?'裏向き（自分のみ確認）：'+c.privateName:c.name}\n${c.type||''}  コスト${c.cost||0}\n${c.type==='monster'?`パワー${c.power}  SP${c.sp}\n`:''}${c.txt||d?.txt||''}`;
+ const box=$('cardActions'),dock=$('quickCardActions'),panel=$('quickCardDock');empty(box);empty(dock);
+ $('quickCardName').textContent=`《${c.name}》`;
+ const me=view.seat;
+ const add=(label,handler,css)=>{button(box,label,handler,css);button(dock,label,handler,css);};
+ const canMain=g.turn===me&&g.phase==='MAIN'&&!g.drawPending&&!g.effectDraw&&!g.choice&&!g.block&&!g.stack.length;
+ if(!g.over&&side===me&&part==='hand'){
+  if(c.type!=='summoner')add('流脈として配置',()=>act('land',{card:c.id}));
+  if(c.type==='monster'||c.type==='spell')add('プレイする',()=>playWithTarget(c),'primary');
+  if(!canMain&&g.drawPending){$('quickCardHelp').textContent='最初に「DRAW」を押してからカードを使ってください。';}
+  else if(!canMain&&g.turn!==me){$('quickCardHelp').textContent='相手のターンです。通常の配置・プレイは自分のメインフェイズに行います。';}
+  else if(!canMain){$('quickCardHelp').textContent='今は使用できないカードがあります。フェイズ・スタックを確認してください。';}
+  else{$('quickCardHelp').textContent='カードの操作を選んでください。流脈は通常カードをプレイする前に1ターン1枚です。';}
+ }
+ if(!g.over&&side===me&&part==='lands'){
+  add(c.tapped?'タップを戻す':'タップしてマナ生成',()=>act(c.tapped?'untap_land':'tap_land',{card:c.id}));
+  $('quickCardHelp').textContent='流脈をタップするとマナが発生します。';
+ }
+ if(!g.over&&side===me&&part==='field'&&g.phase==='BATTLE'&&g.turn===me){add('攻撃する',()=>attackWithTarget(c),'primary');$('quickCardHelp').textContent='攻撃対象を選んでください。';}
+ if(!g.over&&side===me&&part==='field'&&g.block&&g.block.seat!==me&&!c.tapped){add('このモンスターでブロック',()=>act('block',{card:c.id}),'primary');$('quickCardHelp').textContent='このモンスターで攻撃をブロックします。';}
+ panel.classList.toggle('hidden',!dock.childElementCount);
 }
+
 function doDialog(title,help,opts,min,max,callback){pending={title};dialogCb=callback;dialogChosen=[];dialogMin=min;dialogMax=max;$('dialogCancel').disabled=false;$('dialogTitle').textContent=title;$('dialogHelp').textContent=help;$('dialog').classList.remove('hidden');const area=$('dialogOptions');empty(area);for(const opt of opts){const b=button(area,opt.label,()=>{if(dialogMax===1){dialogChosen=[opt.id];update();return}if(dialogChosen.includes(opt.id))dialogChosen=dialogChosen.filter(x=>x!==opt.id);else if(dialogChosen.length<dialogMax)dialogChosen.push(opt.id);update();});b.dataset.id=opt.id;}
  function update(){for(const b of area.querySelectorAll('button'))b.classList.toggle('active',dialogChosen.includes(b.dataset.id));$('dialogOk').disabled=dialogChosen.length<min||dialogChosen.length>max;}
  update();}
@@ -229,10 +249,12 @@ $('onlineResetField').onclick=async()=>{try{await fieldStore('readwrite',s=>s.de
 $('onlineFieldInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>10*1024*1024||!/^image\/(png|jpeg|webp)$/.test(file.type)){status('画像は10MB以内のPNG・JPG・WebPを使用してください',true);return;}try{await fieldStore('readwrite',s=>s.put({blob:file,name:file.name},FIELD_KEY));applyField(file);}catch(e){status('背景画像を保存できませんでした',true)}e.target.value='';};
 $('onlineInfoBtn').onclick=()=>document.body.classList.toggle('info-open');
 // Playmat card interactions do not collapse the hand; clicking other surfaces does.
+function setCompactHand(value){document.body.classList.toggle('hands-compact',!!value);$('mobileHandSizeBtn').textContent=value?'手札を広げる':'手札を縮小';$('mobileHandSizeBtn').setAttribute('aria-pressed',String(!!value));}
+$('mobileHandSizeBtn').onclick=e=>{e.stopPropagation();setCompactHand(!document.body.classList.contains('hands-compact'));};
 document.addEventListener('click',e=>{if(!view?.game)return;const t=e.target;if(!(t instanceof Element))return;
- if(t.closest('.handbar,.opponent-hand-wrap')){document.body.classList.remove('hands-compact');return;}
+ if(t.closest('.handbar,.opponent-hand-wrap')){setCompactHand(false);return;}
  if(t.closest('#duelView .card,#duelView .card-controls'))return;
- if(t.closest('#duelView'))document.body.classList.add('hands-compact');
+ if(t.closest('#duelView'))setCompactHand(true);
 });
 restoreField();
 

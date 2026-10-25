@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v33-online-shared-playmat-r1";
+const CACHE_NAME = "summoner-pwa-v34-postmatch-rematch-r1";
 const CORE_ASSETS = [
   "./",
   "./index.html",

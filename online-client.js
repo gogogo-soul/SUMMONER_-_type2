@@ -1,14 +1,14 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const STORAGE='summoner_online_pvp_session_v1',SERVER_STORE='summoner_online_worker_url_v1';
-let session=null,ws=null,view=null,pending=null,selected=null,dialogCb=null,dialogChosen=[],dialogMax=1,dialogMin=1,reconnect=0,manualClose=false;
+let session=null,ws=null,view=null,pending=null,selected=null,dialogCb=null,dialogChosen=[],dialogMax=1,dialogMin=1,reconnect=0,manualClose=false,lastMatchId=null,leavingRoom=false;
 const CE=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};
 const n=v=>String(v||'');
 const status=(msg,err=false)=>{const n=$('status');n.textContent=msg;n.classList.toggle('err',err);const hud=$('onlineNotice');if(view?.game&&hud){hud.hidden=false;hud.textContent=err?'通信エラー：'+msg:msg;hud.classList.toggle('error',err);if(!err)hud.hidden=true;}};
 const server=()=>{const raw=($('serverUrl').value||'').trim().replace(/\/$/,'');if(!raw)return null;try{const u=new URL(raw);if(u.protocol!=='https:'&&!(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname)))return null;return u.origin;}catch{return null;}};
 function getServer(){return server()}
 function saveSession(r){session=r;localStorage.setItem(STORAGE,JSON.stringify(r));}
-function forget(){manualClose=true;if(ws)ws.close();session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('このブラウザからルームの接続情報を解除しました。');}
+function forget(){lastMatchId=null;leavingRoom=false;selected=null;pending=null;$('dialog').classList.add('hidden');$('matchEndPanel').classList.add('hidden');$('roomCode').value='';try{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u.href);}catch(_){}manualClose=true;if(ws)ws.close();session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('このブラウザからルームの接続情報を解除しました。');}
 function titleRoom(){const code=session?.code;if(!code)return '';return code;}
 function roomInvite(){const u=new URL('online.html',location.href);u.searchParams.set('room',titleRoom());if(getServer())u.searchParams.set('server',getServer());return u.href;}
 async function rest(path,data){const root=getServer();if(!root)throw Error('Cloudflare WorkerのURLを設定してください');const r=await fetch(root+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error||`通信エラー HTTP ${r.status}`);return body;}
@@ -18,8 +18,8 @@ function act(type,extra={}){attempt({type:'action',action:{type,...extra}});}
 function connect(){if(!session||!getServer())return;manualClose=false; if(ws&&ws.readyState<=1)ws.close(); const url=getServer().replace(/^http/,'ws')+`/api/rooms/${session.code}/socket`;ws=new WebSocket(url);const thisSocket=ws;
  status('対戦サーバーへ接続しています…');
  ws.onopen=()=>{if(ws!==thisSocket)return;reconnect=0;send({type:'auth',token:session.token});status('対戦サーバーに接続しました。')};
- ws.onmessage=e=>{if(ws!==thisSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='error'){status(m.error,true);return;}if(m.type==='state'){view=m.data;render();status(`ルーム ${session.code} に接続中／PLAYER ${session.seat+1}`);}};
- ws.onclose=()=>{if(ws!==thisSocket||manualClose)return;status('通信が切断されました。数秒後に再接続します。',true);const sec=Math.min(20,1+Math.pow(2,Math.min(++reconnect,4)));setTimeout(()=>{if(!manualClose&&session)connect()},sec*1000)};
+ ws.onmessage=e=>{if(ws!==thisSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='error'){leavingRoom=false;status(m.error,true);return;}if(m.type==='left_room'){forget();status('マッチングに戻りました。新しいルームを作成、または参加してください。');return;}if(m.type==='state'){view=m.data;render();status(`ルーム ${session.code} に接続中／PLAYER ${session.seat+1}`);}};
+ ws.onclose=e=>{if(ws!==thisSocket||manualClose)return;if(e.code===1008){forget();status('このルームの接続が終了したため、マッチング画面に戻りました。');return;}leavingRoom=false;status('通信が切断されました。数秒後に再接続します。',true);const sec=Math.min(20,1+Math.pow(2,Math.min(++reconnect,4)));setTimeout(()=>{if(!manualClose&&session)connect()},sec*1000)};
  ws.onerror=()=>status('通信エラー。接続先・ネットワーク・Cloudflareの設定を確認してください。',true);
 }
 function currentUser(){return localStorage.getItem('arcana_duel_current_user')||'Guest'}
@@ -53,6 +53,7 @@ function prettyMana(m){return (m||[]).length?m.map(c=>colorWord(c)).join(' / '):
 function button(parent,text,fn,klass){const b=CE('button',klass||'',text);b.onclick=fn;parent.append(b);return b;}
 function renderDuel(){
  const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];
+ if(lastMatchId!==g.matchId){lastMatchId=g.matchId;selected=null;pending=null;$('dialog').classList.add('hidden');$('cardActions').replaceChildren();$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
  $('lobbyView').classList.add('hidden');$('duelView').classList.remove('hidden');
  document.body.classList.add('online-active');$('onlineFieldCss').disabled=false;$('onlineOverrideCss').disabled=false;
  $('myName').textContent=`PLAYER ${me+1}：${view.players[me].name}（自分）`;
@@ -93,10 +94,40 @@ function renderDuel(){
  else if(g.drawPending||g.opponentDrawPending){headline=g.turn===me?'ドローしてください':'相手がドロー中';explain='DRAW後にメインフェイズへ進みます。';}
  else{headline=g.turn===me?'あなたのターン':'相手のターン';explain=`先攻はPLAYER ${g.firstSeat+1}（サーバーでランダム決定）。`}
  $('turnStatus').textContent=headline;$('turnHelp').textContent=explain;
+ renderMatchEnd(g,me);
  const logs=$('gameLog');logs.replaceChildren();for(const x of [...g.log].reverse())logs.append(CE('div','',x));
  if(selected){const selectedNode=$('duelView').querySelector(`[data-id="${CSS.escape(selected.c.id)}"]`);if(selectedNode)selectedNode.classList.add('selected');}
  if(g.choice&&!g.choice.waiting&&g.choice.seat===me&&!pending)promptChoice(g.choice);
 }
+function renderMatchEnd(g,me){
+ const box=$('matchEndPanel'),result=$('matchEndTitle'),details=$('matchEndDetails'),waiting=$('matchEndWaitStatus'),rematch=$('rematchBtn'),back=$('backToMatchBtn');
+ box.classList.toggle('hidden',!g.over);
+ if(!g.over){leavingRoom=false;return;}
+ result.textContent=g.winner==null?'引き分け':g.winner===me?'勝利！':'敗北';
+ details.textContent=g.winner==null?'引き分けで対戦が終了しました。':g.winner===me?'対戦に勝利しました。':'対戦に敗北しました。';
+ const r=view.rematch||{},own=!!r.accepted?.[me],op=!!r.accepted?.[1-me];
+ if(r.closed){waiting.textContent='相手がルームを退出しました。再戦はできません。';}
+ else if(own){waiting.textContent=op?'再戦準備中です…':'再戦を希望しました。相手の選択を待っています。';}
+ else if(op){waiting.textContent='相手が再戦を希望しています。';}
+ else{waiting.textContent='続けて遊ぶ場合は、両プレイヤーが「再戦」を選んでください。';}
+ rematch.disabled=!!r.closed||leavingRoom;
+ rematch.textContent=own?'再戦希望を取り消す':'続けて遊ぶ（再戦）';
+ back.disabled=leavingRoom;
+ back.textContent=leavingRoom?'退出しています…':'マッチングに戻る';
+}
+function backToMatching(){
+ if(leavingRoom)return;
+ if(!view?.game?.over)return status('試合終了後に選択してください',true);
+ if(!ws||ws.readyState!==WebSocket.OPEN)return status('サーバーと再接続してから退出してください',true);
+ leavingRoom=true;renderMatchEnd(view.game,view.seat);
+ try{send({type:'leave_room'});}catch(e){leavingRoom=false;status(e.message,true);renderMatchEnd(view.game,view.seat);}
+}
+$('rematchBtn').onclick=()=>{
+ if(!view?.game?.over||view.rematch?.closed)return;
+ const requested=!!view.rematch?.accepted?.[view.seat];
+ attempt({type:'rematch',accept:!requested});
+};
+$('backToMatchBtn').onclick=backToMatching;
 function openGrave(side){const g=view.game;const list=g.players[side].grave;const title=side===view.seat?'自分の墓地':'相手の墓地';const info=list.map(c=>`${c.name}（${c.type}）`).join('\n');$('cardInfo').textContent=title+'\n'+(info||'カードなし');}
 function openCard(c,part,side,dom){const g=view?.game;if(!g)return;selected={c,part,side};document.querySelectorAll('#duelView .card.selected').forEach(n=>n.classList.remove('selected'));if(dom)dom.classList.add('selected');const d=DB[c.name];$('cardInfo').textContent=`${c.privateName?'裏向き（自分のみ確認）：'+c.privateName:c.name}\n${c.type||''}  コスト${c.cost||0}\n${c.type==='monster'?`パワー${c.power}  SP${c.sp}\n`:''}${c.txt||d?.txt||''}`;
  const box=$('cardActions');empty(box);const me=view.seat;

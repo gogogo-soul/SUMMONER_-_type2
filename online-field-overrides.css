@@ -92,3 +92,40 @@ body.online-active{margin:0!important;overflow:hidden!important;height:100dvh!im
 /* Prevent legacy card minimums overriding compact size on desktop as well. */
 body.online-active.hands-compact #duelView .hand .card{min-width:0!important;min-height:0!important}
 body.online-active.hands-compact #duelView .opponent-hand .card{min-width:0!important;min-height:0!important}
+
+/* v37 - normal-mode card controls, inspector, phase bar and dialogs */
+#duelView .online-top-actions{margin-left:0}
+#duelView .top-info{margin-left:auto}
+#duelView .card-controls{pointer-events:auto}
+#duelView .card-controls button{min-width:20px;min-height:20px;padding:0;line-height:1}
+#duelView .card-controls button:disabled{opacity:.5;cursor:not-allowed}
+#duelView .card.attack-ready{outline:3px solid #ffd166;box-shadow:0 0 9px #ffbb33aa}
+#duelView .card.affordable-red{box-shadow:0 0 8px #69b7ffdd}
+#duelView .handbar .hand-info{pointer-events:none}
+#duelView .handbar .hand-info *{pointer-events:none}
+#duelView #cardInfo{white-space:normal;max-height:none;line-height:1.45}
+#duelView #cardInfo .sub{margin:2px 0 10px;white-space:normal}
+#duelView #cardInfo p{white-space:pre-wrap}
+#duelView #opLP{cursor:pointer}
+#duelView .online-card-toolbar{display:none!important}
+#duelView .field-settings{z-index:8800}
+#dialog{z-index:9000!important}
+#dialog>div{width:min(500px,94vw);padding:18px;background:#171d25;border-color:#626d7b}
+#dialog .targets{display:flex;flex-direction:column;gap:8px;max-height:45dvh;overflow:auto}
+#dialog .targets button{background:#222b37;text-align:left;border:1px solid #526277}
+#dialog .targets button.active{background:#315b7a;border-color:#ffd166}
+#dialog footer{flex-wrap:wrap}
+#onlineEffectPeekReturn{z-index:9010}
+#onlineEffectPeekReturn button{font-size:13px}
+@media(max-width:900px){#duelView .top-info{display:none}#duelView .online-top-actions .nav-btn{font-size:10px}#duelView .card-controls button{width:23px;height:23px;font-size:12px}}
+/* Ensure the local-match LP/name marker never covers clickable cards on narrow screens. */
+@media(max-width:900px) and (orientation:portrait){
+ #duelView .cpu-half .player-head,
+ #duelView .you-half .player-head{width:110px;max-width:110px;flex-wrap:wrap;gap:3px;pointer-events:none}
+ #duelView .player-head .who{flex:0 0 100%;max-width:110px;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+ #duelView .player-head .hp{pointer-events:auto;display:inline-flex;max-width:100%}
+ #duelView .zonebox .cards{position:relative;z-index:7}
+}
+
+/* In local match, attacking a player means clicking their LP directly. */
+body.online-active.attack-targeting #duelView .opponent-hand-wrap{pointer-events:none!important}

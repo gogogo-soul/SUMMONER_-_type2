@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v40-duel-ui-r1";
+const CACHE_NAME = "summoner-pwa-v40-rulebook-gel-20261026-r5";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -12,6 +12,7 @@ const CORE_ASSETS = [
   "./decklibrary.html",
   "./updates.html",
   "./SUMMONER_Rulebook_Beta.pdf",
+  "./SUMMONER_Rulebook_Beta_v40_TextFixed_20261026.pdf",
   "./cards.js",
   "./starter-decks.js",
   "./deck-reset-v30.js",

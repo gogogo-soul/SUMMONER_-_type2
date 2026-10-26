@@ -39,7 +39,7 @@ const DB = {
   "離岸流": { code:"BS01-036", t:"spell", color:"blue", race:"水", c:4, txt:"パワー3000以下のモンスターを全て手札に戻す。", n:4, effectKey:"bounceHp3" },
   "大いなる知恵": { code:"BS01-037", t:"spell", color:"blue", race:"魔法", c:4, txt:"カードを3枚引く。", n:4, effectKey:"draw3" },
   "詠唱破棄": { code:"BS01-038", t:"spell", color:"blue", race:"魔法", c:3, txt:"【高速詠唱】（このカードはプレイ可能なら、いつでも発動できる） 相手が召喚士以外のカードをプレイするとき、そのカードを無効化し墓地に置く。", n:4, effectKey:"counterPlay", timing:"instant" },
-  "ゲル・プロテクション": { code:"BS01-039", t:"spell", color:"blue", race:"魔法", c:5, txt:"自分の戦場のモンスター全ては、ターン終了時までそのモンスターが墓地へ送られるとき、代わりに手札に戻す。", n:4, effectKey:"returnAllOnDeath" },
+  "ゲル・プロテクション": { code:"BS01-039", t:"spell", color:"blue", race:"魔法", c:3, txt:"【高速詠唱】（このカードはプレイ可能なら、いつでも発動できる） 自分の戦場のモンスター全ては、ターン終了時までそのモンスターが墓地へ送られるとき、代わりに手札に戻す。", n:4, effectKey:"returnAllOnDeath", timing:"instant" },
   "波乗り": { code:"BS01-040", t:"spell", color:"blue", race:"戦術", c:5, txt:"自分の戦場のモンスター全ては、ターン終了時までブロックされない。", n:4, effectKey:"teamUnblockable" },
   "洪水": { code:"BS01-041", t:"spell", color:"blue", race:"魔法", c:6, txt:"場のモンスターをすべて手札に戻す。", n:4, effectKey:"bounceAll" },
   "オムニ・マインド": { code:"BS01-042", t:"spell", color:"blue", race:"魔法", c:6, txt:"カードを5枚引く。その後手札を4枚選び山札の下に好きな順番で置く。", n:4, effectKey:"draw5Bottom4" },

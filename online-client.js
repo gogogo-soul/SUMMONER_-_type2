@@ -57,7 +57,8 @@ function makeCard(c,handler=null,back=false,part=null,side=null){
  const d=DB[c.name]||{};
  const hidden=back||c.faceDown;
  const affordable=part==='hand'&&side===view?.seat&&c.type!=='land'&&canCastNow(c)&&hasMana(c);
- const klass='card '+(hidden?'back':c.type||'')+(!hidden&&c.color&&c.color!=='none'?' color-'+c.color:'')+(c.tapped?' tapped':'')+(part==='field'&&c.summonSick&&c.type==='monster'?' summon-sick':'')+(affordable?' affordable-red':'')+(armedAttack&&c.id===armedAttack.id?' attack-ready':'');
+ const hasHaste=!!(c.haste||d.haste);
+ const klass='card '+(hidden?'back':c.type||'')+(!hidden&&c.color&&c.color!=='none'?' color-'+c.color:'')+(c.tapped?' tapped':'')+(part==='field'&&c.summonSick&&c.type==='monster'&&!hasHaste?' summon-sick':'')+(affordable?' affordable-red':'')+(armedAttack&&c.id===armedAttack.id?' attack-ready':'');
  const node=CE('div',klass);node.dataset.id=c.id||'';
  if(hidden){node.append(CE('div','name',back?'裏向きカード':'裏向き流脈'),CE('div','art',back?'✦':'≋'));}
  else{
@@ -114,7 +115,7 @@ function onBoardCard(c,part,side,dom){
  }
  // Click selects a Summoner; the '効' marker activates its ability.
  if(part==='field'&&c.type==='monster'&&g.turn===me&&g.phase==='BATTLE'&&!g.block){
-    if(c.tapped||c.summonSick&&!DB[c.name]?.haste){status('このモンスターは現在攻撃できません',true);return;}
+    if(c.tapped||(c.summonSick&&!c.haste&&!DB[c.name]?.haste)){status('このモンスターは現在攻撃できません',true);return;}
     armedAttack={id:c.id};document.body.classList.add('attack-targeting');$('turnHelp').textContent=`《${c.name}》で攻撃：相手のモンスターまたは召喚士を選択してください。`;
     $('opSummoner').title='召喚士をクリックしてプレイヤーへ直接攻撃';
     $('duelView').querySelectorAll('.card.attack-ready').forEach(n=>n.classList.remove('attack-ready'));

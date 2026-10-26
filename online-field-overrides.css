@@ -229,3 +229,53 @@ body.online-active:not(.hands-compact) #duelView .handbar .hand::-webkit-scrollb
 #duelView .online-top-actions{display:flex;margin-left:auto;align-items:center;justify-content:flex-end}
 #duelView .online-top-actions #surrenderBtn{padding:7px 17px;min-height:34px;white-space:nowrap}
 @media(max-width:900px){#duelView .online-top-actions #surrenderBtn{padding:7px 12px;font-size:12px;min-height:34px}}
+
+
+/* v40.1 - rulebook screenshots + mobile spacing + desktop stack size */
+@media(min-width:901px){
+ #duelView .central-stack-panel{
+   width:min(620px,88vw)!important;
+   max-height:min(210px,30dvh)!important;
+   padding:8px 14px!important;
+ }
+ #duelView .central-stack-panel .stack-entry{font-size:12px!important;padding:6px 8px!important}
+ #duelView .central-stack-panel .priority-line{font-size:11px!important;margin-top:5px!important}
+}
+@media(max-width:900px){
+ #duelView .cpu-half .zone-row,
+ #duelView .cpu-half .opponent-hand-wrap{transform:none!important}
+ #duelView .cpu-half{padding-top:0!important}
+ #duelView .opponent-hand-wrap{top:46px!important;height:96px!important;width:calc(100% - 18px)!important}
+ #duelView .opponent-hand{height:96px!important;align-items:flex-start!important}
+ #duelView .cpu-half .player-head{top:142px!important}
+ #duelView .cpu-half .zonebox.zone-land{top:42%!important;left:18%!important;right:18%!important;height:12%!important}
+ #duelView .cpu-half .zonebox.zone-summoner{top:58%!important;left:24%!important;right:24%!important;height:12%!important}
+ #duelView .cpu-half .zonebox.zone-field{top:75%!important;left:11%!important;right:11%!important;height:14%!important}
+ #duelView .you-half .zonebox.zone-field{top:5%!important;left:11%!important;right:11%!important;height:14%!important}
+ #duelView .you-half .zonebox.zone-summoner{top:24%!important;left:24%!important;right:24%!important;height:12%!important}
+ #duelView .you-half .zonebox.zone-land{top:42%!important;left:18%!important;right:18%!important;height:12%!important}
+ #duelView .you-half .player-head{bottom:146px!important}
+ #duelView .cpu-half .resource-col.deck-grave-stack{top:46%!important}
+ #duelView .you-half .resource-col.deck-grave-stack{top:8%!important}
+ #duelView .handbar{bottom:54px!important;height:112px!important;width:calc(100% - 12px)!important}
+ #duelView .hand{height:112px!important;padding-left:8px!important;padding-right:12px!important;gap:4px!important}
+ body.online-active:not(.hands-compact) #duelView .handbar .hand .card{flex:0 0 60px!important;width:60px!important;height:80px!important;min-width:60px!important;padding:3px!important}
+ #duelView .hand .card .art{height:26px!important}
+ #duelView .opponent-hand .card{flex:0 0 42px!important;width:42px!important;height:57px!important;margin-left:-4px!important;padding:2px!important}
+ #duelView .opponent-hand .card .art{height:18px!important;font-size:10px!important}
+ #duelView .opponent-hand .card .power-stat,#duelView .opponent-hand .card .sp-stat{font-size:8px!important;padding:1px 2px!important}
+ #duelView .mobile-actions{min-height:44px!important}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ #duelView .opponent-hand-wrap{top:8px!important;height:90px!important;width:72%!important}
+ #duelView .cpu-half .player-head{top:92px!important}
+ #duelView .you-half .player-head{bottom:112px!important}
+ #duelView .cpu-half .zonebox.zone-land{top:42%!important;height:14%!important}
+ #duelView .cpu-half .zonebox.zone-summoner{top:58%!important;height:14%!important}
+ #duelView .cpu-half .zonebox.zone-field{top:76%!important;height:16%!important}
+ #duelView .you-half .zonebox.zone-field{top:5%!important;height:16%!important}
+ #duelView .you-half .zonebox.zone-summoner{top:24%!important;height:14%!important}
+ #duelView .you-half .zonebox.zone-land{top:42%!important;height:14%!important}
+ #duelView .handbar{bottom:48px!important;height:100px!important;width:74%!important}
+ body.online-active:not(.hands-compact) #duelView .handbar .hand .card{flex:0 0 56px!important;width:56px!important;height:76px!important;min-width:56px!important}
+}

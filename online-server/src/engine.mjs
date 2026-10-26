@@ -23,7 +23,7 @@ function log(g,msg){g.log.push(msg);if(g.log.length>MAX_LOG)g.log.shift();}
 function cardDef(card){return DB[card.name];}
 function player(side,deck){const names=shuffle(deck.filter(n=>DB[n].t!=='summoner'));const p={lp:20,deck:names.map(n=>inst(n)),hand:[],field:[],lands:[],grave:[],summoner:inst(deck.find(n=>DB[n].t==='summoner')),mana:[],landPlaced:false,playedThisTurn:false,turnAttacks:0,prevent:0,effects:{}};p.summoner.owner=side;p.deck.forEach(c=>c.owner=side);return p;}
 function drawCard(g,side){const p=g.players[side];if(!p.deck.length){p.lp=0;endGame(g,1-side,'山札切れ');return false;} p.hand.push(p.deck.pop());return true;}
-export function startMatch(room){if(room.game)throw Error('対戦開始済みです');if(room.players.some(s=>!s.ready||!s.deckNames))throw Error('双方のデッキと準備完了が必要です');const firstSeat=randomInt(2);room.matchCount=(room.matchCount||0)+1;room.rematch=[false,false];const g={matchId:room.matchCount,players:room.players.map((s,i)=>player(i,s.deckNames)),turn:firstSeat,firstSeat,turnNo:1,phase:'MAIN',drawPending:0,pendingEffectDraw:null,stack:[],priority:firstSeat,pass:0,block:null,choice:null,over:false,winner:null,log:[],lastAction:'',serial:0,lifeEvents:[]};g.players.forEach((p,i)=>{for(let n=0;n<7;n++)drawCard(g,i)});log(g,`対戦開始：PLAYER ${firstSeat+1}の先攻・PLAYER ${2-firstSeat}の後攻（先攻初回ドローなし）`);room.game=g;return g;}
+export function startMatch(room){if(room.game)throw Error('対戦開始済みです');if(room.players.some(s=>!s.ready||!s.deckNames))throw Error('双方のデッキと準備完了が必要です');const firstSeat=randomInt(2);room.matchCount=(room.matchCount||0)+1;room.rematch=[false,false];const g={matchId:room.matchCount,players:room.players.map((s,i)=>player(i,s.deckNames)),turn:firstSeat,firstSeat,turnNo:1,phase:'MAIN',drawPending:0,pendingEffectDraw:null,endingTurnSide:null,stack:[],priority:firstSeat,pass:0,block:null,choice:null,over:false,winner:null,log:[],lastAction:'',serial:0,lifeEvents:[]};g.players.forEach((p,i)=>{for(let n=0;n<7;n++)drawCard(g,i)});log(g,`対戦開始：PLAYER ${firstSeat+1}の先攻・PLAYER ${2-firstSeat}の後攻（先攻初回ドローなし）`);room.game=g;return g;}
 // Only the server can start a rematch: both original seats must agree after the match ends.
 export function requestRematch(room,seat,accept=true){
  if(!SIDES.includes(seat)||!room.players[seat]?.token)throw Error('対戦参加者ではありません');
@@ -69,6 +69,24 @@ function makeLand(g,c,s){const v=moveOut(g,c.id);if(!v)return;c.faceDown=true;c.
 function modPower(g,c,s,amount,until){c.mods.push({type:'power',amount,until});if(calcPower(g,c,s)<=0)kill(g,c,s);}
 function expEnd(g){for(let s=0;s<2;s++){const p=g.players[s];for(const c of p.field){c.mods=c.mods.filter(x=>x.until>g.turnNo);if(calcPower(g,c,s)<=0)kill(g,c,s);}if(p.effects.until<=g.turnNo){p.effects={};} }}
 function manaColor(c){return c.faceDown?'none':cardDef(c).color;}
+function endTurnSummonerPayment(p,sd){
+ // Reserve the same-color flow vein; the additional generic mana may be
+ // paid from the existing pool or generated from a different untapped vein.
+ const colored=p.lands.find(c=>!c.tapped&&manaColor(c)===sd.color);
+ if(!colored)return null;
+ const extra=Math.max(0,(Number(sd.summonerAbilityCost)||1)-1);
+ const fromPool=Math.min(extra,p.mana.length);
+ const extraLands=p.lands.filter(c=>c.id!==colored.id&&!c.tapped).slice(0,extra-fromPool);
+ return fromPool+extraLands.length===extra?{colored,fromPool,extraLands}:null;
+}
+function payEndTurnSummoner(p,payment){
+ for(let i=0;i<payment.fromPool;i++){
+  const mana=p.mana.shift(),source=p.lands.find(c=>c.id===mana.src);
+  if(source)source.spent=true;
+ }
+ for(const land of [payment.colored,...payment.extraLands]){land.tapped=true;land.spent=true;}
+}
+
 function pay(p,d){const cost=Number(d.c)||0;if(p.mana.length<cost)throw Error('マナが不足しています');const color=d.color||'none';const index=color==='none'?-1:p.mana.findIndex(m=>m.color===color);if(color!=='none'&&index<0)throw Error(colorWords[color]+'のマナが必要です'); const indices=[];if(index>=0)indices.push(index);for(let i=0;i<p.mana.length&&indices.length<cost;i++)if(!indices.includes(i))indices.push(i);if(cost===0)indices.length=0;if(indices.length!==cost)throw Error('マナ不足');const used=indices.map(i=>p.mana[i]);p.mana=p.mana.filter((_,i)=>!indices.includes(i));for(const m of used){const land=p.lands.find(c=>c.id===m.src);if(land)land.spent=true;}}
 function lpChange(g,side,amount,kind){if(!amount)return;g.lifeEvents??=[];g.serial=(g.serial||0)+1;g.lifeEvents.push({seq:g.serial,side,amount,kind});if(g.lifeEvents.length>24)g.lifeEvents.shift();}
 function heal(g,side,n){g.players[side].lp+=n;lpChange(g,side,n,'heal');}
@@ -176,7 +194,35 @@ function resolveSummoner(g,e){const p=g.players[e.side],k=e.key,opp=g.players[1-
  default:log(g,'召喚士能力の処理に失敗');
  }
 }
-function resolveStack(g){while(g.stack.length&&!g.choice&&!g.pendingEffectDraw&&!g.over){const e=g.stack.pop(); log(g,`解決：《${e.card.name}》`);if(e.kind==='summoner'){resolveSummoner(g,e);continue;}const d=cardDef(e.card);if(d.t==='monster'){g.players[e.side].field.push(e.card);log(g,`PLAYER ${e.side+1}が《${e.card.name}》を召喚`);}else{g.players[e.side].grave.push(e.card)}applyEffect(g,e);checkGame(g);}if(!g.stack.length&&!g.pendingEffectDraw&&!g.choice){g.pass=0;g.priority=g.turn;} }
+// Summoning and enter-the-battlefield triggers are two independent stack events.
+// Players get priority for the summon first, then for its triggered effect.
+function resolveStack(g){
+ while(g.stack.length&&!g.choice&&!g.pendingEffectDraw&&!g.over){
+  const e=g.stack.pop();log(g,`解決：《${e.card.name}》`);
+  if(e.kind==='summoner'){resolveSummoner(g,e);continue;}
+  if(e.kind==='trigger'){applyEffect(g,e);checkGame(g);continue;}
+  const d=cardDef(e.card);
+  if(d.t==='monster'){
+   g.players[e.side].field.push(e.card);
+   log(g,`PLAYER ${e.side+1}が《${e.card.name}》を召喚`);
+   if(String(d.txt||'').includes('登場時')){
+    const options=listMayTarget(g,d.effectKey,e.side);
+    if(options!==null){
+     if(!options.length){log(g,`《${e.card.name}》：対象がないため登場時効果は不発`);continue;}
+     issueChoice(g,e.side,'etb_target',options.map(id=>{const x=zone(g,id);return {id,name:x?.card?.name||'相手プレイヤー'};}));
+     g.choice.source={id:e.card.id,side:e.side};
+     log(g,`《${e.card.name}》登場時効果：召喚後に対象を選択`);return;
+    }
+    g.stack.push({id:secureId('s'),kind:'trigger',side:e.side,card:e.card,targetId:null,chosen:[]});
+    g.priority=1-e.side;g.pass=0;
+    log(g,`登場時：《${e.card.name}》の効果がスタックへ（優先権：相手）`);
+    return;
+   }
+  }else{g.players[e.side].grave.push(e.card);applyEffect(g,e);}
+  checkGame(g);
+ }
+ if(!g.stack.length&&!g.pendingEffectDraw&&!g.choice){g.pass=0;g.priority=g.turn;if(g.endingTurnSide!==null&&g.endingTurnSide!==undefined){const ending=g.endingTurnSide;g.endingTurnSide=null;advanceTurn(g,ending);}}
+}
 function expire(g){for(let s=0;s<2;s++){const p=g.players[s];for(const c of p.field){c.indestructible=0;const expired=c.mods.filter(m=>m.until<=g.turnNo);c.mods=c.mods.filter(m=>m.until>g.turnNo);if(expired.some(m=>m.type==='clearUnblockable'))c.unblockable=false;if(expired.some(m=>m.type==='clearBurst'))c.burst=false;if(calcPower(g,c,s)<=0)kill(g,c,s)}if((p.effects.until||0)<=g.turnNo)p.effects={};}}
 function battle(g){const b=g.block;if(!b)return;g.block=null;const attacker=target(g,b.seat,b.attacker);if(!attacker){log(g,'攻撃モンスターが戦場にいないため攻撃終了');return}const opp=1-b.seat;const defender=b.blocker?target(g,opp,b.blocker):b.target?target(g,opp,b.target):null;
  if(!defender){if(!b.target){hurt(g,opp,calcSP(attacker));log(g,`直接攻撃：SP ${calcSP(attacker)}`);}else log(g,'攻撃対象が戦場から離れた');return;}
@@ -196,6 +242,7 @@ function validateSelection(g,side,key,id,chosen){const options=listMayTarget(g,k
  if(!options.includes(id))throw Error('有効な対象を選択してください');}
 function verifyActivity(g,side){if(!g||g.over)throw Error('対戦が進行していません');if(g.choice)throw Error('カード選択処理を完了してください');}
 function advanceTurn(g,side){
+ g.endingTurnSide=null;
  const p=g.players[side];
  for(const c of p.field)if(cardDef(c).effectKey==='untapSelfEnd'){c.tapped=false;c.spent=false;}
  expire(g);p.mana=[];g.turn=1-side;g.turnNo++;g.phase='MAIN';g.drawPending=1;g.priority=g.turn;g.pass=0;
@@ -224,15 +271,7 @@ export function handleGameAction(g,side,msg){if(!SIDES.includes(side))throw Erro
  }
  if(g.pendingEffectDraw)throw Error('ドロー効果の処理を完了してください');
  if(t==='land'){if(g.turn!==side||g.phase!=='MAIN'||g.drawPending||p.landPlaced||p.playedThisTurn||g.stack.length||g.block)throw Error('今は流脈を配置できません');const c=target(g,side,msg.card,'hand');if(!c||cardDef(c).t==='summoner')throw Error('手札にカードがありません');moveOut(g,c.id);c.faceDown=cardDef(c).t!=='land';c.tapped=false;c.spent=false;p.lands.push(c);p.landPlaced=true;log(g,`PLAYER ${side+1}が${c.faceDown?'裏向き':'表向き'}の流脈を配置`);return;}
- if(t==='tap_monster'||t==='untap_monster'){
-  if(g.choice||g.block||g.pendingEffectDraw||g.stack.length)throw Error('別の処理の途中ではタップを変更できません');
-  const c=target(g,side,msg.card,'field');if(!c||cardDef(c).t!=='monster')throw Error('自分のモンスターを選択してください');
-  if(t==='untap_monster'){
-   if(!c.tapped||c.spent)throw Error('攻撃・ブロック等で使用済みのモンスターはアンタップできません');
-   c.tapped=false;
-  }else{if(c.tapped)throw Error('すでにタップしています');c.tapped=true;}
-  log(g,`PLAYER ${side+1}が《${c.name}》を${c.tapped?'タップ':'アンタップ'}`);return;
- }
+ if(t==='tap_monster'||t==='untap_monster')throw Error('モンスターのタップ／アンタップはカード効果・攻撃・ターン処理でのみ行えます');
  if(t==='monster_ability'){
   if(g.turn!==side||g.phase!=='MAIN'||g.drawPending||g.choice||g.stack.length||g.block)throw Error('今は能力を使用できません');
   const c=target(g,side,msg.card,'field');if(!c||cardDef(c).effectKey!=='tapBurn2'||c.tapped)throw Error('このモンスターのタップ能力は使用できません');
@@ -248,7 +287,7 @@ export function handleGameAction(g,side,msg){if(!SIDES.includes(side))throw Erro
   else if(!instant&&(g.turn!==side||g.phase!=='MAIN'))throw Error('通常カードは自分のメインフェイズにプレイします');
   if(g.drawPending)throw Error('ドロー処理が必要です');
   if(d.effectKey==='counterAttack'&&!g.block)throw Error('攻撃に対応するときだけ使用できます');
-  const targets=listMayTarget(g,d.effectKey,side);if(targets!==null){if(d.t==='monster'&&targets.length===0){}else if(d.effectKey==='freeSummon3'){if(!targets.length)throw Error('召喚できる対象のモンスターが手札にいません');}else validateSelection(g,side,d.effectKey,msg.target||null,msg.chosen||[]);}
+  const targets=listMayTarget(g,d.effectKey,side);if(targets!==null){if(d.t==='monster'){}else if(d.effectKey==='freeSummon3'){if(!targets.length)throw Error('召喚できる対象のモンスターが手札にいません');}else validateSelection(g,side,d.effectKey,msg.target||null,msg.chosen||[]);}
   if((d.lpCost||0)&&p.lp<=d.lpCost)throw Error('LP支払い後に1以上必要です');pay(p,d);if(d.lpCost){p.lp-=d.lpCost;lpChange(g,side,-d.lpCost,'cost');}
   moveOut(g,c.id);p.playedThisTurn=true;
   const entry={id:secureId('s'),kind:'card',side,card:c,targetId:msg.target||null,chosen:(msg.chosen||[]).slice(0,50)};g.stack.push(entry);g.priority=1-side;g.pass=0;log(g,`PLAYER ${side+1}が《${c.name}》をプレイ`);checkGame(g);return;
@@ -287,9 +326,8 @@ export function handleGameAction(g,side,msg){if(!SIDES.includes(side))throw Erro
   if(g.turn!==side||g.drawPending||g.stack.length||g.block)throw Error('まだターンを終了できません');
   const summ=p.summoner,sd=cardDef(summ);
   if(sd.summonerTrigger==='turnEnd'){
-    const land=p.lands.find(x=>!x.tapped&&manaColor(x)===sd.color);
     const condition=sd.summonerAbilityKey!=='endDrawIf2Attacks'||p.turnAttacks>=2;
-    if(land&&p.mana.length&&condition){issueChoice(g,side,'endTurnSummoner',[
+    if(endTurnSummonerPayment(p,sd)&&condition){issueChoice(g,side,'endTurnSummoner',[
       {id:'activate',name:'召喚士のターン終了時能力を使用する（同色流脈≋1 + ≋1）'},
       {id:'skip',name:'能力を使わずターン終了する'}]);return;}
   }
@@ -298,13 +336,28 @@ export function handleGameAction(g,side,msg){if(!SIDES.includes(side))throw Erro
  throw Error('不明な操作です');
 }
 export function finishChoice(g,side,ids){if(!g.choice||g.choice.seat!==side)throw Error('選択権がありません');const c=g.choice;const unique=[...new Set(ids||[])];if(unique.length<c.min||unique.length>c.max||unique.some(i=>!c.options.some(o=>o.id===i)))throw Error('指定枚数のカードを選択してください');const p=g.players[side];
+ if(c.type==='etb_target'){
+  const source=zone(g,c.source?.id);
+  g.choice=null;
+  if(source?.part==='field'&&source.side===side){
+    const trigger={id:secureId('s'),kind:'trigger',side,card:source.card,targetId:unique[0],chosen:[]};
+    g.stack.push(trigger);g.priority=1-side;g.pass=0;
+    log(g,`《${source.card.name}》登場時効果がスタックへ（対象選択済み）`);
+  }else log(g,'登場時効果の発生源が戦場にないため不発');
+  return;
+ }
  if(c.type==='endTurnSummoner'){
   if(unique[0]==='activate'){
-    const summ=p.summoner,sd=cardDef(summ),land=p.lands.find(x=>!x.tapped&&manaColor(x)===sd.color);
-    if(!land||!p.mana.length)throw Error('能力に必要な流脈とマナが足りません');
-    land.tapped=true;land.spent=true;p.mana.shift();resolveSummoner(g,{side,key:sd.summonerAbilityKey,card:summ});
+    const summ=p.summoner,sd=cardDef(summ),payment=endTurnSummonerPayment(p,sd);
+    if(!payment)throw Error('能力に必要な流脈とマナが足りません');
+    payEndTurnSummoner(p,payment);
+    g.choice=null;g.endingTurnSide=side;
+    g.stack.push({id:secureId('s'),kind:'summoner',side,key:sd.summonerAbilityKey,card:summ,targetId:null});
+    g.priority=1-side;g.pass=0;
+    log(g,`《${summ.name}》のターン終了時誘発効果をスタックに積みました`);
+    return;
   }
-  g.choice=null;if(g.pendingEffectDraw)return;advanceTurn(g,side);return;
+  g.choice=null;advanceTurn(g,side);return;
  }
  switch(c.type){
  case 'handToFaceDownLand':{const v=zone(g,unique[0]);if(v?.side===side&&v.part==='hand')makeLand(g,v.card,side);break;}

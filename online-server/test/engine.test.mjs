@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DB,newRoom,joinSeat,validDeck,startMatch,viewFor,handleGameAction,finishChoice,supportReport} from '../src/engine.mjs';
-const r=(side=0)=>{const room=newRoom('A23456789BC2'); const names=Object.keys(DB);const summ=names.find(n=>DB[n].t==='summoner');const land=names.find(n=>DB[n].t==='land');for(const i of [0,1]){joinSeat(room,i,'P'+i,'TOKEN'+i);room.players[i].deckNames=[...Array(50).fill(land),summ];room.players[i].ready=true;} startMatch(room);room.game.turn=0;room.game.priority=0;return room;};
+const r=(side=0)=>{const room=newRoom('A234B2'); const names=Object.keys(DB);const summ=names.find(n=>DB[n].t==='summoner');const land=names.find(n=>DB[n].t==='land');for(const i of [0,1]){joinSeat(room,i,'P'+i,'TOKEN'+i);room.players[i].deckNames=[...Array(50).fill(land),summ];room.players[i].ready=true;} startMatch(room);room.game.turn=0;room.game.priority=0;return room;};
 const piece=(name,i=0)=>({id:'inst_'+name+'_'+i,name,owner:i,tapped:false,spent:false,faceDown:false,summonSick:false,mod:0,spMod:0,mods:[],burst:false,haste:false,unblockable:false,indestructible:0});
 const at=(room,side,action)=>handleGameAction(room.game,side,action);
 test('Opening seat is picked by server randomness, both seats occur',()=>{const counts=[0,0];for(let i=0;i<45;i++){const room=r();const {firstSeat}=room.game;assert.ok(firstSeat===0||firstSeat===1);counts[firstSeat]++;assert.equal(viewFor(room,0).game.firstSeat,firstSeat);}assert.ok(counts[0]&&counts[1]);});
@@ -27,6 +27,7 @@ test('Draw-two spell waits for two separate DRAW commands, with progress and hid
  const card=piece(name,0);g.players[0].hand.push(card);g.players[0].mana=Array.from({length:def.c},()=>({color:def.color,src:null}));
  const startHand=g.players[0].hand.length;
  at(room,0,{type:'play',card:card.id});at(room,1,{type:'pass'});at(room,0,{type:'pass'});
+ if(def.t==='monster'){assert.equal(g.players[0].field.some(x=>x.id===card.id),true);assert.equal(g.stack.at(-1)?.kind,'trigger');at(room,1,{type:'pass'});at(room,0,{type:'pass'});}
  assert.equal(g.players[0].hand.length,startHand-1);
  assert.equal(g.pendingEffectDraw.remaining,2);
  assert.equal(viewFor(room,1).game.players[0].hand,undefined);
@@ -129,16 +130,12 @@ test('v36: red flow vein placement, tapping, and monster casting work in sequenc
  assert.equal(own.mana.length,0);
  assert.equal(viewFor(room,1).game.players[0].hand,undefined);
 });
-test('v37: manual monster tap and undo match local card controls without cheating',()=>{
+test('v40: monster manual tap and untap are forbidden',()=>{
  const room=r(),g=room.game;const c=piece('パラディン',0);g.players[0].field.push(c);
- at(room,0,{type:'tap_monster',card:c.id});assert.equal(c.tapped,true);
- assert.equal(viewFor(room,1).game.players[0].field[0].tapped,true);
- at(room,0,{type:'untap_monster',card:c.id});assert.equal(c.tapped,false);
- at(room,0,{type:'tap_monster',card:c.id});c.spent=true;
- assert.throws(()=>at(room,0,{type:'untap_monster',card:c.id}),/使用済み/);
- assert.throws(()=>at(room,1,{type:'untap_monster',card:c.id}),/自分/);
+ assert.throws(()=>at(room,0,{type:'tap_monster',card:c.id}),/タップ/);
+ assert.throws(()=>at(room,0,{type:'untap_monster',card:c.id}),/タップ/);
+ assert.equal(c.tapped,false);
 });
-
 
 test('v38 ordinary monster or spell can be placed face-down as colorless vein before playing',()=>{
  const room=r(),g=room.game,p=g.players[0];const c=piece('陽炎のジン',0);p.hand.push(c);
@@ -178,6 +175,9 @@ test('v38 end-turn-triggered summoner is resolved by END TURN rather than main p
  at(room,0,{type:'end_turn'});
  assert.equal(g.choice.type,'endTurnSummoner');
  finishChoice(g,0,['activate']);
+ assert.equal(g.stack.at(-1)?.kind,'summoner');
+ assert.equal(g.turn,0,'Turn end waits for the trigger stack to resolve');
+ at(room,1,{type:'pass'});at(room,0,{type:'pass'});
  assert.ok(g.pendingEffectDraw);
  assert.equal(g.pendingEffectDraw.remaining,1);
 });
@@ -198,4 +198,80 @@ test('v39 still offers NO BLOCK when one among multiple defenders is untapped',(
  at(room,0,{type:'phase',to:'BATTLE'});at(room,0,{type:'attack',card:a.id});
  assert.notEqual(g.block,null);assert.equal(g.players[1].lp,20);
  at(room,1,{type:'block'});assert.equal(g.players[1].lp,17);
+});
+
+test('v40: ETB summon resolves separately, with a second priority window',()=>{
+ const room=r(),g=room.game,p=g.players[0];
+ const [name,d]=Object.entries(DB).find(([,d])=>d.t==='monster'&&d.effectKey==='draw2'&&String(d.txt).includes('登場時'));
+ assert.ok(name);const monster=piece(name,0);p.hand.push(monster);p.mana=Array.from({length:d.c},()=>({color:d.color,src:null}));
+ at(room,0,{type:'play',card:monster.id});assert.equal(g.stack.length,1);assert.equal(g.stack[0].kind,'card');
+ assert.equal(g.players[0].field.some(x=>x.id===monster.id),false);
+ at(room,1,{type:'pass'});at(room,0,{type:'pass'});
+ assert.equal(g.players[0].field.some(x=>x.id===monster.id),true);
+ assert.equal(g.stack.at(-1)?.kind,'trigger');assert.equal(g.priority,1);assert.equal(g.pendingEffectDraw,null);
+ at(room,1,{type:'pass'});at(room,0,{type:'pass'});
+ assert.equal(g.pendingEffectDraw?.remaining,2);
+});
+test('v40: targeted ETB chooses target only after monster enters, then opens priority',()=>{
+ const room=r(),g=room.game,p=g.players[0],q=g.players[1];
+ const [name,d]=Object.entries(DB).find(([,d])=>d.t==='monster'&&d.effectKey==='destroyOppMonster'&&String(d.txt).includes('登場時'));
+ const victim=piece('パラディン',1);q.field.push(victim);
+ const summon=piece(name,0);p.hand.push(summon);p.mana=Array.from({length:d.c},()=>({color:d.color,src:null}));
+ at(room,0,{type:'play',card:summon.id});at(room,1,{type:'pass'});at(room,0,{type:'pass'});
+ assert.equal(p.field.some(x=>x.id===summon.id),true);assert.equal(g.choice?.type,'etb_target');
+ assert.equal(q.field.some(x=>x.id===victim.id),true);
+ finishChoice(g,0,[victim.id]);assert.equal(g.stack.at(-1)?.kind,'trigger');assert.equal(g.priority,1);
+ at(room,1,{type:'pass'});at(room,0,{type:'pass'});
+ assert.equal(q.field.some(x=>x.id===victim.id),false);
+});
+
+
+test('v40 turn-end Elijah trigger offers automatic generic flow vein payment and resolves through stack',()=>{
+ const room=r(),g=room.game,p=g.players[0];p.summoner=piece('エリヤ',0);
+ const yellow=piece('黄の流脈',0),green=piece('緑の流脈',0),monster=piece('陽炎のジン',0);
+ p.lands=[yellow,green];p.field=[monster];monster.tapped=true;
+ assert.equal(p.mana.length,0);
+ at(room,0,{type:'end_turn'});
+ assert.equal(g.choice?.type,'endTurnSummoner');
+ assert.equal(viewFor(room,0).game.choice.options.length,2);
+ assert.equal(viewFor(room,1).game.choice.waiting,true);
+ finishChoice(g,0,['activate']);
+ assert.equal(yellow.tapped,true);assert.equal(green.tapped,true);
+ assert.equal(g.stack.at(-1)?.kind,'summoner');assert.equal(g.priority,1);
+ assert.equal(monster.tapped,true,'Ability waits for priority passes');
+ assert.equal(g.turn,0);
+ at(room,1,{type:'pass'});at(room,0,{type:'pass'});
+ assert.equal(monster.tapped,false,'Monster is untapped by triggered ability');
+ assert.equal(g.turn,1,'Turn changes only after stack resolves');
+ assert.equal(g.stack.length,0);
+ assert.equal(g.drawPending,1);
+});
+
+test('v40 Fenugreek triggers from two untapped lands with no pre-floated generic mana',()=>{
+ const room=r(),g=room.game,p=g.players[0];p.summoner=piece('フェヌグリーク',0);
+ p.lands=[piece('赤の流脈',0),piece('青の流脈',0)];p.turnAttacks=2;
+ at(room,0,{type:'end_turn'});
+ assert.equal(g.choice?.type,'endTurnSummoner');
+ finishChoice(g,0,['activate']);
+ at(room,1,{type:'pass'});at(room,0,{type:'pass'});
+ assert.equal(g.pendingEffectDraw?.remaining,1);
+ assert.equal(g.turn,0,'Do not end turn until effect DRAW finishes');
+ at(room,0,{type:'draw'});
+ assert.equal(g.pendingEffectDraw,null);
+ assert.equal(g.turn,1);
+});
+
+test('v40 end-turn trigger skips when its attack or mana cost requirement is absent',()=>{
+ const room=r(),g=room.game,p=g.players[0];p.summoner=piece('フェヌグリーク',0);
+ p.lands=[piece('赤の流脈',0),piece('青の流脈',0)];p.turnAttacks=1;
+ at(room,0,{type:'end_turn'});assert.equal(g.choice,null);assert.equal(g.turn,1);
+ const second=r(),h=second.game,q=h.players[0];q.summoner=piece('エリヤ',0);q.lands=[piece('黄の流脈',0)];
+ at(second,0,{type:'end_turn'});assert.equal(h.choice,null);assert.equal(h.turn,1);
+});
+
+test('v40 turn-end summoner choice can decline without consuming resources',()=>{
+ const room=r(),g=room.game,p=g.players[0];p.summoner=piece('エリヤ',0);
+ const yellow=piece('黄の流脈',0),black=piece('黒の流脈',0);p.lands=[yellow,black];
+ at(room,0,{type:'end_turn'});finishChoice(g,0,['skip']);
+ assert.equal(g.turn,1);assert.equal(yellow.tapped,false);assert.equal(black.tapped,false);
 });

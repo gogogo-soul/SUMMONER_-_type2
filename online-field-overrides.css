@@ -211,7 +211,7 @@ body.online-active:not(.hands-compact) #duelView .handbar .hand::-webkit-scrollb
 #surrenderConfirm{z-index:9500!important}
 #surrenderConfirm .online-surrender{background:#b32135;color:#fff;border:1px solid #f88;border-radius:7px;padding:12px}
 #duelView .card.monster.summon-sick:after{content:'Zz';position:absolute;right:3px;top:3px;background:#563bb9;color:#fff;font-size:10px;font-weight:900;padding:2px 3px;border-radius:4px;z-index:10;pointer-events:none}
-#duelView .card.land .art{writing-mode:vertical-rl;transform:rotate(90deg);transform-origin:center}
+#duelView .card.land .art{writing-mode:horizontal-tb;transform:none;text-orientation:mixed;white-space:nowrap;direction:ltr}
 #duelView #opSummoner{cursor:crosshair}
 #duelView .online-card-popup{pointer-events:auto}
 @media(max-width:900px){
@@ -224,3 +224,8 @@ body.online-active:not(.hands-compact) #duelView .handbar .hand::-webkit-scrollb
 #duelView .online-surrender{background:#b51c36!important;border:1px solid #ff728c!important;color:#fff!important;font-weight:900}
 #duelView .online-surrender:hover{background:#d52b4e!important}
 #duelView .online-surrender:disabled{opacity:.45}
+
+/* v40 online duel: one upper-right surrender control; no navigation shortcuts while playing. */
+#duelView .online-top-actions{display:flex;margin-left:auto;align-items:center;justify-content:flex-end}
+#duelView .online-top-actions #surrenderBtn{padding:7px 17px;min-height:34px;white-space:nowrap}
+@media(max-width:900px){#duelView .online-top-actions #surrenderBtn{padding:7px 12px;font-size:12px;min-height:34px}}

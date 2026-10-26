@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const home = path.dirname(fileURLToPath(import.meta.url));
-const expected = 'alpha2-v39';
+const expected = 'alpha2-v40-triggerfix-20261026';
 try {
   const urlText = (await readFile(path.join(home, 'CHECK_VERSION_URL.txt'), 'utf8')).trim();
   const url = new URL(urlText);
@@ -25,13 +25,13 @@ try {
   console.log(`Live version: ${parsed.version ?? '(missing)'}`);
   console.log(`Expected:     ${expected}`);
   if (!response.ok || parsed.version !== expected) {
-    console.error('\nVERSION MISMATCH: Deployment is not serving v39 at the original Worker URL.');
+    console.error('\nVERSION MISMATCH: Deployment is not serving v40 at the original Worker URL.');
     console.error('1. Compare the published URL printed by Wrangler with this URL.');
     console.error('2. Make sure Wrangler is logged into the same Cloudflare account as the original Worker.');
     console.error('3. Check any errors printed earlier during deployment.');
     process.exitCode = 2;
   } else {
-    console.log('\nSUCCESS: The original Cloudflare Worker now serves alpha2-v39.');
+    console.log('\nSUCCESS: The original Cloudflare Worker now serves alpha2-v40-triggerfix-20261026.');
   }
 } catch (error) {
   console.error(`\nHEALTH CHECK FAILED: ${error.message}`);

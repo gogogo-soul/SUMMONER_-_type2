@@ -5,21 +5,21 @@ function answer(data,status=200,extra={}){return new Response(JSON.stringify(dat
 function errorMsg(e){return typeof e?.message==='string'?e.message:'処理できませんでした';}
 function allowed(request,env){const origin=request.headers.get('Origin');if(!origin)return true;const list=String(env.ALLOWED_ORIGINS||'').split(',').map(s=>s.trim()).filter(Boolean);return list.includes(origin)||(/\blocalhost\b|127\.0\.0\.1/.test(origin)&&env.ALLOW_LOCAL==='true');}
 function cors(request,env){const o=request.headers.get('Origin');return allowed(request,env)&&o?{'access-control-allow-origin':o,'vary':'Origin','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type'}:{}}
-function validCode(code){return /^[A-Z2-9]{12}$/.test(code)}
-function roomCode(){const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const raw=new Uint8Array(12);crypto.getRandomValues(raw);return [...raw].map(n=>alphabet[n%alphabet.length]).join('');}
+function validCode(code){return /^[A-Z0-9]{6}$/.test(code)}
+function roomCode(){const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';const raw=new Uint8Array(6);crypto.getRandomValues(raw);return [...raw].map(n=>alphabet[n%alphabet.length]).join('');}
 function jsonBody(request){return request.json().then(x=>{if(!x||typeof x!=='object')throw Error('リクエスト形式が不正です');return x;})}
 export default {
  async fetch(request,env){const url=new URL(request.url),path=url.pathname;const c=cors(request,env);
   if(request.method==='OPTIONS'){if(!allowed(request,env))return answer({error:'Origin not allowed'},403);return new Response(null,{status:204,headers:c});}
   if(!allowed(request,env))return answer({error:'許可されていないサイトからのアクセスです。ALLOWED_ORIGINSを設定してください。'},403);
-  if(path==='/health')return answer({service:'SUMMONER Online Duel',status:'ok',version:'alpha2-v39',features:['rematch','leave_room','leave_http']},200,c);
+  if(path==='/health')return answer({service:'SUMMONER Online Duel',status:'ok',version:'alpha2-v40-triggerfix-20261026',features:['rematch','leave_room','leave_http']},200,c);
   try {
     if(path==='/api/rooms'&&request.method==='POST'){
       const data=await jsonBody(request);const code=roomCode();const id=env.ROOMS.idFromName(code);const stub=env.ROOMS.get(id);
       const r=await stub.fetch('https://room.internal/create',{method:'POST',body:JSON.stringify({code,name:data.name})});
       return answer(await r.json(),r.status,c);
     }
-    const match=path.match(/^\/api\/rooms\/([A-Z2-9]{12})\/(join|socket|leave)$/);
+    const match=path.match(/^\/api\/rooms\/([A-Z0-9]{6})\/(join|socket|leave)$/);
     if(match){const [,code,op]=match;if(!validCode(code))throw Error('不正なルームコード');const stub=env.ROOMS.get(env.ROOMS.idFromName(code));
       if(op==='leave'&&request.method==='POST'){const d=await jsonBody(request);const r=await stub.fetch('https://room.internal/leave',{method:'POST',body:JSON.stringify(d)});return answer(await r.json(),r.status,c);}
       if(op==='join'&&request.method==='POST'){const data=await jsonBody(request);const r=await stub.fetch('https://room.internal/join',{method:'POST',body:JSON.stringify(data)});return answer(await r.json(),r.status,c);}

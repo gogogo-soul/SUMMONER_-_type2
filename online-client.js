@@ -57,7 +57,7 @@ function makeCard(c,handler=null,back=false,part=null,side=null){
  const d=DB[c.name]||{};
  const hidden=back||c.faceDown;
  const affordable=part==='hand'&&side===view?.seat&&c.type!=='land'&&canCastNow(c)&&hasMana(c);
- const klass='card '+(hidden?'back':c.type||'')+(!hidden&&c.color&&c.color!=='none'?' color-'+c.color:'')+(c.tapped?' tapped':'')+(c.summonSick&&c.type==='monster'?' summon-sick':'')+(affordable?' affordable-red':'')+(armedAttack&&c.id===armedAttack.id?' attack-ready':'');
+ const klass='card '+(hidden?'back':c.type||'')+(!hidden&&c.color&&c.color!=='none'?' color-'+c.color:'')+(c.tapped?' tapped':'')+(part==='field'&&c.summonSick&&c.type==='monster'?' summon-sick':'')+(affordable?' affordable-red':'')+(armedAttack&&c.id===armedAttack.id?' attack-ready':'');
  const node=CE('div',klass);node.dataset.id=c.id||'';
  if(hidden){node.append(CE('div','name',back?'裏向きカード':'裏向き流脈'),CE('div','art',back?'✦':'≋'));}
  else{
@@ -311,7 +311,7 @@ function summonAbility(){const g=view?.game;if(!g||g.over)return;const me=view.s
  const land=g.players[me].lands.find(l=>!l.faceDown&&!l.tapped&&l.color===d.color);if(!land){status(`${colorWord(d.color)}の未タップ流脈が1枚必要です。裏向き流脈は無色なので使えません。`,true);return;}
  if((d.summonerAbilityCost||0)>1&&!(g.players[me].mana||[]).length){status('追加マナが1つ必要です。別の流脈をタップしてから発動してください。',true);return;}
  const opts=choices(key,me);if(opts===null){act('summoner');return;}if(!opts.length){status('召喚士能力の対象がいません',true);return;}doDialog('召喚士《'+c.name+'》',`${colorWord(d.color)}の流脈≋1をコストとしてタップします。`,opts.map(readable),1,1,x=>act('summoner',{target:x[0]}));}
-function promptChoice(choice){const opts=choice.options.map(x=>({id:x.id,label:x.name}));doDialog(choice.type==='reorderTop3'?'山札の上からの順番を指定':'カードを選択',choice.type==='reorderTop3'?'1→2→3の順にカードを選んでください。番号1が山札の一番上です。':'選択順は1、2、3…の数字で表示します。',opts,choice.min,choice.max,ids=>attempt({type:'choose',ids}));pending.forced=true;$('dialogCancel').disabled=true;}
+function promptChoice(choice){const opts=choice.options.map(x=>({id:x.id,label:x.name}));const endTrigger=choice.type==='endTurnSummoner';doDialog(endTrigger?'召喚士の誘発効果':choice.type==='reorderTop3'?'山札の上からの順番を指定':'カードを選択',endTrigger?'ターン終了時の能力です。コストを支払って発動するか選んでください。':choice.type==='reorderTop3'?'1→2→3の順にカードを選んでください。番号1が山札の一番上です。':'選択順は1、2、3…の数字で表示します。',opts,choice.min,choice.max,ids=>attempt({type:'choose',ids}));pending.forced=true;$('dialogCancel').disabled=true;}
 $('noBlockBtn').onclick=()=>act('block');$('drawBtn').onclick=()=>act('draw');$('battleBtn').onclick=()=>act('phase',{to:'BATTLE'});$('endBtn').onclick=()=>act('end_turn');$('passBtn').onclick=()=>act('pass');$('summonerBtn').onclick=summonAbility;
 $('surrenderBtn').onclick=()=>{const modal=$('surrenderConfirm');if(!modal||!view?.game||view.game.over)return;modal.classList.remove('hidden');};
 $('surrenderYes').onclick=()=>{$('surrenderConfirm').classList.add('hidden');};
@@ -342,7 +342,7 @@ async function restoreField(){try{const val=await fieldStore('readonly',s=>s.get
 function openOnlineFieldSettings(){$('onlineFieldImageStatus').textContent=document.body.classList.contains('custom-field-active')?'現在：カスタム背景':'現在：v17標準フィールド';$('onlineFieldSettings').classList.add('open');};$('onlineFieldClose').onclick=()=>$('onlineFieldSettings').classList.remove('open');$('onlineFieldSettings').addEventListener('click',e=>{if(e.target===$('onlineFieldSettings'))$('onlineFieldSettings').classList.remove('open');});
 $('onlineResetField').onclick=async()=>{try{await fieldStore('readwrite',s=>s.delete(FIELD_KEY));}catch(e){console.warn(e)}document.body.classList.remove('custom-field-active');$('onlineFieldImageStatus').textContent='現在：v17標準フィールド';document.documentElement.style.removeProperty('--custom-field-image');if(fieldObjectUrl){URL.revokeObjectURL(fieldObjectUrl);fieldObjectUrl=null;}};
 $('onlineFieldInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>10*1024*1024||!/^image\/(png|jpeg|webp)$/.test(file.type)){status('画像は10MB以内のPNG・JPG・WebPを使用してください',true);return;}try{await fieldStore('readwrite',s=>s.put({blob:file,name:file.name},FIELD_KEY));applyField(file);}catch(e){status('背景画像を保存できませんでした',true)}e.target.value='';};
-$('onlineInfoBtn').onclick=()=>document.body.classList.toggle('info-open');
+// Battle topbar intentionally contains only the surrender action.
 // Playmat card interactions do not collapse the hand; clicking other surfaces does.
 function setCompactHand(value){document.body.classList.toggle('hands-compact',!!value);$('mobileHandSizeBtn').textContent=value?'手札を広げる':'手札を縮小';$('mobileHandSizeBtn').setAttribute('aria-pressed',String(!!value));}
 $('mobileHandSizeBtn').onclick=e=>{e.stopPropagation();setCompactHand(!document.body.classList.contains('hands-compact'));};

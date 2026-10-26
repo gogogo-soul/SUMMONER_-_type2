@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v40-rulebook-gel-20261026-r5";
+const CACHE_NAME = "summoner-pwa-v40-online-ui-trigger-20261026-r6";
 const CORE_ASSETS = [
   "./",
   "./index.html",

@@ -1104,16 +1104,13 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
  .draw-progress-panel{top:calc(50% - 45px)}
 }
 </style>
+<link rel="stylesheet" href="solo-online-parity.css">
 </head>
-<body>
+<body class="solo-active">
 <div id="app">
 <header class="topbar">
   <div class="brand">SUMMONER — BATTLE</div>
-  <div style="display:flex; gap:8px;">
-    <button class="nav-btn btn-sub" id="infoToggleBtn" type="button" onclick="document.body.classList.toggle('info-open')">情報</button>
-    <a href="deckbuilder.html" class="nav-btn btn-sub">デッキ編集</a>
-    <a href="index.html" class="nav-btn">タイトルへ</a>
-  </div>
+  <div class="online-top-actions"><button type="button" id="soloSurrenderBtn" class="nav-btn online-surrender" onclick="showSoloSurrender()">投了</button></div>
   <div class="top-info"><span>PLAYTEST</span><span id="topDeck">MAX 50 CARDS</span><span id="topTurn">TURN 1</span></div>
 </header>
 
@@ -1193,7 +1190,6 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
   <button class="primary" onclick="document.getElementById('battleBtn').click()">BATTLE</button>
   <button onclick="document.getElementById('noBlockBtn').click()">NO BLOCK</button>
   <button class="primary" onclick="document.getElementById('endBtn').click()">END</button>
-  <button onclick="document.body.classList.toggle('info-open')">INFO</button>
 </div>
 </main>
 
@@ -1204,7 +1200,6 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
   <button class="primary" onclick="document.getElementById('battleBtn').click()">BATTLE</button>
   <button onclick="document.getElementById('noBlockBtn').click()">NO<br>BLOCK</button>
   <button class="primary" onclick="document.getElementById('endBtn').click()">END</button>
-  <button onclick="document.body.classList.toggle('info-open')">INFO</button>
 </div>
 
 <div class="handbar">
@@ -1214,6 +1209,9 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 </div>
 
 
+<div id="soloCardPopup" class="online-card-popup solo-card-popup" hidden></div>
+<div id="soloSurrenderConfirm" class="solo-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="soloSurrenderTitle"><div class="solo-confirm-box"><h2 id="soloSurrenderTitle">本当に投了しますか？</h2><p>現在のターンのプレイヤーが投了します。</p><div><button type="button" onclick="hideSoloSurrender()">YES：バトルに戻る</button><button type="button" class="online-surrender" onclick="confirmSoloSurrender()">NO：投了して敗北</button></div></div></div>
+<div class="solo-outcome" id="soloOutcome" hidden role="status" aria-live="assertive"><strong id="soloOutcomeText">WIN</strong><span id="soloOutcomeDetails">試合終了</span><button type="button" id="soloRematchBtn" onclick="openDeckSetup()">続けて遊ぶ（新しいゲーム）</button><a href="index.html" class="solo-back-title">タイトルへ戻る</a></div>
 <div class="deck-setup" id="deckSetup">
   <div class="deck-setup-box">
     <div class="deck-setup-title">SUMMONER — DECK SELECT</div>
@@ -1313,6 +1311,11 @@ const COLOR_JP = {red:"赤", blue:"青", yellow:"黄", green:"緑", black:"黒",
 function colorJP(c){ return COLOR_JP[c] || "無"; }
 function manaSymbol(c){ return {red:"🔴",blue:"🔵",yellow:"🟡",green:"🟢",black:"🟣",colorless:"⚪"}[c] || "⚪"; }
 function typeJP(t){ return t === "monster" ? "モンスター" : t === "spell" ? "魔法" : t === "summoner" ? "召喚士" : t === "land" ? "流脈" : t; }
+function cardHasHaste(c){
+  if(!c)return false;
+  const d=DB[c.name]||{};
+  return !!(c.haste||d.haste||['haste','hasteBurn3'].includes(c.effectKey||d.effectKey)||/【速攻】/.test(c.txt||d.txt||''));
+}
 function cardIcon(c){
   if(c.timing==="instant")return "⚡";
   if(c.t==="monster")return "△";
@@ -1338,7 +1341,7 @@ function card(name){
     summonerAbilityKey:d.summonerAbilityKey||null,summonerAbilityText:d.summonerAbilityText||"",summonerAbilityCost:Number(d.summonerAbilityCost)||0,
     summonerTrigger:d.summonerTrigger||null,summonerTriggerRace:d.summonerTriggerRace||"",
     haste:!!d.haste, flying:!!d.flying || /飛行/.test(d.txt||""),
-    id:crypto.randomUUID?.()||Math.random().toString(36),summon:!d.haste,tapped:false,isFaceDown:false,tapLocked:false,usedThisTurn:false,
+    id:crypto.randomUUID?.()||Math.random().toString(36),summon:!(d.haste||["haste","hasteBurn3"].includes(d.effectKey)||/【速攻】/.test(d.txt||"")),tapped:false,isFaceDown:false,tapLocked:false,usedThisTurn:false,
     tempPower:0,indestructible:false,returnOnDeath:d.effectKey==="returnOnDeath",soulNever:false,burst:d.effectKey==="deathtouch",
     summonedTurnNo:null,longPowerMods:[],longSpMods:[],blockingPowerMods:[],unblockableUntilTurnNo:null,forceAttackUntilTurnNo:null
   };
@@ -1438,6 +1441,9 @@ function updateDeckSelectInfo(){
   }
 }
 function startBattleWithSelectedDecks(){
+  const soloOutcome=el('soloOutcome');if(soloOutcome)soloOutcome.hidden=true;
+  const soloConfirm=el('soloSurrenderConfirm');if(soloConfirm)soloConfirm.hidden=true;
+  const soloPopup=el('soloCardPopup');if(soloPopup)soloPopup.hidden=true;
   const p1=selectedDeckNames("p1DeckSelect");
   const p2=selectedDeckNames("p2DeckSelect");
   if(!p1.length || !p2.length){ toast("PLAYER 1 / PLAYER 2 のデッキを選択してください"); return; }
@@ -1576,6 +1582,7 @@ function renderManaPool(owner){
 function makeCard(c,where,index){
   const owner=(where==="hand"||where==="youField"||where==="youLand"||where==="youSummoner")?"you":"cpu";
   const isField=(where==="youField"||where==="cpuField");
+  const inHand=(where==="hand"||where==="cpuHand");
   let affordable=false;
   if((where==="hand"||where==="cpuHand")&&c.t!=="summoner"&&c.t!=="land"){
     const instant=c.timing==="instant"; const valid=instant|| (G.turn===owner&&G.phase==="MAIN PHASE");
@@ -1584,31 +1591,35 @@ function makeCard(c,where,index){
   if(isField&&c.t==="spell") affordable=(c.timing==="instant"||G.turn===owner);
   const d=document.createElement("div"); d.dataset.id=c.id;
   const colorClass=c.color&&c.color!=="none"?" color-"+c.color:"";
-  d.className="card "+c.t+colorClass+(G.selected===c.id?" selected":"")+(c.tapped?" tapped":"")+(affordable?" affordable-red":"");
+  d.className="card "+c.t+colorClass+(G.uiSelected===c.id?" selected":"")+(c.tapped?" tapped":"")+(isField&&c.t==="monster"&&c.summon&&!cardHasHaste(c)?" summon-sick":"")+(affordable?" affordable-red":"");
   const stats=c.t==="monster"?`<div class="power-stat" title="パワー">${attackPower(c,owner)}</div><div class="sp-stat" title="SP">${attackSP(c)}</div>`:"";
   d.innerHTML=`<div class="name">${c.name}</div><div class="type">${c.code?c.code+" / ":""}${typeJP(c.t)}${c.race?" / "+c.race:""}</div>${c.t!=="summoner"&&c.t!=="land"?`<div class="cost">${c.c}</div>`:""}<div class="art">${cardIcon(c)}</div>${stats}`;
 
   if(c.isFaceDown){
-    d.className="card back"+(G.selected===c.id?" selected":"")+(c.tapped?" tapped":"");
+    d.className="card back"+(G.uiSelected===c.id?" selected":"")+(c.tapped?" tapped":"");
     d.innerHTML=`<div class="name" style="font-size:9px;color:#cbd5e1">${c.t==="summoner"?"裏向き召喚士":"裏向き流脈"}</div><div class="art">${c.t==="summoner"?"◎":"≋"}</div>`;
   }
 
   const isLandZone=(where==="youLand"||where==="cpuLand");
   const isHandVein=(where==="hand"||where==="cpuHand")&&c.t==="land";
   const isSummonerZone=(where==="youSummoner"||where==="cpuSummoner");
-  if(!G.preparing && G.uiSelected===c.id && ((isField&&c.t==="monster")||isLandZone||isHandVein||isSummonerZone)){
+  if(!G.preparing && G.uiSelected===c.id && (inHand&&c.t!=="summoner"||isField&&c.t==="monster"||isLandZone||isSummonerZone)){
     const controls=document.createElement("div");
     controls.className="card-controls";
 
-    if(isHandVein){
+    if(inHand){
       const placeBtn=document.createElement("button");
       placeBtn.className="place-btn";
       placeBtn.textContent="置";
-      placeBtn.title="流脈ゾーンに置く";
+      placeBtn.title=c.t==="land"?"表向きの流脈として置く":"裏向きの流脈として置く";
       placeBtn.disabled=G.turn!==owner||G.phase!=="MAIN PHASE"||G[owner].mainActionStarted||G[owner].land||G.stack.length>0||G.resolvingStack;
-      if(placeBtn.disabled)placeBtn.classList.add("locked-btn");
-      placeBtn.onclick=(e)=>{e.stopPropagation();playLand(index,false,owner);};
+      placeBtn.onclick=e=>{e.stopPropagation();playLand(index,c.t!=="land",owner);};
       controls.appendChild(placeBtn);
+      if(c.t!=="land"){
+        const playBtn=document.createElement("button");playBtn.className="play-btn";playBtn.textContent="▶";playBtn.title="カードをプレイする";
+        playBtn.disabled=!canAddToStack(c,owner)||!canPayAllPlayCosts(G[owner],c);
+        playBtn.onclick=e=>{e.stopPropagation();playCard(index,owner);};controls.appendChild(playBtn);
+      }
     }else{
       const tapBtn=document.createElement("button");
       tapBtn.className="tap-btn";
@@ -1622,14 +1633,9 @@ function makeCard(c,where,index){
         // 召喚士自身をタップする能力コストは存在しない。
         // 操作ボタンは追加せず「効」ボタンのみを使用する。
         // 選択中の召喚士に手動タップUIは表示しない。
-      }else{
-        const locked=c.tapped&&c.tapLocked;
-        tapBtn.title=locked?"使用済み：カード効果または次のターン開始までアンタップ不可":(c.tapped?"アンタップ":"タップ");
-        tapBtn.textContent=locked?"🔒":(c.tapped?"↶":"↷");
-        if(locked){tapBtn.disabled=true;tapBtn.classList.add("locked-btn");}
-        tapBtn.onclick=(e)=>{e.stopPropagation();toggleTap(c,owner);};
       }
-      if(!isSummonerZone)controls.appendChild(tapBtn);
+      // 戦場モンスターの手動タップ/アンタップはオンラインと同じく禁止。
+      if(isLandZone)controls.appendChild(tapBtn);
     }
 
     if(isSummonerZone&&c.t==="summoner"){
@@ -1709,8 +1715,19 @@ function fill(id,list,where){
   });
 }
 function findById(id){for(const w of ["you","cpu"])for(const z of ["hand","field","lands","summoners","grave"])for(const c of G[w][z])if(c.id===id)return c;return null;}
+function showSoloCardPopup(c){
+ const popup=el("soloCardPopup");if(!popup)return;
+ if(!c){popup.hidden=true;popup.replaceChildren();return;}
+ popup.replaceChildren();
+ const title=document.createElement("h3");title.textContent=c.isFaceDown?"裏向き流脈":c.name;
+ const meta=document.createElement("div");meta.className="online-popup-meta";
+ meta.textContent=c.isFaceDown?"流脈 / 無色":`${typeJP(c.t)}${c.t==='monster'?' / パワー '+attackPower(c,targetOwnerOfCard(c))+' / SP '+attackSP(c):''}`;
+ const paragraph=document.createElement("p");paragraph.textContent=c.isFaceDown?"裏向きで置かれた流脈（無色マナ）":c.txt||"";
+ const close=document.createElement("button");close.className="online-popup-close";close.textContent="×";close.type="button";close.setAttribute("aria-label","カード詳細を閉じる");close.onclick=()=>{popup.hidden=true;};
+ popup.append(title,meta,paragraph,close);popup.hidden=false;
+}
 function showInspector(c,ownerHint=null){
-  if(window.innerWidth>900)document.body.classList.add("info-open");
+  showSoloCardPopup(c);
   if(!c){el("inspector").innerHTML="<div class='big'>No card selected</div><div class='sub'>カードを選択してください</div><p>カードをクリックすると詳細が表示されます。</p>";return;}
   if(c.isFaceDown){el("inspector").innerHTML=`<div class="big">裏向き流脈</div><div class="sub">流脈ゾーンの裏向きカード（無色）</div><p>元カード：${c.name}<br>タップで無色マナを1つ生成。</p>`;return;}
   const owner=ownerHint||(G.you.field.includes(c)||G.you.hand.includes(c)||G.you.lands.includes(c)||G.you.summoners.includes(c)?"you":"cpu");
@@ -1907,7 +1924,7 @@ function resolveSummonerAbility(entry){
   const complete=()=>{render();check();if(G.resolvingStack)continueStackResolution();};
   switch(key){
     case "face2":dealDamage("face",2,source,opp,w);complete();return;
-    case "grantHaste":{const x=one();if(x){x.summon=false;log("《"+source+"》：《"+x.name+"》はターン終了時まで【速攻】を得ました。");}else invalid();complete();return;}
+    case "grantHaste":{const x=one();if(x){x.haste=true;x.hasteUntilTurnNo=G.turnNo;x.summon=false;log("《"+source+"》：《"+x.name+"》はターン終了時まで【速攻】を得ました。");}else invalid();complete();return;}
     case "destroyTriggerBurn2":{const x=one();if(x)dealDamage(x,2,source,opp,w);else invalid();complete();return;}
     case "endDrawIf2Attacks":requestDraw(w,1,()=>{complete();clearDrawEffect(w,source);},source);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
     case "tribeSummonDraw":requestDraw(w,1,()=>{complete();clearDrawEffect(w,source);},source);log("《"+source+"》：1枚ドロー。DRAWボタンを押してください。");render();return;
@@ -2040,6 +2057,8 @@ function restoreCardBaseState(c){
   if(!c)return c;
   const d=DB[c.name]||{};
   if(c.t==="monster"){
+    c.haste=!!(d.haste||['haste','hasteBurn3'].includes(d.effectKey)||/【速攻】/.test(d.txt||''));
+    c.hasteUntilTurnNo=null;
     c.basePower=Number(d.power)||0;
     c.power=c.basePower;
     c.sp=Number(d.sp)||0;
@@ -2326,7 +2345,7 @@ function resolveStackTop(){
     render();continueStackResolution();return;
   }
   if(c.t==="monster"){
-    G[w].field.push(c);c.summon=!c.haste;noteMonsterSummoned(c,w);
+    G[w].field.push(c);c.summon=!cardHasHaste(c);noteMonsterSummoned(c,w);
     log(sideLabel(w)+"の《"+c.name+"》が解決され、戦場に登場しました。");
     render();
     onSummon(c,w,entry);return;
@@ -2364,7 +2383,7 @@ function playCard(i,w=activeSide(),free=false){
 
   if(free){
     if(!finalizeCostsAndRemove())return;
-    p.field.push(c);c.summon=!c.haste;noteMonsterSummoned(c,w);log(sideLabel(w)+"が《"+c.name+"》をコストなしで召喚。");onSummon(c,w,null);return;
+    p.field.push(c);c.summon=!cardHasHaste(c);noteMonsterSummoned(c,w);log(sideLabel(w)+"が《"+c.name+"》をコストなしで召喚。");onSummon(c,w,null);return;
   }
 
   // 魔法は従来どおり、対象を決めてからプレイする。
@@ -2701,7 +2720,7 @@ function destroyOneEach(c,w){
   const opp=opponentSide(w); chooseFromList(G[w].field.filter(x=>x.t==="monster"),"自分の破壊するモンスターを選択",own=>chooseFromList(G[opp].field.filter(x=>x.t==="monster"),"相手の破壊するモンスターを選択",enemy=>{destroyMonster(own,w);destroyMonster(enemy,opp,w);finishSpell(c,w);}));
 }
 function freeSummonFromCard(x,w,sourceSpell){
-  const i=G[w].hand.indexOf(x);if(i<0)return;G[w].hand.splice(i,1);G[w].field.push(x);x.summon=!x.haste;noteMonsterSummoned(x,w);log(sideLabel(w)+"が《天の名の下に》で《"+x.name+"》をコストなしで召喚。");onSummon(x,w,null,()=>finishSpell(sourceSpell,w));
+  const i=G[w].hand.indexOf(x);if(i<0)return;G[w].hand.splice(i,1);G[w].field.push(x);x.summon=!cardHasHaste(x);noteMonsterSummoned(x,w);log(sideLabel(w)+"が《天の名の下に》で《"+x.name+"》をコストなしで召喚。");onSummon(x,w,null,()=>finishSpell(sourceSpell,w));
 }
 
 function discardRandom(w){
@@ -2773,7 +2792,24 @@ function dealDamage(target,amount,source,targetOwner,sourceOwner=null){
   }else {log("《"+source+"》：《"+target.name+"》のパワーは"+(amount*1000)+"より高いため破壊されません。");render();}
 }
 
+function localLifeGlass(owner,amount,kind){
+  const hp=el(owner==="you"?"youHp":"cpuHp");if(!hp||!amount)return;
+  hp.classList.remove('online-lp-impact');void hp.offsetWidth;hp.classList.add('online-lp-impact');
+  const amountEl=document.createElement('span');amountEl.className='online-lp-delta '+(kind==='heal'?'life-heal':kind==='pay'?'life-cost':'life-damage');
+  amountEl.textContent=(kind==='heal'?'+':'-')+Math.abs(amount);hp.appendChild(amountEl);
+  const layer=document.createElement('span');layer.className='online-shatter-layer';
+  if(kind==='damage')for(let i=0;i<11;i++){
+    const shard=document.createElement('i');shard.className='online-glass-piece';const rad=2*Math.PI*i/11;
+    shard.style.setProperty('--dx',Math.round(Math.cos(rad)*(28+(i%4)*12))+'px');
+    shard.style.setProperty('--dy',Math.round(Math.sin(rad)*(28+(i%4)*12))+'px');
+    shard.style.setProperty('--spin',((i%2?-1:1)*(110+i*37))+'deg');
+    shard.style.setProperty('--delay',(i%3*22)+'ms');layer.appendChild(shard);
+  }
+  hp.appendChild(layer);
+  setTimeout(()=>{amountEl.remove();layer.remove();hp.classList.remove('online-lp-impact');},1800);
+}
 function showLpPop(owner,amount,kind="damage"){
+  localLifeGlass(owner,amount,kind);
   const pop=el(owner==="you"?"youDmgPop":"cpuDmgPop");if(!pop||!amount)return;
   pop.classList.remove("active","lp-pay","lp-heal");
   if(kind==="pay")pop.classList.add("lp-pay");
@@ -2951,7 +2987,7 @@ function clickCard(where,i,c){
   if(G.over||G.preparing)return;
   showInspector(c);
   if(G.effectPeekMode)return;
-  const controllable=((where==="youField"||where==="cpuField")&&c.t==="monster")||where==="youLand"||where==="cpuLand"||where==="youSummoner"||where==="cpuSummoner"||((where==="hand"||where==="cpuHand")&&c.t==="land");
+  const controllable=((where==="youField"||where==="cpuField")&&c.t==="monster")||where==="youLand"||where==="cpuLand"||where==="youSummoner"||where==="cpuSummoner"||(where==="hand"||where==="cpuHand")&&c.t!=="summoner";
   G.uiSelected=controllable?c.id:null;
   const owner=(where==="hand"||where==="youField"||where==="youLand"||where==="youSummoner")?"you":"cpu";
   if(G.blockPending){
@@ -2960,14 +2996,8 @@ function clickCard(where,i,c){
   }
   const ownTurn=G.turn===owner,instant=c.timing==="instant";
   if(where==="hand"||where==="cpuHand"){
-    if(c.t==="land"){
-      // 流脈は「置」ボタンから表向きで配置。
-      render();return;
-    }
     if(c.t==="summoner")return toast("召喚士は対戦開始時に専用ゾーンへ配置します");
-    if(!ownTurn&&!instant)return toast(sideLabel(owner)+"のターンでは操作できません");
-    if(ownTurn&&G.phase==="MAIN PHASE"&&!G[owner].land&&!G.stack.length)openPlayModal(i,c,owner);
-    else playCard(i,owner);
+    render();return; // オンライン版と同様：一度選択し「置」または「▶」を押す
   } else if(where==="youField"||where==="cpuField"){
     if(c.t==="spell"){
       if(ownTurn||instant)activateSpell(c,owner); else toast("自分のターンまたは高速詠唱タイミングでのみ発動できます");
@@ -2982,7 +3012,12 @@ function clickCard(where,i,c){
       selectTarget(c);
       if(G.phase!=="BATTLE PHASE")render();
     }
-  } else if(where==="youLand"||where==="cpuLand"||where==="youSummoner"||where==="cpuSummoner"){render();}
+  } else if(where==="youSummoner"||where==="cpuSummoner"){
+    if(owner!==G.turn && G.phase==="BATTLE PHASE" && G.selected && G[opponentSide(owner)].field.some(x=>x.id===G.selected)){
+      declareDirectAttack();return;
+    }
+    render();
+  } else if(where==="youLand"||where==="cpuLand"){render();}
 }
 function modalCancelLocked(){
   return !!(G&&(G.resolvingStack||G.processingSummonerTrigger||G.triggerTargetPending||G.pendingPlayDraft));
@@ -3048,6 +3083,10 @@ function resetTurnEndEffects(endingSide){
       c.blockingPowerMods=(Array.isArray(c.blockingPowerMods)?c.blockingPowerMods:[]).filter(m=>Number(m.expiresTurnNo||0)>G.turnNo);
       if(Number(c.unblockableUntilTurnNo||0)<=G.turnNo)c.unblockableUntilTurnNo=null;
       if(Number(c.forceAttackUntilTurnNo||0)<=G.turnNo)c.forceAttackUntilTurnNo=null;
+      if(c.hasteUntilTurnNo!=null&&c.hasteUntilTurnNo<=G.turnNo){
+        c.haste=!!(d.haste||['haste','hasteBurn3'].includes(d.effectKey)||/【速攻】/.test(d.txt||''));
+        c.hasteUntilTurnNo=null;
+      }
       c.indestructible=false;
       c.returnOnDeath=c.effectKey==="returnOnDeath";
       c.soulNever=false;
@@ -3062,7 +3101,31 @@ function resetTurnEndEffects(endingSide){
   }
 }
 
-function check(){if(G.you.hp<=0){G.you.hp=0;G.over=true;toast("PLAYER 2 WINS");}if(G.cpu.hp<=0){G.cpu.hp=0;G.over=true;toast("PLAYER 1 WINS");}}
+function showSoloSurrender(){
+ if(!G||G.over||G.preparing)return;
+ el('soloSurrenderConfirm').hidden=false;
+}
+function hideSoloSurrender(){el('soloSurrenderConfirm').hidden=true;}
+function confirmSoloSurrender(){
+ hideSoloSurrender();
+ if(!G||G.over||G.preparing)return;
+ G[G.turn].hp=0;
+ log(sideLabel(G.turn)+'が投了しました。');
+ check();render();
+}
+function check(){
+  if(!G)return;
+  if(G.you.hp<=0){G.you.hp=0;G.over=true;}
+  if(G.cpu.hp<=0){G.cpu.hp=0;G.over=true;}
+  const overlay=el('soloOutcome');if(G.over){
+    if(overlay&&overlay.hidden){
+      const winner=G.you.hp>0?'PLAYER 1':G.cpu.hp>0?'PLAYER 2':'DRAW';
+      el('soloOutcomeText').textContent=winner==='DRAW'?'DRAW':'WIN';
+      el('soloOutcomeDetails').textContent=winner==='DRAW'?'引き分け':winner+' の勝利';
+      overlay.hidden=false;
+    }
+  }
+}
 
 el("cpuHp").onclick=()=>{if(activeSide()==="you")declareDirectAttack();};
 el("youHp").onclick=()=>{if(activeSide()==="cpu")declareDirectAttack();};

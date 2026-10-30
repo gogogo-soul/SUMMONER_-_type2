@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v40-rulebooklayout-20261026-r7";
+const CACHE_NAME = "summoner-pwa-v41-haste-solo-parity-20261029";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const CORE_ASSETS = [
   "./online-client.js",
   "./online-field.css",
   "./online-field-overrides.css",
+  "./solo-online-parity.css",
   "./online-config.js",
   "./deckbuilder.html",
   "./decklibrary.html",

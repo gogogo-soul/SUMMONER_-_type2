@@ -1,0 +1,313 @@
+/* Same physical table/card styling as the local duel, with online-only layering. */
+body.solo-active{margin:0!important;overflow:hidden!important;height:100dvh!important;color:#eef2f7}
+#app{display:block!important;position:fixed!important;inset:0;z-index:1000;overflow:hidden;background:#171712}
+#app.hidden{display:none!important}
+#app{height:100dvh}
+#app .online-top-actions{margin-left:auto;display:flex;gap:5px;pointer-events:auto}
+#app .topbar{z-index:100}
+#app .online-top-actions .nav-btn{display:inline-flex;align-items:center;min-height:31px}
+#app .side .actions{gap:5px}
+#app .side .actions button{font-size:11px;padding:7px 4px;min-width:0}
+#app .inspector{font-size:11px;line-height:1.6;white-space:pre-wrap;color:#e7edf4;min-height:95px;max-height:28vh;overflow:auto}
+#app .online-phase-help{font-size:11px;color:#ccd6e4;padding:4px;line-height:1.5}
+#app .zonebox .cards:empty{outline:1px dashed rgba(70,65,53,.25);border-radius:5px}
+#app .card{user-select:none;touch-action:manipulation}
+#app .card .name{color:#fff}
+#app .card .art{color:#eef5ff}
+#app .card[role=button]:focus-visible{outline:3px solid #ff9b47}
+#app .opponent-hand .card{pointer-events:none}
+#app .opponent-hand .card .art{color:#bcd4ff}
+#app .online-game-note{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);background:#512a2a;color:#fff;border:1px solid #f28a8a;padding:12px;z-index:200;border-radius:8px;max-width:80vw}
+#app .online-game-note[hidden]{display:none}
+#app .stack-box{color:#fff}
+#app .central-stack-panel{z-index:56}
+#app .central-stack-panel .stack-entry{text-align:center;background:#203047;border-radius:4px;margin:2px 0}
+#app .draw-progress-panel{z-index:57}
+#app .opponent-hand-title{display:none}
+#dialog{z-index:9000!important}
+#dialog.hidden{display:none!important}
+#dialog>div{background:#162438;color:#eff6ff}
+#dialog button{color:#f3f7ff}
+@media(min-width:901px){#app .side{z-index:120}#app .online-top-actions{margin-left:auto}}
+@media(max-width:900px){#app .online-top-actions{gap:3px}#app .online-top-actions .nav-btn{font-size:9px;padding:5px 7px}#app .side{z-index:110}#app .opponent-hand .card{pointer-events:none}}
+#app .main{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;align-self:stretch!important;flex:1 1 auto}
+#app{align-items:stretch!important}
+
+/* Result choices are shown to both players until they rematch or exit. */
+#app .match-end-overlay{position:fixed;inset:0;z-index:8500;display:grid;place-items:center;padding:20px;background:rgba(6,12,21,.78);backdrop-filter:blur(7px);overflow:auto}
+#app .match-end-overlay.hidden{display:none!important}
+#app .match-end-card{background:#162338;color:#f1f6fc;border:1px solid #8aa8c9;border-radius:16px;width:min(460px,100%);padding:clamp(20px,4vw,32px);box-shadow:0 24px 90px #020712b8;text-align:center}
+#app .match-end-eyebrow{color:#86c8f2;font-weight:800;letter-spacing:.14em;font-size:11px}
+#app .match-end-card h2{margin:12px 0 7px;font-weight:900;font-size:clamp(25px,5vw,36px);color:#fff}
+#app .match-end-card p{line-height:1.7;margin:8px 0;color:#e3eaf4}
+#app .match-end-wait{font-size:14px;min-height:48px;color:#b9dcff!important}
+#app .match-end-actions{display:grid;gap:12px;margin:22px 0 12px}
+#app .match-end-actions button{min-height:50px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;background:#28394f;color:#fff;border:1px solid #7893b0}
+#app .match-end-actions button.primary{background:#286c9d;border-color:#4eb9ef;color:#fff}
+#app .match-end-actions button:disabled{opacity:.56;cursor:not-allowed}
+#app .match-end-card .match-end-footnote{font-size:12px;color:#acbfd3;line-height:1.6}
+
+#app .match-end-error{background:#542830;color:#ffe6e6;border:1px solid #ec9090;border-radius:8px;padding:10px;text-align:left;font-size:13px;line-height:1.6;}
+#app .match-end-error[hidden]{display:none!important;}
+
+/* v36: Direct card controls. v35 hid .side .actions on narrow screens,
+   making it impossible to place a flow vein or cast from the hand. */
+#app .online-card-toolbar{position:fixed;z-index:350;right:10px;bottom:194px;max-width:min(470px,70vw);padding:9px 11px;background:rgba(18,31,44,.96);border:1px solid #78a7cb;border-radius:10px;box-shadow:0 4px 18px #000b;pointer-events:auto;color:#f3f6fc}
+#app .online-card-toolbar.hidden{display:none!important}
+#app .online-card-toolbar-head{display:grid;gap:3px;margin-bottom:6px;line-height:1.3}
+#app .online-card-toolbar-head strong{font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#app .online-card-toolbar-head span{font-size:10px;color:#c8d9e8}
+#app .online-card-toolbar-buttons{display:flex;flex-wrap:wrap;gap:6px}
+#app .online-card-toolbar-buttons button{flex:1 1 auto;padding:8px 9px;min-height:42px;border-radius:6px;border:1px solid #87a4c4;background:#314663;color:#fff;font-size:12px;font-weight:800;touch-action:manipulation}
+#app .online-card-toolbar-buttons button.primary{background:#236d97;border-color:#70cdfb}
+#app .online-hand-toggle{display:none}
+@media(max-width:900px){
+ #app .online-hand-toggle{display:block;position:fixed;z-index:380;left:8px;bottom:195px;min-height:31px;line-height:1.1;padding:6px 9px;font-size:11px;font-weight:900;border:1px solid #cfc3a0;border-radius:6px;color:#fafafa;background:rgba(31,41,47,.95);box-shadow:0 3px 10px #0009}
+ #app .online-card-toolbar{bottom:190px;right:6px;max-width:min(280px,68vw);padding:7px}
+ #app .online-card-toolbar-buttons{display:grid;grid-template-columns:1fr;gap:4px}
+ #app .online-card-toolbar-buttons button{font-size:11px;min-height:36px;padding:6px 9px}
+ #app .side .actions#cardActions{display:flex!important;flex-wrap:wrap;gap:5px} /* INFO also works */
+ body.solo-active.hands-compact #app .handbar{
+   left:7px!important;right:auto!important;bottom:53px!important;transform:none!important;
+   width:min(156px,42vw)!important;height:55px!important;max-width:156px!important;
+   background:rgba(22,29,38,.92)!important;border:1px solid #b2b6bb!important;
+   border-radius:7px!important;padding:3px!important;z-index:160!important;
+ }
+ body.solo-active.hands-compact #app .hand{height:46px!important;display:flex!important;justify-content:flex-start!important;align-items:flex-end!important;overflow:hidden!important;padding:0 3px!important;gap:0!important}
+ body.solo-active.hands-compact #app .hand .card{
+   flex:0 0 31px!important;width:31px!important;height:42px!important;min-width:0!important;min-height:0!important;
+   margin-left:-13px!important;padding:2px!important;transform:none!important;border-radius:3px!important;
+ }
+ body.solo-active.hands-compact #app .hand .card:first-child{margin-left:0!important}
+ body.solo-active.hands-compact #app .handbar::before{content:'手札をタップで拡大';font-size:9px;top:-18px!important;left:0!important;right:auto!important;width:auto}
+ body.solo-active.hands-compact #app .online-hand-toggle{bottom:115px!important;left:8px!important}
+ body.solo-active.hands-compact #app .online-card-toolbar{bottom:55px!important;max-width:calc(100vw - 178px)!important;right:6px!important}
+ body.solo-active.hands-compact #app .online-card-toolbar-head span{display:none}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ #app .online-hand-toggle{bottom:155px}
+ #app .online-card-toolbar{bottom:110px}
+ body.solo-active.hands-compact #app .online-card-toolbar{bottom:55px!important}
+}
+/* Prevent legacy card minimums overriding compact size on desktop as well. */
+body.solo-active.hands-compact #app .hand .card{min-width:0!important;min-height:0!important}
+body.solo-active.hands-compact #app .opponent-hand .card{min-width:0!important;min-height:0!important}
+
+/* v37 - normal-mode card controls, inspector, phase bar and dialogs */
+#app .online-top-actions{margin-left:0}
+#app .top-info{margin-left:auto}
+#app .card-controls{pointer-events:auto}
+#app .card-controls button{min-width:20px;min-height:20px;padding:0;line-height:1}
+#app .card-controls button:disabled{opacity:.5;cursor:not-allowed}
+#app .card.attack-ready{outline:3px solid #ffd166;box-shadow:0 0 9px #ffbb33aa}
+#app .card.affordable-red{box-shadow:0 0 8px #69b7ffdd}
+#app .handbar .hand-info{pointer-events:none}
+#app .handbar .hand-info *{pointer-events:none}
+#app #cardInfo{white-space:normal;max-height:none;line-height:1.45}
+#app #cardInfo .sub{margin:2px 0 10px;white-space:normal}
+#app #cardInfo p{white-space:pre-wrap}
+#app #opLP{cursor:pointer}
+#app .online-card-toolbar{display:none!important}
+#app .field-settings{z-index:8800}
+#dialog{z-index:9000!important}
+#dialog>div{width:min(500px,94vw);padding:18px;background:#171d25;border-color:#626d7b}
+#dialog .targets{display:flex;flex-direction:column;gap:8px;max-height:45dvh;overflow:auto}
+#dialog .targets button{background:#222b37;text-align:left;border:1px solid #526277}
+#dialog .targets button.active{background:#315b7a;border-color:#ffd166}
+#dialog footer{flex-wrap:wrap}
+#onlineEffectPeekReturn{z-index:9010}
+#onlineEffectPeekReturn button{font-size:13px}
+@media(max-width:900px){#app .top-info{display:none}#app .online-top-actions .nav-btn{font-size:10px}#app .card-controls button{width:23px;height:23px;font-size:12px}}
+/* Ensure the local-match LP/name marker never covers clickable cards on narrow screens. */
+@media(max-width:900px) and (orientation:portrait){
+ #app .cpu-half .player-head,
+ #app .you-half .player-head{width:110px;max-width:110px;flex-wrap:wrap;gap:3px;pointer-events:none}
+ #app .player-head .who{flex:0 0 100%;max-width:110px;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+ #app .player-head .hp{pointer-events:auto;display:inline-flex;max-width:100%}
+ #app .zonebox .cards{position:relative;z-index:7}
+}
+
+/* In local match, attacking a player means clicking their LP directly. */
+body.solo-active.attack-targeting #app .opponent-hand-wrap{pointer-events:none!important}
+
+/* v38 - allow a genuinely scrollable hand even with many cards. */
+body.solo-active:not(.hands-compact) #app .handbar .hand{
+ justify-content:flex-start!important;overflow-x:auto!important;overflow-y:hidden!important;
+ overscroll-behavior-x:contain;touch-action:pan-x;scrollbar-width:thin;scrollbar-color:#aab9c6 #172333;
+ -webkit-overflow-scrolling:touch;
+ padding-left:10px!important;padding-right:18px!important;gap:6px!important;
+}
+body.solo-active:not(.hands-compact) #app .handbar .hand .card{
+ flex-shrink:0!important;margin-left:0!important;touch-action:pan-x;
+}
+body.solo-active:not(.hands-compact) #app .handbar .hand::-webkit-scrollbar{height:9px}
+body.solo-active:not(.hands-compact) #app .handbar .hand::-webkit-scrollbar-thumb{background:#aab9c6;border-radius:8px}
+@media(max-width:900px){
+ body.solo-active:not(.hands-compact) #app .handbar .hand .card{flex-basis:90px!important;width:90px!important;min-width:90px!important}
+}
+/* Color-coded floating LP feedback. Includes the payment category separate from damage. */
+#app .player-head .hp{position:relative;overflow:visible!important}
+#app .online-lp-delta{position:absolute;left:calc(100% + 7px);top:calc(50% + var(--life-offset,0px));z-index:430;pointer-events:none;white-space:nowrap;font-weight:900;font-size:clamp(17px,2.3vw,25px);
+ text-shadow:0 2px 2px #111,0 0 3px #111;animation:onlineLifeDelta 1.65s ease-out forwards}
+#app .life-damage{color:#ff364e}
+#app .life-heal{color:#38dc7b}
+#app .life-cost{color:#ba76ff}
+@keyframes onlineLifeDelta{0%{opacity:0;transform:translate(0,-25%) scale(.78)}12%{opacity:1;transform:translate(0,-50%) scale(1.15)}55%{opacity:1;transform:translate(4px,-85%) scale(1)}100%{opacity:0;transform:translate(6px,-145%) scale(.92)}}
+@media(max-width:900px){#app .online-lp-delta{font-size:17px;left:calc(100% + 3px)}}
+
+/* v39: Keep error visible until the player explicitly dismisses it. */
+#app .online-game-note{position:fixed!important;z-index:8900!important;top:clamp(56px,11vh,110px)!important;bottom:auto!important;left:50%!important;transform:translateX(-50%)!important;width:min(540px,calc(100vw - 24px))!important;max-width:none!important;background:#601e2a!important;border:2px solid #ff7584!important;color:#fff!important;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 15px!important;box-shadow:0 10px 40px #000b;line-height:1.5}
+#app .online-game-note[hidden]{display:none!important}
+#app .online-notice-text{flex:1;overflow-wrap:anywhere;font-size:13px;font-weight:700}
+#app .online-notice-close{flex:none;border:1px solid #f9bec7;border-radius:6px;background:#241219;color:#fff;min-width:66px;padding:9px 6px;font-size:12px;font-weight:800}
+/* Place on-card action icons in the middle of the selected card. */
+#app .card-controls{top:50%!important;bottom:auto!important;left:50%!important;transform:translate(-50%,-50%)!important;display:flex;justify-content:center;align-items:center;gap:3px;background:rgba(12,19,27,.74);padding:4px;border:1px solid #dce9f4;border-radius:999px;max-width:96%;box-shadow:0 3px 10px #000b;z-index:70!important}
+#app .card-controls button{flex:none;border-color:#e8f0ff;background:#1b4262;color:#fff}
+/* Shattered-glass flash for damage, without changes to LP arithmetic. */
+#app .online-lp-impact{animation:onlineLpImpact .45s ease-out}
+@keyframes onlineLpImpact{0%,100%{filter:none}18%{filter:brightness(2.5) drop-shadow(0 0 8px #fb465b)}55%{filter:brightness(.9)}}
+#app .online-shatter-layer{position:absolute;top:50%;left:50%;pointer-events:none;z-index:600;width:0;height:0;overflow:visible}
+#app .online-glass-piece{position:absolute;left:0;top:0;display:block;width:12px;height:14px;background:linear-gradient(130deg,#ffffffd9,#bde9ff99 55%,#ef7b8b82);clip-path:polygon(17% 0,96% 25%,59% 100%,0 56%);border:1px solid #fff9;box-shadow:0 0 9px #fff8;animation:onlineGlassScatter .7s ease-out forwards;animation-delay:var(--delay,0ms)}
+@keyframes onlineGlassScatter{0%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1.15)}60%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--spin)) scale(.3)}}
+/* Show WIN / LOSE to each player before presenting rematch options. */
+#app .online-outcome{position:fixed;inset:0;z-index:8600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at center,#243750ef,#050a11f5 74%);pointer-events:auto;color:#fff}
+#app .online-outcome.hidden{display:none!important}
+#app .online-outcome strong{font:900 clamp(84px,18vw,200px)/1 system-ui,sans-serif;letter-spacing:.1em;text-shadow:0 4px 20px #000b;animation:onlineOutcomeReveal 1.2s cubic-bezier(.2,1.4,.4,1) both}
+#app .online-outcome span{font-size:18px;letter-spacing:.35em;opacity:.85}
+#app .online-outcome.outcome-win strong{color:#f6d778;text-shadow:0 0 34px #d7a64a9c}
+#app .online-outcome.outcome-lose strong{color:#ff7a89;text-shadow:0 0 34px #d83c559c}
+#app .online-outcome.outcome-draw strong{color:#dce4ef}
+@keyframes onlineOutcomeReveal{from{opacity:0;transform:scale(1.8);filter:blur(12px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+/* v39: shrink card geometry ONLY on touch/small-screen online play. Desktop dimensions unchanged. */
+@media (max-width:900px) and (pointer:coarse){
+ #app .zonebox .cards .card{flex:0 0 42px!important;width:42px!important;height:57px!important;min-width:0!important;min-height:0!important;padding:2px!important;border-radius:3px!important}
+ #app .zonebox .cards{min-height:60px!important;gap:3px!important;overflow-x:auto!important}
+ #app .card .name{font-size:6px!important;padding-right:0}
+ #app .zonebox .card .type{font-size:5px!important}
+ #app .zonebox .card .art{height:18px!important;font-size:10px!important;margin:1px 0!important}
+ #app .zonebox .card .cost{left:1px!important;top:1px!important;min-width:11px!important;padding:0 1px!important;font-size:7px!important}
+ #app .zonebox .card .power-stat,#app .zonebox .card .sp-stat{font-size:8px!important;min-width:0!important;padding:1px 2px!important;bottom:1px!important;-webkit-text-stroke:.6px #000}
+ #app .opponent-hand .card{flex:0 0 44px!important;width:44px!important;height:60px!important;min-width:0!important;min-height:0!important;padding:2px!important;margin-left:-5px!important}
+ #app .opponent-hand .card:first-child{margin-left:0!important}
+ #app .opponent-hand .card .art{height:18px!important;font-size:10px!important}
+ body.solo-active:not(.hands-compact) #app .handbar .hand .card{flex:0 0 67px!important;width:67px!important;height:90px!important;min-width:0!important;min-height:0!important;padding:3px!important;margin-left:0!important}
+ #app .handbar .hand{align-items:flex-end;max-width:100%;}
+ #app .hand .card .art{height:29px!important;font-size:12px!important}
+ #app .hand .card .power-stat,#app .hand .card .sp-stat{font-size:10px!important;min-width:0!important;padding:1px 2px!important}
+ #app .card-controls{padding:2px!important;gap:1px!important;max-width:100%!important}
+ #app .card-controls button{width:19px!important;height:19px!important;min-width:19px!important;min-height:19px!important;font-size:10px!important}
+}
+@media(prefers-reduced-motion:reduce){#app .online-glass-piece,#app .online-outcome strong,#app .online-lp-impact{animation:none}}
+
+/* v40 */
+#onlineEffectPeekReturn{display:none!important}
+#app .online-card-popup{display:block}
+.online-card-popup{position:fixed;z-index:9100;right:14px;top:55px;width:min(300px,calc(100vw - 28px));max-height:45dvh;overflow:auto;padding:12px 14px;background:#142235f3;border:2px solid #6e8dab;border-radius:10px;color:#f3f6fa;box-shadow:0 10px 40px #0009;pointer-events:auto}
+.online-card-popup[hidden]{display:none!important}
+.online-card-popup h3{margin:0 24px 7px 0;font-size:14px;line-height:1.3}
+.online-card-popup p{margin:8px 0 0;font-size:12px;white-space:pre-wrap;line-height:1.6}
+.online-popup-meta{font-weight:800;font-size:12px;color:#f5d594}
+.online-popup-close{position:absolute;right:5px;top:5px;padding:1px 9px;font-size:19px;border:1px solid #667c98;background:#263b56;border-radius:5px}
+#surrenderConfirm{z-index:9500!important}
+#surrenderConfirm .online-surrender{background:#b32135;color:#fff;border:1px solid #f88;border-radius:7px;padding:12px}
+#app .card.monster.summon-sick:after{content:'Zz';position:absolute;right:3px;top:3px;background:#563bb9;color:#fff;font-size:10px;font-weight:900;padding:2px 3px;border-radius:4px;z-index:10;pointer-events:none}
+#app .card.land .art{writing-mode:horizontal-tb;transform:none;text-orientation:mixed;white-space:nowrap;direction:ltr}
+#app #opSummoner{cursor:crosshair}
+#app .online-card-popup{pointer-events:auto}
+@media(max-width:900px){
+ .online-card-popup{right:7px;top:45px;width:min(240px,58vw);font-size:11px;padding:10px;max-height:30dvh}
+ /* The opposing hand, resources and field move one compact card-depth farther away. */
+ #app .cpu-half .zone-row,#app .cpu-half .opponent-hand-wrap{transform:translateY(-50px)}
+ #app .cpu-half{padding-top:48px}
+}
+
+#app .online-surrender{background:#b51c36!important;border:1px solid #ff728c!important;color:#fff!important;font-weight:900}
+#app .online-surrender:hover{background:#d52b4e!important}
+#app .online-surrender:disabled{opacity:.45}
+
+/* v40 online duel: one upper-right surrender control; no navigation shortcuts while playing. */
+#app .online-top-actions{display:flex;margin-left:auto;align-items:center;justify-content:flex-end}
+#app .online-top-actions #surrenderBtn{padding:7px 17px;min-height:34px;white-space:nowrap}
+@media(max-width:900px){#app .online-top-actions #surrenderBtn{padding:7px 12px;font-size:12px;min-height:34px}}
+
+
+/* v40.1 - rulebook screenshots + mobile spacing + desktop stack size */
+@media(min-width:901px){
+ #app .central-stack-panel{
+   width:min(620px,88vw)!important;
+   max-height:min(210px,30dvh)!important;
+   padding:8px 14px!important;
+ }
+ #app .central-stack-panel .stack-entry{font-size:12px!important;padding:6px 8px!important}
+ #app .central-stack-panel .priority-line{font-size:11px!important;margin-top:5px!important}
+}
+@media(max-width:900px){
+ #app .cpu-half .zone-row,
+ #app .cpu-half .opponent-hand-wrap{transform:none!important}
+ #app .cpu-half{padding-top:0!important}
+ #app .opponent-hand-wrap{top:46px!important;height:96px!important;width:calc(100% - 18px)!important}
+ #app .opponent-hand{height:96px!important;align-items:flex-start!important}
+ #app .cpu-half .player-head{top:142px!important}
+ #app .cpu-half .zonebox.zone-land{top:42%!important;left:18%!important;right:18%!important;height:12%!important}
+ #app .cpu-half .zonebox.zone-summoner{top:58%!important;left:24%!important;right:24%!important;height:12%!important}
+ #app .cpu-half .zonebox.zone-field{top:75%!important;left:11%!important;right:11%!important;height:14%!important}
+ #app .you-half .zonebox.zone-field{top:5%!important;left:11%!important;right:11%!important;height:14%!important}
+ #app .you-half .zonebox.zone-summoner{top:24%!important;left:24%!important;right:24%!important;height:12%!important}
+ #app .you-half .zonebox.zone-land{top:42%!important;left:18%!important;right:18%!important;height:12%!important}
+ #app .you-half .player-head{bottom:146px!important}
+ #app .cpu-half .resource-col.deck-grave-stack{top:46%!important}
+ #app .you-half .resource-col.deck-grave-stack{top:8%!important}
+ #app .handbar{bottom:54px!important;height:112px!important;width:calc(100% - 12px)!important}
+ #app .hand{height:112px!important;padding-left:8px!important;padding-right:12px!important;gap:4px!important}
+ body.solo-active:not(.hands-compact) #app .handbar .hand .card{flex:0 0 60px!important;width:60px!important;height:80px!important;min-width:60px!important;padding:3px!important}
+ #app .hand .card .art{height:26px!important}
+ #app .opponent-hand .card{flex:0 0 42px!important;width:42px!important;height:57px!important;margin-left:-4px!important;padding:2px!important}
+ #app .opponent-hand .card .art{height:18px!important;font-size:10px!important}
+ #app .opponent-hand .card .power-stat,#app .opponent-hand .card .sp-stat{font-size:8px!important;padding:1px 2px!important}
+ #app .mobile-actions{min-height:44px!important}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ #app .opponent-hand-wrap{top:8px!important;height:90px!important;width:72%!important}
+ #app .cpu-half .player-head{top:92px!important}
+ #app .you-half .player-head{bottom:112px!important}
+ #app .cpu-half .zonebox.zone-land{top:42%!important;height:14%!important}
+ #app .cpu-half .zonebox.zone-summoner{top:58%!important;height:14%!important}
+ #app .cpu-half .zonebox.zone-field{top:76%!important;height:16%!important}
+ #app .you-half .zonebox.zone-field{top:5%!important;height:16%!important}
+ #app .you-half .zonebox.zone-summoner{top:24%!important;height:14%!important}
+ #app .you-half .zonebox.zone-land{top:42%!important;height:14%!important}
+ #app .handbar{bottom:48px!important;height:100px!important;width:74%!important}
+ body.solo-active:not(.hands-compact) #app .handbar .hand .card{flex:0 0 56px!important;width:56px!important;height:76px!important;min-width:56px!important}
+}
+
+/* Solo needs both players' hands interactive, unlike private online rooms. */
+body.solo-active #app .opponent-hand,body.solo-active #app .opponent-hand .card{pointer-events:auto!important}
+body.solo-active #app .opponent-hand-wrap{pointer-events:auto!important}
+body.solo-active #app .card-controls button{cursor:pointer}
+body.solo-active #app .solo-card-popup{z-index:9200}
+body.solo-active #app .solo-outcome{position:fixed;inset:0;z-index:8700;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;color:#fff;background:radial-gradient(circle at center,#243750ef,#050a11f5 74%)}
+body.solo-active #app .solo-outcome[hidden]{display:none!important}
+body.solo-active #app .solo-outcome strong{font:900 clamp(64px,17vw,180px)/1 system-ui,sans-serif;letter-spacing:.08em;text-shadow:0 0 30px #284867}
+body.solo-active #app .solo-outcome button{font-weight:800;padding:11px 21px;background:#255981;color:#fff;border:1px solid #83a6c8;border-radius:9px}
+body.solo-active #app .card.monster.summon-sick::after{content:'Zz';position:absolute;right:3px;top:3px;background:#563bb9;color:#fff;font-size:10px;font-weight:900;padding:2px 3px;border-radius:4px;z-index:10;pointer-events:none}
+body.solo-active #app .card.land .art{writing-mode:horizontal-tb;transform:none;text-orientation:mixed;white-space:nowrap;direction:ltr}
+/* Solo dialogs need to cover the centrally located field and its card controls. */
+body.solo-active #app .modal{z-index:9400!important}
+@media(max-width:900px){
+ body.solo-active #app .opponent-hand .card{cursor:pointer!important}
+ body.solo-active #app .mobile-actions{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+
+/* Same surrender layout and confirmation as the online duel. */
+body.solo-active #app .online-top-actions{margin-left:auto;display:flex;align-items:center;pointer-events:auto;justify-content:flex-end}
+body.solo-active #app #soloSurrenderBtn{font-size:12px;padding:7px 16px;min-height:34px;background:#b51c36!important;border-color:#ff728c!important;color:#fff!important;font-weight:900}
+body.solo-active #app #soloSurrenderBtn:disabled{opacity:.5}
+body.solo-active #app .solo-confirm{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;background:#03070cba;padding:16px;color:#eef4ff}
+body.solo-active #app .solo-confirm[hidden]{display:none!important}
+body.solo-active #app .solo-confirm-box{width:min(480px,96vw);background:#162438;border:1px solid #6c8aa5;border-radius:12px;padding:20px;box-shadow:0 20px 80px #0009}
+body.solo-active #app .solo-confirm-box h2{margin:0 0 12px;font-size:19px}
+body.solo-active #app .solo-confirm-box p{margin:0 0 15px;font-size:13px;color:#c3cfdf}
+body.solo-active #app .solo-confirm-box>div{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+body.solo-active #app .solo-confirm-box button{border:1px solid #8a9bad;background:#25364a;color:#fff;border-radius:7px;padding:10px;font-size:12px;cursor:pointer}
+body.solo-active #app .solo-confirm-box .online-surrender{background:#b51c36;border-color:#ff728c}
+body.solo-active #app .solo-back-title{color:#b9def6;font-weight:800;font-size:13px;text-decoration:none}

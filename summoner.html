@@ -1103,6 +1103,14 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
  .central-stack-panel{max-height:28dvh;top:50%}
  .draw-progress-panel{top:calc(50% - 45px)}
 }
+
+
+/* v43: automatic PASS switch (solo) */
+.auto-pass-toggle{background:#245b50!important;border:1px solid #79d2b7!important;color:#f3fff9!important;font-weight:900!important;white-space:nowrap}
+.auto-pass-toggle[aria-pressed="false"]{background:#45474d!important;border-color:#9aa0aa!important;color:#f0f1f4!important}
+.desktop-actions .auto-pass-toggle{min-width:96px}
+.mobile-actions .auto-pass-toggle{font-size:7px!important;line-height:1!important;padding:4px 1px!important;overflow-wrap:anywhere}
+.actions .auto-pass-toggle{width:100%;min-height:34px}
 </style>
 <link rel="stylesheet" href="solo-online-parity.css">
 </head>
@@ -1175,6 +1183,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
   <h2>Action Log</h2>
   <div class="log" id="log"></div>
   <div class="actions">
+    <button type="button" class="auto-pass-toggle" data-solo-auto-pass-toggle>自動PASS ON</button>
     <button class="stack-pass" id="passBtn" disabled>PASS / 解決</button>
     <button class="primary" id="drawBtn">DRAW</button>
     <button class="primary" id="battleBtn">BATTLE PHASE</button>
@@ -1185,6 +1194,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 </aside>
 
 <div class="desktop-actions" aria-label="デスクトップ操作">
+  <button type="button" class="auto-pass-toggle" data-solo-auto-pass-toggle>自動PASS ON</button>
   <button class="pass" onclick="document.getElementById('passBtn').click()">PASS</button>
   <button class="primary" onclick="document.getElementById('drawBtn').click()">DRAW</button>
   <button class="primary" onclick="document.getElementById('battleBtn').click()">BATTLE</button>
@@ -1195,6 +1205,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 
 
 <div class="mobile-actions" aria-label="スマホ操作">
+  <button type="button" class="auto-pass-toggle" data-solo-auto-pass-toggle>自動PASS ON</button>
   <button class="pass" onclick="document.getElementById('passBtn').click()">PASS</button>
   <button class="primary" onclick="document.getElementById('drawBtn').click()">DRAW</button>
   <button class="primary" onclick="document.getElementById('battleBtn').click()">BATTLE</button>
@@ -1272,6 +1283,8 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 
 <script>
 let G;
+const SOLO_AUTO_PASS_STORE="summoner_solo_auto_pass_v43";
+let soloAutoPassEnabled=localStorage.getItem(SOLO_AUTO_PASS_STORE)!=="false";
 const names = Object.keys(DB);
 const currentUser = localStorage.getItem("arcana_duel_current_user") || "ゲスト";
 const el = id => document.getElementById(id);
@@ -2135,7 +2148,73 @@ function selectionLabel(entry){
   const names=(s.targets||[]).map(targetLabelFromRef);
   return names.length?" → "+names.map(n=>"《"+n+"》").join(" / "):"";
 }
+// Solo and online use the same high-speed priority semantics. Automation is
+// allowed only when the current player has no high-speed card they can legally
+// activate now (including payment from still-untapped flow veins).
+let scheduledAutoPassKey=null;
+function canPotentiallyPayHighSpeed(player,c){
+ const cost=Math.max(0,Number(c?.c)||0),pool=player?.manaPool||[];
+ const ready=G?.blockPending?[]:(player?.lands||[]).filter(x=>!x.tapped&&!x.tapLocked&&!x.usedThisTurn);
+ if(pool.length+ready.length<cost)return false;
+ if(cost>0&&c.color&&c.color!=="none"&&!pool.some(m=>manaColorOf(m)===c.color)&&!ready.some(x=>!x.isFaceDown&&x.color===c.color))return false;
+ return canPayLpCost(player,c);
+}
+function hasLegalHighSpeedTarget(c,owner){
+ if(c.t==="monster")return true; // A monster can still be summoned; its ETB effect may simply fizzle.
+ const opp=opponentSide(owner),ownMon=G[owner].field.filter(x=>x.t==="monster"),oppMon=G[opp].field.filter(x=>x.t==="monster");
+ switch(c.effectKey){
+  case "counterPlay":return G.stack.some(e=>e.kind==="card"&&e.owner!==owner&&e.card?.t!=="summoner");
+  case "counterAttack":return !!G.blockPending;
+  case "damageOpp2":case "oppToFaceDownLand":case "tapOppOnSummon":case "hpMinus1EOT":case "hpMinus2EOT":case "destroyOppMonster":return oppMon.length>0;
+  case "hpMinus3UntappedOpp":return oppMon.some(x=>!x.tapped);
+  case "destroyOppLand":return G[opp].lands.length>0;
+  case "bounceAny":return ownMon.length>0||oppMon.length>0;
+  case "atkPlus1":case "ownToFaceDownLand":case "ownSpPlus1":case "grantHaste":case "grantUnblockable":case "grantDeathtouch":case "forceAttackTarget":return ownMon.length>0;
+  case "graveToFaceDownLand":case "recoverOne":case "recoverUpTo2":return G[owner].grave.some(x=>x.t==="monster");
+  case "tapUpTo2":return oppMon.length>0;
+  case "soulDrain":return ownMon.length>0;
+  case "destroyOneEach":return ownMon.length>0&&oppMon.length>0;
+  case "freeSummon3":return G[owner].hand.some(x=>x!==c&&x.t==="monster"&&x.c<=3);
+  case "chooseBurn3":return true; // The opponent player is always a legal option.
+  default:return true;
+ }
+}
+function hasPlayableHighSpeedResponse(owner){
+ const player=G?.[owner];if(!player)return false;
+ return player.hand.some(c=>c.t!=="land"&&c.t!=="summoner"&&
+   (c.timing==="instant"||String(c.txt||"").includes("高速詠唱"))&&
+   canAddToStack(c,owner)&&canPotentiallyPayHighSpeed(player,c)&&hasLegalHighSpeedTarget(c,owner));
+}
+function updateSoloAutoPassButtons(){
+ document.querySelectorAll('[data-solo-auto-pass-toggle]').forEach(btn=>{
+  btn.textContent=`自動PASS ${soloAutoPassEnabled?'ON':'OFF'}`;
+  btn.setAttribute('aria-pressed',String(soloAutoPassEnabled));
+  btn.title=soloAutoPassEnabled?'発動可能な高速詠唱がなければ自動PASSします':'自動PASSを停止します。PASSボタンで手動操作します';
+ });
+}
+function toggleSoloAutoPass(){
+ soloAutoPassEnabled=!soloAutoPassEnabled;
+ try{localStorage.setItem(SOLO_AUTO_PASS_STORE,String(soloAutoPassEnabled));}catch(_){}
+ scheduledAutoPassKey=null;updateSoloAutoPassButtons();
+ if(G)renderStack();
+}
+function scheduleAutomaticStackPass(){
+ if(!G||G.over||!soloAutoPassEnabled||!G.stack.length||G.resolvingStack||!G.priority||
+    G.pendingPlayDraft||el("modal")?.style.display==="flex"||hasPlayableHighSpeedResponse(G.priority))return;
+ const key=G.stack.map(e=>e.id).join("/")+":"+G.priority+":"+G.passCount;
+ if(scheduledAutoPassKey===key)return;
+ scheduledAutoPassKey=key;
+ setTimeout(()=>{
+  if(scheduledAutoPassKey===key)scheduledAutoPassKey=null;
+  if(!G||G.over||!soloAutoPassEnabled||G.resolvingStack||!G.stack.length||!G.priority||
+     G.pendingPlayDraft||el("modal")?.style.display==="flex"||hasPlayableHighSpeedResponse(G.priority))return;
+  const currentKey=G.stack.map(e=>e.id).join("/")+":"+G.priority+":"+G.passCount;
+  if(currentKey!==key)return;
+  passPriority();
+ },80);
+}
 function renderStack(){
+  updateSoloAutoPassButtons();
   if(!G)return;
   const box=el("stackBox"),line=el("priorityLine"),btn=el("passBtn"),panel=el("centralStackPanel");
   if(!box||!line||!btn)return;
@@ -2158,10 +2237,11 @@ function renderStack(){
   line.textContent=G.resolvingStack?"両者PASS済み：上から連続解決中":"優先権："+sideLabel(G.priority)+" / 連続PASS "+G.passCount+"/2";
   btn.disabled=G.over||G.resolvingStack;
   btn.textContent=G.resolvingStack?"解決中":sideLabel(G.priority)+" PASS";
+  scheduleAutomaticStackPass();
 }
 function canAddToStack(c,w){
   if(c.t==="land"||c.t==="summoner")return false;
-  const instant=c.timing==="instant";
+  const instant=c.timing==="instant"||String(c.txt||"").includes("高速詠唱");
   if(G.stack.length){
     if(!instant)return false;
     return G.priority===w&&!G.resolvingStack;
@@ -3129,7 +3209,7 @@ function check(){
 
 el("cpuHp").onclick=()=>{if(activeSide()==="you")declareDirectAttack();};
 el("youHp").onclick=()=>{if(activeSide()==="cpu")declareDirectAttack();};
-el("noBlockBtn").onclick=noBlock;el("drawBtn").onclick=playerDraw;el("passBtn").onclick=passPriority;
+el("noBlockBtn").onclick=noBlock;el("drawBtn").onclick=playerDraw;el("passBtn").onclick=passPriority;document.querySelectorAll("[data-solo-auto-pass-toggle]").forEach(btn=>btn.addEventListener("click",toggleSoloAutoPass));updateSoloAutoPassButtons();
 el("youDeckZone").onclick=()=>toast("山札の中身を見ることはできません");el("cpuDeckZone").onclick=()=>toast("山札の中身を見ることはできません");
 el("youGraveZone").onclick=()=>showGrave("you");el("cpuGraveZone").onclick=()=>showGrave("cpu");
 function showGrave(w){const list=G[w].grave;if(!list.length)return toast(sideLabel(w)+"の墓地は空です");el("modalTitle").textContent=sideLabel(w)+"の墓地（"+list.length+"枚）";el("targets").innerHTML="";list.slice().reverse().slice(0,20).forEach(c=>addTarget(c.name+" / "+typeJP(c.t),()=>{showInspector(c);}));el("modal").style.display="flex";syncModalCancelButton();}

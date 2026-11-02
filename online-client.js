@@ -1,6 +1,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-const STORAGE='summoner_online_pvp_session_v1',SERVER_STORE='summoner_online_worker_url_v1';
+const STORAGE='summoner_online_pvp_session_v1',SERVER_STORE='summoner_online_worker_url_v1',AUTO_PASS_STORE='summoner_online_auto_pass_v43';
+let autoPassPreference=localStorage.getItem(AUTO_PASS_STORE)!=='false',autoPassSyncedMatchId=null;
 let session=null,ws=null,view=null,pending=null,selected=null,armedAttack=null,dialogCb=null,dialogChosen=[],dialogMax=1,dialogMin=1,reconnect=0,manualClose=false,lastMatchId=null,leavingRoom=false,serverVersion='',matchEndError='',resultIntroMatch=null,resultIntroDone=false,resultIntroTimer=null;
 const CE=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};
 const n=v=>String(v||'');
@@ -9,19 +10,19 @@ function dismissError(){const hud=$('onlineNotice');if(hud){hud.hidden=true;hud.
 const server=()=>{const raw=($('serverUrl').value||'').trim().replace(/\/$/,'');if(!raw)return null;try{const u=new URL(raw);if(u.protocol!=='https:'&&!(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname)))return null;return u.origin;}catch{return null;}};
 function getServer(){return server()}
 function saveSession(r){session=r;localStorage.setItem(STORAGE,JSON.stringify(r));}
-function forget(){clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;$('onlineOutcome').classList.add('hidden');dismissError();lastMatchId=null;leavingRoom=false;matchEndError='';selected=null;armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('matchEndPanel').classList.add('hidden');$('roomCode').value='';try{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u.href);}catch(_){}manualClose=true;const oldSocket=ws;ws=null;if(oldSocket)try{oldSocket.close()}catch(_){}session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active','info-open','hands-compact','attack-targeting');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('マッチング画面に戻りました。');}
+function forget(){autoPassSyncedMatchId=null;clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;$('onlineOutcome').classList.add('hidden');dismissError();lastMatchId=null;leavingRoom=false;matchEndError='';selected=null;armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('matchEndPanel').classList.add('hidden');$('roomCode').value='';try{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState(null,'',u.href);}catch(_){}manualClose=true;const oldSocket=ws;ws=null;if(oldSocket)try{oldSocket.close()}catch(_){}session=null;view=null;localStorage.removeItem(STORAGE);$('lobbyWait').classList.add('hidden');$('duelView').classList.add('hidden');document.body.classList.remove('online-active','info-open','hands-compact','attack-targeting');$('onlineFieldCss').disabled=true;$('onlineOverrideCss').disabled=true;$('lobbyView').classList.remove('hidden');status('マッチング画面に戻りました。');}
 function titleRoom(){const code=session?.code;if(!code)return '';return code;}
 function roomInvite(){const u=new URL('online.html',location.href);u.searchParams.set('room',titleRoom());if(getServer())u.searchParams.set('server',getServer());return u.href;}
 async function rest(path,data){const root=getServer();if(!root)throw Error('Cloudflare WorkerのURLを設定してください');const r=await fetch(root+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error||`通信エラー HTTP ${r.status}`);return body;}
 function send(data){if(!ws||ws.readyState!==WebSocket.OPEN)throw Error('サーバー未接続です');ws.send(JSON.stringify(data));}
 function attempt(data){try{send(data)}catch(e){showMatchError(e.message)}}
-function showMatchError(msg){const oldWorker=/不正な命令|unknown|unsupported|rematch|leave_room/i.test(msg);matchEndError=oldWorker?'Cloudflareサーバーが旧版の可能性があります。v40のWorker更新後に新しいルームでお試しください。':msg;status(matchEndError,true);if(view?.game?.over)renderMatchEnd(view.game,view.seat);}
+function showMatchError(msg){const oldWorker=/不正な命令|unknown|unsupported|rematch|leave_room/i.test(msg);matchEndError=oldWorker?'Cloudflareサーバーが旧版の可能性があります。v43のWorker更新後に新しいルームでお試しください。':msg;status(matchEndError,true);if(view?.game?.over)renderMatchEnd(view.game,view.seat);}
 async function checkWorkerVersion(){const root=getServer();if(!root)return;try{const r=await fetch(root+'/health',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const info=await r.json();if(root!==getServer())return;serverVersion=info.version||'不明';const compatible=/^alpha2-v(?:3[4-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion);if(!compatible&&view?.game?.over){matchEndError=`Cloudflareは ${serverVersion} です。再戦にはv34以降、確実な退出にはv35が必要です。`;renderMatchEnd(view.game,view.seat);}return info;}catch(e){serverVersion='確認不可';return null;}}
 function act(type,extra={}){attempt({type:'action',action:{type,...extra}});}
 function connect(){if(!session||!getServer())return;manualClose=false; if(ws&&ws.readyState<=1)ws.close(); const url=getServer().replace(/^http/,'ws')+`/api/rooms/${session.code}/socket`;ws=new WebSocket(url);const thisSocket=ws;
  status('対戦サーバーへ接続しています…');
  ws.onopen=()=>{if(ws!==thisSocket)return;reconnect=0;send({type:'auth',token:session.token});status('対戦サーバーに接続しました。');checkWorkerVersion();};
- ws.onmessage=e=>{if(ws!==thisSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='error'){leavingRoom=false;showMatchError(m.error||'サーバーで処理できませんでした。');return;}if(m.type==='left_room'){forget();status('マッチングに戻りました。新しいルームを作成、または参加してください。');return;}if(m.type==='state'){const prevId=view?.game?.matchId;view=m.data;if(!view?.game?.over||view?.game?.matchId!==prevId)matchEndError='';render();status(`ルーム ${session.code} に接続中／PLAYER ${session.seat+1}`);}};
+ ws.onmessage=e=>{if(ws!==thisSocket)return;let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='error'){leavingRoom=false;showMatchError(m.error||'サーバーで処理できませんでした。');return;}if(m.type==='left_room'){forget();status('マッチングに戻りました。新しいルームを作成、または参加してください。');return;}if(m.type==='state'){const prevId=view?.game?.matchId;view=m.data;const matchId=view?.game?.matchId;if(matchId&&autoPassSyncedMatchId!==matchId){autoPassSyncedMatchId=matchId;const serverEnabled=view.game.players?.[view.seat]?.autoPassEnabled!==false;if(serverEnabled!==autoPassPreference){try{send({type:'action',action:{type:'auto_pass_setting',enabled:autoPassPreference}});}catch(_){}}}if(!view?.game?.over||view?.game?.matchId!==prevId)matchEndError='';render();status(`ルーム ${session.code} に接続中／PLAYER ${session.seat+1}`);}};
  ws.onclose=e=>{if(ws!==thisSocket||manualClose)return;if(e.code===1008){forget();status('このルームの接続が終了したため、マッチング画面に戻りました。');return;}leavingRoom=false;showMatchError('通信が切断されました。再接続しています。再戦操作は接続が回復してから行ってください。');const sec=Math.min(20,1+Math.pow(2,Math.min(++reconnect,4)));setTimeout(()=>{if(!manualClose&&session)connect()},sec*1000)};
  ws.onerror=()=>showMatchError('通信エラー。接続先・ネットワーク・Cloudflareの設定を確認してください。');
 }
@@ -134,6 +135,22 @@ function backs(node,count){node.replaceChildren();for(let i=0;i<count;i++)node.a
 const colorWord=c=>({red:'赤',blue:'青',green:'緑',yellow:'黄',black:'黒',none:'無色'})[c]||'無色';
 function prettyMana(m){return (m||[]).length?m.map(c=>colorWord(c)).join(' / '):'なし';}
 function button(parent,text,fn,klass){const b=CE('button',klass||'',text);b.onclick=fn;parent.append(b);return b;}
+function updateAutoPassToggleButtons(){
+ const enabled=!!autoPassPreference;
+ document.querySelectorAll('[data-auto-pass-toggle]').forEach(btn=>{
+  btn.textContent=`自動PASS ${enabled?'ON':'OFF'}`;
+  btn.setAttribute('aria-pressed',String(enabled));
+  btn.title=enabled?'発動可能な高速詠唱がなければ自動PASSします':'自動PASSを停止します。PASSボタンで手動操作します';
+ });
+}
+function toggleAutoPassSetting(){
+ if(!view?.game||view.game.over)return;
+ autoPassPreference=!autoPassPreference;
+ localStorage.setItem(AUTO_PASS_STORE,String(autoPassPreference));
+ updateAutoPassToggleButtons();
+ act('auto_pass_setting',{enabled:autoPassPreference});
+}
+
 function renderDuel(){
  const g=view.game,me=view.seat,enemy=1-me,mine=g.players[me],op=g.players[enemy];
  if(lastMatchId!==g.matchId){clearTimeout(resultIntroTimer);resultIntroMatch=null;resultIntroDone=false;$('onlineOutcome').classList.add('hidden');dismissError();lastMatchId=g.matchId;if($('onlineCardPopup'))$('onlineCardPopup').hidden=true;lastLifeSeq=Math.max(0,...(g.lifeEvents||[]).map(e=>e.seq));clearCardSelection();armedAttack=null;pending=null;$('dialog').classList.add('hidden');$('cardInfo').textContent='カードを選択すると詳細が表示されます。';}
@@ -165,6 +182,7 @@ function renderDuel(){
  $('battleBtn').disabled=g.over||g.turn!==me||g.phase!=='MAIN'||g.drawPending>0||!!g.effectDraw||g.stack.length>0||!!g.block;
  $('endBtn').disabled=g.over||g.turn!==me||g.drawPending>0||!!g.effectDraw||g.stack.length>0||!!g.block;
  $('passBtn').disabled=g.over||!g.stack.length||g.priority!==me;
+ updateAutoPassToggleButtons();
  $('summonerBtn').disabled=g.over||g.turn!==me||g.phase!=='MAIN'||g.drawPending>0||!!g.effectDraw||g.stack.length>0||!!g.block;
  $('surrenderBtn').disabled=g.over;
  if($('surrenderConfirm')&&g.over)$('surrenderConfirm').classList.add('hidden');
@@ -198,7 +216,7 @@ function renderMatchEnd(g,me){
  }
  if(!resultIntroDone){box.classList.add('hidden');return;}
  box.classList.remove('hidden');
- if(!matchEndError&&serverVersion&&serverVersion!=='確認不可'&&!/^alpha2-v(?:3[5-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion))matchEndError=`Cloudflareのサーバーは ${serverVersion} です。最新v40へ更新してください（再戦・退出にはサーバー側の更新も必要です）。`;
+ if(!matchEndError&&serverVersion&&serverVersion!=='確認不可'&&!/^alpha2-v(?:3[5-9]|[4-9][0-9])(?:$|\b)/.test(serverVersion))matchEndError=`Cloudflareのサーバーは ${serverVersion} です。最新v43へ更新してください（再戦・退出にはサーバー側の更新も必要です）。`;
  result.textContent=g.winner==null?'引き分け':g.winner===me?'勝利！':'敗北';
  details.textContent=g.winner==null?'引き分けで対戦が終了しました。':g.winner===me?'対戦に勝利しました。':'対戦に敗北しました。';
  const r=view.rematch||{},own=!!r.accepted?.[me],op=!!r.accepted?.[1-me];
@@ -225,7 +243,7 @@ function backToMatching(){
   body:JSON.stringify({token:s.token}),keepalive:true
  }).then(async r=>{const body=await r.json().catch(()=>({}));if(!r.ok)throw Error(body.error||`HTTP ${r.status}`);return body;})
  .then(()=>{if(!session)status('マッチングに戻りました。ルームから退出しました。');})
- .catch(e=>{if(!session)status('マッチングには戻りましたが、サーバーへの退出通知は未完了です。Cloudflareをv40に更新してください。 ('+e.message+')',true);});
+ .catch(e=>{if(!session)status('マッチングには戻りましたが、サーバーへの退出通知は未完了です。Cloudflareをv43に更新してください。 ('+e.message+')',true);});
 }
 $('rematchBtn').onclick=()=>{
  if(!view?.game?.over||view.rematch?.closed)return;
@@ -313,7 +331,7 @@ function summonAbility(){const g=view?.game;if(!g||g.over)return;const me=view.s
  if((d.summonerAbilityCost||0)>1&&!(g.players[me].mana||[]).length){status('追加マナが1つ必要です。別の流脈をタップしてから発動してください。',true);return;}
  const opts=choices(key,me);if(opts===null){act('summoner');return;}if(!opts.length){status('召喚士能力の対象がいません',true);return;}doDialog('召喚士《'+c.name+'》',`${colorWord(d.color)}の流脈≋1をコストとしてタップします。`,opts.map(readable),1,1,x=>act('summoner',{target:x[0]}));}
 function promptChoice(choice){const opts=choice.options.map(x=>({id:x.id,label:x.name}));const endTrigger=choice.type==='endTurnSummoner';doDialog(endTrigger?'召喚士の誘発効果':choice.type==='reorderTop3'?'山札の上からの順番を指定':'カードを選択',endTrigger?'ターン終了時の能力です。コストを支払って発動するか選んでください。':choice.type==='reorderTop3'?'1→2→3の順にカードを選んでください。番号1が山札の一番上です。':'選択順は1、2、3…の数字で表示します。',opts,choice.min,choice.max,ids=>attempt({type:'choose',ids}));pending.forced=true;$('dialogCancel').disabled=true;}
-$('noBlockBtn').onclick=()=>act('block');$('drawBtn').onclick=()=>act('draw');$('battleBtn').onclick=()=>act('phase',{to:'BATTLE'});$('endBtn').onclick=()=>act('end_turn');$('passBtn').onclick=()=>act('pass');$('summonerBtn').onclick=summonAbility;
+$('noBlockBtn').onclick=()=>act('block');$('drawBtn').onclick=()=>act('draw');$('battleBtn').onclick=()=>act('phase',{to:'BATTLE'});$('endBtn').onclick=()=>act('end_turn');$('passBtn').onclick=()=>act('pass');$('summonerBtn').onclick=summonAbility;document.querySelectorAll('[data-auto-pass-toggle]').forEach(btn=>btn.addEventListener('click',toggleAutoPassSetting));updateAutoPassToggleButtons();
 $('surrenderBtn').onclick=()=>{const modal=$('surrenderConfirm');if(!modal||!view?.game||view.game.over)return;modal.classList.remove('hidden');};
 $('surrenderYes').onclick=()=>{$('surrenderConfirm').classList.add('hidden');};
 $('surrenderNo').onclick=()=>{$('surrenderConfirm').classList.add('hidden');attempt({type:'surrender'});};

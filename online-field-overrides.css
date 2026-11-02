@@ -279,3 +279,11 @@ body.online-active:not(.hands-compact) #duelView .handbar .hand::-webkit-scrollb
  #duelView .handbar{bottom:48px!important;height:100px!important;width:74%!important}
  body.online-active:not(.hands-compact) #duelView .handbar .hand .card{flex:0 0 56px!important;width:56px!important;height:76px!important;min-width:56px!important}
 }
+
+
+/* v43: automatic PASS switch */
+#duelView .auto-pass-toggle{background:#245b50!important;border:1px solid #79d2b7!important;color:#f3fff9!important;font-weight:900!important;white-space:nowrap}
+#duelView .auto-pass-toggle[aria-pressed="false"]{background:#45474d!important;border-color:#9aa0aa!important;color:#f0f1f4!important}
+#duelView .desktop-actions .auto-pass-toggle{min-width:96px}
+#duelView .mobile-actions .auto-pass-toggle{font-size:7px!important;line-height:1!important;padding:4px 1px!important;overflow-wrap:anywhere}
+#duelView .side .actions .auto-pass-toggle{width:100%;min-height:34px}

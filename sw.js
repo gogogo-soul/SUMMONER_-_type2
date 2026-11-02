@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v41-haste-solo-parity-20261029";
+const CACHE_NAME = "summoner-pwa-v43-smart-autopass-toggle-20261102";
 const CORE_ASSETS = [
   "./",
   "./index.html",

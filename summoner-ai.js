@@ -1,5 +1,5 @@
 /*
- * SUMMONER Solo AI v1.1
+ * SUMMONER Solo AI v1.2
  * Free, browser-local AI. No API key, external service, or paid model required.
  * Planning: beam-search over the AI's visible hand/resources + tactical minimax
  * for attacks/blocks. Hidden opponent hand/deck contents are never read.
@@ -944,7 +944,11 @@
       const c=chooseLandDrop(g);
       if(c){const i=p.hand.indexOf(c);a.playLand(i,c.t!=='land','cpu');return true;}
     }
-    if(maybeUseSummonerAbility(g))return true;
+
+    // カードの使用を先に計画する。旧処理では召喚士能力を毎回先に発動し、
+    // 能力用に同色流脈をタップし続けて通常カードを使うマナが残らないことがあった。
+    // まず盤面・手札の評価に基づく通常カードを使用し、使えるカードがなくなった
+    // 段階で、残った流脈を使って召喚士能力を発動する。
     const plan=searchBestFirstPlay(g);
     if(plan){
       const c=p.hand.find(x=>x.id===plan.id);
@@ -962,6 +966,9 @@
         return true;
       }
     }
+
+    // 有効な通常カードがない場合、または追加のリソースが残っている場合に能力を使う。
+    if(maybeUseSummonerAbility(g))return true;
     if(g.phase==='MAIN PHASE'){
       el('battleBtn')?.click();
       return true;

@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v45-1-solo-ai-fixes-20261103";
+const CACHE_NAME = "summoner-pwa-v45-2-ai-card-priority-20261103";
 const CORE_ASSETS = [
   "./",
   "./index.html",

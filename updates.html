@@ -1,1 +1,29 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SUMMONER - 更新内容</title><style>body{font-family:system-ui,sans-serif;background:#0b0e13;color:#eee;margin:0;padding:40px 20px;text-align:center}a{color:#bde0ff}p{color:#aab5c6}</style></head><body><h1>SUMMONER — 更新内容</h1><p>現在、更新履歴は掲載していません。</p><a href="index.html">タイトルに戻る</a></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SUMMONER - 更新内容</title>
+<style>
+:root{color-scheme:dark}body{font-family:system-ui,sans-serif;background:#0b0e13;color:#eee;margin:0;padding:32px 18px}main{max-width:760px;margin:auto}h1{font-size:25px;margin:0 0 8px}h2{font-size:20px;margin:0 0 12px;color:#bde0ff}.sub{color:#9eacbd;font-size:13px;margin:0 0 24px}.update{background:#151b24;border:1px solid #354252;border-radius:12px;padding:20px;margin:18px 0}.date{font-size:12px;color:#8ea4bb;margin-bottom:8px}li{margin:8px 0;line-height:1.6}.note{color:#aab5c6;font-size:12px;line-height:1.7;margin-top:14px}a{display:inline-block;color:#bde0ff;margin-top:18px}
+</style>
+</head>
+<body><main>
+<h1>SUMMONER — 更新内容</h1>
+<p class="sub">SUMMONER-βversion の更新履歴</p>
+<section class="update">
+<div class="date">2026-11-03 / v45</div>
+<h2>1人回しにAI対戦を追加</h2>
+<ul>
+<li>デッキ選択画面でPLAYER 2をAIに操作させる設定を追加。初期設定はON。従来の2人操作に戻すこともできます。</li>
+<li>AIの強さを「標準／強い／最強」から選択可能。初期設定は「強い」です。</li>
+<li>カードの使用順を先読みし、盤面・手札・マナ・ライフ・カード効果を評価して行動します。</li>
+<li>攻撃時は相手のブロックを予測し、ブロック時はPower・SP・炸裂・LP被害を比較して判断します。</li>
+<li>カード効果の対象選択、カード検索、手札整理、召喚士能力、ターン終了時の誘発、ドローに対応。</li>
+<li>AIはブラウザ内で動作。外部API・APIキー・有料サービスは不要です。</li>
+<li>AIは相手の手札・山札の中身を参照せず、公開情報と手札枚数のみを使用します。</li>
+</ul>
+<p class="note">※AIは学習済みニューラルネットワークではなく、SUMMONER専用の評価関数・ビーム探索・攻防評価を組み合わせた探索型AIです。「最強」は探索幅と先読み深度を増やします。</p>
+</section>
+<a href="index.html">タイトルに戻る</a>
+</main></body></html>

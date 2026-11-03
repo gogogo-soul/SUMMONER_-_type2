@@ -1,4 +1,4 @@
-const CACHE_NAME = "summoner-pwa-v43-smart-autopass-toggle-20261102";
+const CACHE_NAME = "summoner-pwa-v45-solo-ai-20261103";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -15,6 +15,7 @@ const CORE_ASSETS = [
   "./SUMMONER_Rulebook_Beta.pdf",
   "./SUMMONER_Rulebook_Beta_v40_TextFixed_20261026.pdf",
   "./cards.js",
+  "./summoner-ai.js",
   "./starter-decks.js",
   "./deck-reset-v30.js",
   "./firebase-config.js",

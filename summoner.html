@@ -233,6 +233,14 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
 .first-player-choice{margin-top:14px;background:#10151c;border:1px solid #303946;border-radius:10px;padding:14px}
 .first-player-choice label{display:block;font-size:13px;font-weight:900;margin-bottom:8px}
 .first-player-choice select{width:100%;background:#1a202c;border:1px solid #46505e;color:#fff;border-radius:7px;padding:9px}
+.ai-settings{margin-top:14px;background:linear-gradient(135deg,#122131,#10151c);border:1px solid #386183;border-radius:10px;padding:14px}
+.ai-settings-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ai-settings label{font-size:13px;font-weight:800}
+.ai-settings input[type=checkbox]{width:18px;height:18px;vertical-align:middle;margin-right:7px;accent-color:#55a9e8}
+.ai-settings select{min-width:120px;background:#1a202c;border:1px solid #46505e;color:#fff;border-radius:7px;padding:8px}
+.ai-settings-note{font-size:11px;line-height:1.6;color:#9fb0c2;margin:8px 0 0}
+.ai-status{display:inline-flex;align-items:center;margin-left:8px;padding:3px 7px;border-radius:999px;border:1px solid #4b9ed2;background:#15334a;color:#a9dcff;font-size:9px;font-weight:900;letter-spacing:.05em;vertical-align:middle}
+.ai-status[hidden]{display:none}
 
 .stack-box{
   background:#0d1117;border:1px solid #303946;border-radius:8px;padding:7px;
@@ -412,7 +420,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   .deck-setup-box{margin-top:20px;padding:16px}
   .deck-setup-title{font-size:20px}
   .deck-choice-grid{grid-template-columns:1fr}
-  .deck-choice select,.first-player-choice select,.start-battle-btn{min-height:44px}
+  .deck-choice select,.first-player-choice select,.ai-settings select,.start-battle-btn{min-height:44px}
 }
 
 @media(max-width:900px) and (max-height:520px){
@@ -911,7 +919,7 @@ body.effect-peek-mode .hand .card,body.effect-peek-mode .opponent-hand .card{cur
   .deck-setup-box{margin-top:20px;padding:16px}
   .deck-setup-title{font-size:20px}
   .deck-choice-grid{grid-template-columns:1fr}
-  .deck-choice select,.first-player-choice select,.start-battle-btn{min-height:44px}
+  .deck-choice select,.first-player-choice select,.ai-settings select,.start-battle-btn{min-height:44px}
 }
 
 /* portrait phones need more overlap so names/stats stay visible while the hand still fits */
@@ -1126,7 +1134,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 <section class="table">
   <div class="half cpu-half">
     <div class="player-head">
-      <span class="who">PLAYER 2</span>
+      <span class="who" id="cpuPlayerName">PLAYER 2 / AI</span><span class="ai-status" id="cpuAiStatus" hidden>AI THINKING</span>
       <span class="hp" id="cpuHp" title="攻撃時にここをタップ">20 LP</span>
       <div class="dmg-pop" id="cpuDmgPop"></div>
     </div>
@@ -1145,7 +1153,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
         <div class="resource-zone" style="height:42px"><b>HAND</b><span id="cpuHand" style="font-size:14px;margin-top:0">0</span></div>
       </div>
     </div>
-    <div class="opponent-hand-wrap"><div class="opponent-hand-title">PLAYER 2 HAND <span id="cpuHandCount">7 cards</span></div><div class="opponent-hand" id="cpuHandCards" title="手札をタップして拡大"></div></div>
+    <div class="opponent-hand-wrap"><div class="opponent-hand-title"><span id="cpuHandTitle">AI HAND </span><span id="cpuHandCount">7 cards</span></div><div class="opponent-hand" id="cpuHandCards" title="手札をタップして拡大"></div></div>
   </div>
 
   <div class="centerbar"><span class="turn-pill" id="turnPill">PLAYER 1 TURN</span><span class="phase" id="phase">MAIN PHASE</span></div>
@@ -1222,7 +1230,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 
 <div id="soloCardPopup" class="online-card-popup solo-card-popup" hidden></div>
 <div id="soloSurrenderConfirm" class="solo-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="soloSurrenderTitle"><div class="solo-confirm-box"><h2 id="soloSurrenderTitle">本当に投了しますか？</h2><p>現在のターンのプレイヤーが投了します。</p><div><button type="button" onclick="hideSoloSurrender()">YES：バトルに戻る</button><button type="button" class="online-surrender" onclick="confirmSoloSurrender()">NO：投了して敗北</button></div></div></div>
-<div class="solo-outcome" id="soloOutcome" hidden role="status" aria-live="assertive"><strong id="soloOutcomeText">WIN</strong><span id="soloOutcomeDetails">試合終了</span><button type="button" id="soloRematchBtn" onclick="openDeckSetup()">続けて遊ぶ（新しいゲーム）</button><a href="index.html" class="solo-back-title">タイトルへ戻る</a></div>
+<div class="solo-outcome online-outcome" id="soloOutcome" hidden role="status" aria-live="assertive"><strong id="soloOutcomeText">WIN</strong><span id="soloOutcomeDetails">試合終了</span><button type="button" id="soloRematchBtn" onclick="openDeckSetup()">続けて遊ぶ（新しいゲーム）</button><a href="index.html" class="solo-back-title">タイトルへ戻る</a></div>
 <div class="deck-setup" id="deckSetup">
   <div class="deck-setup-box">
     <div class="deck-setup-title">SUMMONER — DECK SELECT</div>
@@ -1235,11 +1243,18 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
         <div class="deck-info" id="p1DeckInfo"></div>
       </div>
       <div class="deck-choice">
-        <h3>PLAYER 2 使用デッキ</h3>
+        <h3 id="p2DeckTitle">AIが使用するデッキ</h3>
         <select id="p2DeckSelect" onchange="updateDeckSelectInfo()"></select>
         <div class="summoner-choice-label">召喚士は構築時に専用枠へ1種類1枚</div>
         <div class="deck-info" id="p2DeckInfo"></div>
       </div>
+    </div>
+    <div class="ai-settings">
+      <div class="ai-settings-head">
+        <label><input id="aiOpponentEnabled" type="checkbox" checked> PLAYER 2をAIが操作する</label>
+        <label for="aiDifficulty">AIの強さ <select id="aiDifficulty"><option value="normal">標準</option><option value="strong" selected>強い</option><option value="expert">最強</option></select></label>
+      </div>
+      <p class="ai-settings-note">AIはブラウザ内で動作します。外部API・利用料金は不要です。相手の手札と山札の中身は参照せず、公開情報から判断します。</p>
     </div>
     <div class="first-player-choice">
       <label for="firstPlayerSelect">先攻プレイヤー</label>
@@ -1454,7 +1469,7 @@ function updateDeckSelectInfo(){
   }
 }
 function startBattleWithSelectedDecks(){
-  const soloOutcome=el('soloOutcome');if(soloOutcome)soloOutcome.hidden=true;
+  const soloOutcome=el('soloOutcome');if(soloOutcome){soloOutcome.hidden=true;soloOutcome.classList.remove('outcome-win','outcome-lose','outcome-draw');}
   const soloConfirm=el('soloSurrenderConfirm');if(soloConfirm)soloConfirm.hidden=true;
   const soloPopup=el('soloCardPopup');if(soloPopup)soloPopup.hidden=true;
   const p1=selectedDeckNames("p1DeckSelect");
@@ -1464,6 +1479,7 @@ function startBattleWithSelectedDecks(){
   const e2=validateBattleDeck(p2,"PLAYER 2");
   if(e1||e2){alert([e1,e2].filter(Boolean).join("\n")+"\nデッキ構築で通常50枚＋召喚士1枚に調整してください。");return;}
   const firstSide=el("firstPlayerSelect")?.value==="cpu"?"cpu":"you";
+  window.SUMMONER_AI?.configure({enabled:el("aiOpponentEnabled")?.checked!==false,level:el("aiDifficulty")?.value||"strong"});
   el("deckSetup").classList.add("hidden");
   init(p1,p2,firstSide);
 }
@@ -1481,7 +1497,7 @@ function init(p1Names=null,p2Names=null,firstSide="you"){
     cpu:{hp:20,deck:buildDeckFromNames(p2,"cpu"),hand:[],field:[],lands:[],summoners:[],grave:[],land:false,manaPool:[],drawPending:0,drawEffect:null,afterDraw:null,
       counterPlay:0,counterAttack:0,damagePrevent:0,returnAllOnDeath:false,soulNever:false,teamUnblockable:false,teamDeathtouch:false,attacksThisTurn:0,playedNonSummonerThisTurn:false},
     turn:firstSide,turnNo:1,phase:"MAIN PHASE",preparing:false,selected:null,uiSelected:null,action:null,over:false,blockPending:null,stack:[],priority:firstSide,passCount:0,resolvingStack:false,pendingPlayDraft:null,
-    pendingSummonerTriggers:[],processingSummonerTrigger:false,triggerTargetPending:false,endingTurnSide:null
+    pendingSummonerTriggers:[],processingSummonerTrigger:false,triggerTargetPending:false,currentSummonerTriggerOwner:null,resolvingEntryOwner:null,resolvingEntry:null,endingTurnSide:null,outcomeShown:false,winner:null
   };
   el("log").innerHTML="";
   for(const [side,deckList] of [["you",p1],["cpu",p2]]){
@@ -1498,6 +1514,7 @@ function init(p1Names=null,p2Names=null,firstSide="you"){
   begin(G.turn,true);
   log(`ゲーム開始。先攻：${sideLabel(G.turn)}`);
   render();
+  window.SUMMONER_AI?.startGame();
 }
 function begin(w,first=false){
   const p=G[w]; p.land=false; p.mainActionStarted=false; p.manaPool=[]; p.drawPending=first?0:1;p.attacksThisTurn=0;p.playedNonSummonerThisTurn=false;
@@ -1784,6 +1801,29 @@ function canPaySummonerAbilityCost(c,owner){
   const extra=Math.max(0,(Number(c.summonerAbilityCost)||0)-1);
   return !!untappedSameColorLand(c,owner) && canPayGenericMana(G[owner],extra);
 }
+// End-phase abilities use the same payment rule as online play: after reserving
+// one untapped same-color flow vein, additional generic cost may come from the
+// existing mana pool or from other untapped flow veins automatically.
+function canPayTurnEndSummonerAbilityCost(c,owner){
+  const colored=untappedSameColorLand(c,owner);
+  if(!colored)return false;
+  const extra=Math.max(0,(Number(c.summonerAbilityCost)||0)-1);
+  const poolCount=(G[owner].manaPool||[]).length;
+  const otherUntapped=G[owner].lands.filter(x=>x!==colored&&!x.tapped).length;
+  return poolCount+otherUntapped>=extra;
+}
+function payTurnEndSummonerAbilityCost(c,owner){
+  if(!canPayTurnEndSummonerAbilityCost(c,owner))return false;
+  const colored=untappedSameColorLand(c,owner);
+  const extra=Math.max(0,(Number(c.summonerAbilityCost)||0)-1);
+  const fromPool=Math.min(extra,(G[owner].manaPool||[]).length);
+  if(fromPool&&!payGenericMana(G[owner],fromPool))return false;
+  const extraLands=G[owner].lands.filter(x=>x!==colored&&!x.tapped).slice(0,extra-fromPool);
+  if(extraLands.length!==extra-fromPool)return false;
+  for(const land of [colored,...extraLands]){land.tapped=true;land.usedThisTurn=true;land.tapLocked=true;}
+  log(sideLabel(owner)+"が《"+c.name+"》のターン終了時能力コストとして流脈を"+(1+extra)+"枚タップしました。");
+  return true;
+}
 function paySummonerAbilityCost(c,owner){
   if(!canPaySummonerAbilityCost(c,owner))return false;
   const land=untappedSameColorLand(c,owner);
@@ -1835,14 +1875,17 @@ function activateSummonerAbility(c,owner,context=null,fromTrigger=false){
   if(!fromTrigger&&(G.turn!==owner||G.phase!=="MAIN PHASE")){toast("召喚士の起動効果は自分のメインフェイズにのみ発動できます");return false;}
   if(G.resolvingStack){if(!fromTrigger)toast("スタック解決中は新しい能力を積めません");return false;}
   if(G.stack.length&&G.priority!==owner){if(!fromTrigger)toast(sideLabel(owner)+"は現在優先権を持っていません");return false;}
-  if(!canPaySummonerAbilityCost(c,owner)){
+  const turnEndTrigger=!!(fromTrigger&&context?.type==="turnEnd");
+  const canPay=turnEndTrigger?canPayTurnEndSummonerAbilityCost(c,owner):canPaySummonerAbilityCost(c,owner);
+  if(!canPay){
     if(!fromTrigger)toast("召喚士能力（"+summonerAbilityCostLabel(c)+"）には、同色の未タップ流脈"+((Number(c.summonerAbilityCost)||0)>1?"と追加のマナ1つ":"")+"が必要です");
     return false;
   }
 
   const commit=(selection=null)=>{
     if(!G[owner].summoners.includes(c))return false;
-    if(!paySummonerAbilityCost(c,owner)){
+    const paid=turnEndTrigger?payTurnEndSummonerAbilityCost(c,owner):paySummonerAbilityCost(c,owner);
+    if(!paid){
       toast("対象選択中に能力コストの状態が変わったため発動できません");return false;
     }
     pushSummonerAbilityToStack(c,owner,selection,context);return true;
@@ -1966,7 +2009,8 @@ function resolveSummonerAbility(entry){
 }
 function isSummonerTriggerValid(source,owner,context){
   if(!source||!G[owner].summoners.includes(source)||source.t!=="summoner")return false;
-  if(!canPaySummonerAbilityCost(source,owner))return false;
+  const canPay=context?.type==="turnEnd"?canPayTurnEndSummonerAbilityCost(source,owner):canPaySummonerAbilityCost(source,owner);
+  if(!canPay)return false;
   if(context?.type==="summonRace"){
     if(source.summonerTrigger!=="summonRace")return false;
     if(!context.monster||!String(context.monster.race||"").includes(source.summonerTriggerRace||""))return false;
@@ -2001,14 +2045,14 @@ function processPendingSummonerTriggers(){
   while(G.pendingSummonerTriggers.length){
     const t=G.pendingSummonerTriggers.shift(),source=G[t.owner]?.summoners?.find(x=>x.id===t.sourceId);
     if(!isSummonerTriggerValid(source,t.owner,t.context))continue;
-    G.processingSummonerTrigger=true;
+    G.processingSummonerTrigger=true;G.currentSummonerTriggerOwner=t.owner;
     const box=el("targets");box.innerHTML="";el("modalTitle").textContent="《"+source.name+"》の能力を発動しますか？";
     addTarget("発動する",()=>{
-      el("modal").style.display="none";G.processingSummonerTrigger=false;
+      el("modal").style.display="none";G.processingSummonerTrigger=false;G.currentSummonerTriggerOwner=null;
       const ok=activateSummonerAbility(source,t.owner,t.context,true);
       if(!ok)setTimeout(processPendingSummonerTriggers,0);
     });
-    addTarget("発動しない",()=>{el("modal").style.display="none";G.processingSummonerTrigger=false;setTimeout(processPendingSummonerTriggers,0);});
+    addTarget("発動しない",()=>{el("modal").style.display="none";G.processingSummonerTrigger=false;G.currentSummonerTriggerOwner=null;setTimeout(processPendingSummonerTriggers,0);});
     el("modal").style.display="flex";syncModalCancelButton();return;
   }
   if(G.endingTurnSide)finalizeTurnEnd();
@@ -2391,6 +2435,8 @@ function counterStackEntry(entry,counterOwner){
   return true;
 }
 function finishStackResolution(){
+  window.SUMMONER_AI?.clearContext();
+  G.resolvingEntryOwner=null;G.resolvingEntry=null;
   G.resolvingStack=false;
   G.priority=G.turn;
   G.passCount=0;
@@ -2412,6 +2458,7 @@ function resolveStackTop(){
   if(!G.resolvingStack)return;
   if(!G.stack.length){finishStackResolution();return;}
   const entry=G.stack.pop(),c=entry.card,w=entry.owner;
+  G.resolvingEntryOwner=w;G.resolvingEntry=entry;
   if(entry.kind==="summonerAbility"){
     log("スタック解決：《"+entry.sourceName+"》の召喚士能力");
     resolveSummonerAbility(entry);return;
@@ -2983,6 +3030,7 @@ function selectTarget(c){
     if(!attackAllowedByTrap(a,w))return;
     tapAsUsed(a);
     if(a.effectKey==="hasteBurn3")dealDamage("face",3,a.name,opp);
+    if(G.over){G.selected=null;G.blockPending=null;render();return;}
     const blockers=G[opp].field.filter(x=>canBlock(a,x,w,opp));
     if(!blockers.length){resolveMonsterCombat(a,c,w,opp);G.selected=null;render();return;}
     G.blockPending={attacker:a.id,attackerOwner:w,defender:opp,attackTarget:c.id};
@@ -3007,6 +3055,7 @@ function continueDirectAttack(a,w,opp){
   if(!G[w].field.includes(a)||G.over)return;
   tapAsUsed(a);
   if(a.effectKey==="hasteBurn3")dealDamage("face",3,a.name,opp);
+  if(G.over){G.selected=null;G.blockPending=null;render();return;}
   const blockers=G[opp].field.filter(x=>canBlock(a,x,w,opp));
   if(!blockers.length){resolveDirectAttack(a,w,opp);return;}
   G.blockPending={attacker:a.id,attackerOwner:w,defender:opp};log(sideLabel(opp)+"は《"+a.name+"》の攻撃をブロックするか選択します。");toast(sideLabel(opp)+"はアンタップ状態のモンスターを選択してブロックできます。");render();
@@ -3195,15 +3244,21 @@ function confirmSoloSurrender(){
 }
 function check(){
   if(!G)return;
-  if(G.you.hp<=0){G.you.hp=0;G.over=true;}
-  if(G.cpu.hp<=0){G.cpu.hp=0;G.over=true;}
-  const overlay=el('soloOutcome');if(G.over){
-    if(overlay&&overlay.hidden){
-      const winner=G.you.hp>0?'PLAYER 1':G.cpu.hp>0?'PLAYER 2':'DRAW';
-      el('soloOutcomeText').textContent=winner==='DRAW'?'DRAW':'WIN';
-      el('soloOutcomeDetails').textContent=winner==='DRAW'?'引き分け':winner+' の勝利';
-      overlay.hidden=false;
-    }
+  const p1Dead=G.you.hp<=0,p2Dead=G.cpu.hp<=0;
+  if(p1Dead)G.you.hp=0;
+  if(p2Dead)G.cpu.hp=0;
+  if(p1Dead||p2Dead)G.over=true;
+  const overlay=el('soloOutcome');
+  if(G.over&&overlay&&!G.outcomeShown){
+    G.outcomeShown=true;
+    const winner=p1Dead&&p2Dead?'DRAW':p1Dead?'PLAYER 2':'PLAYER 1';
+    G.winner=winner;
+    const kind=winner==='DRAW'?'draw':winner==='PLAYER 1'?'win':'lose';
+    overlay.classList.remove('outcome-win','outcome-lose','outcome-draw');
+    overlay.classList.add('outcome-'+kind);
+    el('soloOutcomeText').textContent=winner==='DRAW'?'DRAW':kind==='win'?'WIN':'LOSE';
+    el('soloOutcomeDetails').textContent=winner==='DRAW'?'引き分け':winner+' の勝利';
+    overlay.hidden=false;
   }
 }
 
@@ -3374,8 +3429,20 @@ restoreCustomFieldImage();
 
 fillDeckSelectors();
 
+window.SUMMONER_AI_BRIDGE={
+  getState:()=>G, getDB:()=>DB,
+  card, canAddToStack, canPayCost, canPayAllPlayCosts, canPayLpCost,
+  canPotentiallyPayHighSpeed, hasLegalHighSpeedTarget,
+  toggleLandMana, playLand, playCard, activateSummonerAbility, activateMonsterAbility,
+  requestEndTurn, playerDraw, passPriority, selectAttacker, selectTarget, declareDirectAttack,
+  chooseBlocker, noBlock, canAttackMonsterNow, forcedAttackTargets, forcedAttackers, mustPerformForcedAttack,
+  canBlock, attackPower, attackSP, cardHasHaste, targetOwnerOfCard, findById, blockingPowerBonus,
+  untappedSameColorLand, canPaySummonerAbilityCost, render, log, toast, el
+};
+
 </script>
 
+<script src="summoner-ai.js"></script>
 <script src="pwa.js"></script>
 
 </body>

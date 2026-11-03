@@ -285,9 +285,13 @@ body.solo-active #app .opponent-hand,body.solo-active #app .opponent-hand .card{
 body.solo-active #app .opponent-hand-wrap{pointer-events:auto!important}
 body.solo-active #app .card-controls button{cursor:pointer}
 body.solo-active #app .solo-card-popup{z-index:9200}
-body.solo-active #app .solo-outcome{position:fixed;inset:0;z-index:8700;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;color:#fff;background:radial-gradient(circle at center,#243750ef,#050a11f5 74%)}
+body.solo-active #app .solo-outcome{position:fixed;inset:0;z-index:8700;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;color:#fff;background:radial-gradient(circle at center,#243750ef,#050a11f5 74%);pointer-events:auto}
 body.solo-active #app .solo-outcome[hidden]{display:none!important}
-body.solo-active #app .solo-outcome strong{font:900 clamp(64px,17vw,180px)/1 system-ui,sans-serif;letter-spacing:.08em;text-shadow:0 0 30px #284867}
+body.solo-active #app .solo-outcome strong{font:900 clamp(84px,18vw,200px)/1 system-ui,sans-serif;letter-spacing:.1em;text-shadow:0 4px 20px #000b;animation:onlineOutcomeReveal 1.2s cubic-bezier(.2,1.4,.4,1) both}
+body.solo-active #app .solo-outcome span{font-size:18px;letter-spacing:.12em;opacity:.9}
+body.solo-active #app .solo-outcome.outcome-win strong{color:#f6d778;text-shadow:0 0 34px #d7a64a9c}
+body.solo-active #app .solo-outcome.outcome-lose strong{color:#ff7a89;text-shadow:0 0 34px #d83c559c}
+body.solo-active #app .solo-outcome.outcome-draw strong{color:#dce4ef}
 body.solo-active #app .solo-outcome button{font-weight:800;padding:11px 21px;background:#255981;color:#fff;border:1px solid #83a6c8;border-radius:9px}
 body.solo-active #app .card.monster.summon-sick::after{content:'Zz';position:absolute;right:3px;top:3px;background:#563bb9;color:#fff;font-size:10px;font-weight:900;padding:2px 3px;border-radius:4px;z-index:10;pointer-events:none}
 body.solo-active #app .card.land .art{writing-mode:horizontal-tb;transform:none;text-orientation:mixed;white-space:nowrap;direction:ltr}
@@ -311,3 +315,30 @@ body.solo-active #app .solo-confirm-box>div{display:flex;gap:9px;justify-content
 body.solo-active #app .solo-confirm-box button{border:1px solid #8a9bad;background:#25364a;color:#fff;border-radius:7px;padding:10px;font-size:12px;cursor:pointer}
 body.solo-active #app .solo-confirm-box .online-surrender{background:#b51c36;border-color:#ff728c}
 body.solo-active #app .solo-back-title{color:#b9def6;font-weight:800;font-size:13px;text-decoration:none}
+
+/* v45.1: Solo result and surrender overlays are siblings of #app, not its children. */
+body.solo-active .solo-outcome{position:fixed;inset:0;z-index:9800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(circle at center,#243750ef,#050a11f5 74%);pointer-events:auto;color:#fff}
+body.solo-active .solo-outcome[hidden]{display:none!important}
+body.solo-active .solo-outcome strong{font:900 clamp(84px,18vw,200px)/1 system-ui,sans-serif;letter-spacing:.1em;text-shadow:0 4px 20px #000b;animation:onlineOutcomeReveal 1.2s cubic-bezier(.2,1.4,.4,1) both}
+body.solo-active .solo-outcome span{font-size:18px;letter-spacing:.35em;opacity:.85}
+body.solo-active .solo-outcome.outcome-win strong{color:#f6d778;text-shadow:0 0 34px #d7a64a9c}
+body.solo-active .solo-outcome.outcome-lose strong{color:#ff7a89;text-shadow:0 0 34px #d83c559c}
+body.solo-active .solo-outcome.outcome-draw strong{color:#dce4ef}
+body.solo-active .solo-match-end{position:fixed;inset:0;z-index:9801;display:grid;place-items:center;padding:16px;background:#050a11ed;color:#fff}
+body.solo-active .solo-match-end[hidden]{display:none!important}
+body.solo-active .solo-match-end-card{width:min(520px,96vw);padding:28px 24px;background:linear-gradient(145deg,#192a40,#0d1725);border:1px solid #6d8aa8;border-radius:16px;box-shadow:0 22px 80px #000b;text-align:center}
+body.solo-active .solo-match-end-eyebrow{font-size:11px;font-weight:900;letter-spacing:.2em;color:#9fc8e8}
+body.solo-active .solo-match-end-card h2{margin:12px 0 8px;font-size:28px}
+body.solo-active .solo-match-end-card p{margin:0;color:#c4d1df;font-size:14px;line-height:1.7}
+body.solo-active .solo-match-end-actions{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap;margin-top:22px}
+body.solo-active .solo-match-end-actions button{font-weight:900;padding:11px 21px;background:#255981;color:#fff;border:1px solid #83a6c8;border-radius:9px;cursor:pointer}
+body.solo-active .solo-back-title{color:#b9def6;font-weight:800;font-size:13px;text-decoration:none}
+body.solo-active .solo-confirm{position:fixed;inset:0;z-index:9900;display:grid;place-items:center;background:#03070cba;padding:16px;color:#eef4ff}
+body.solo-active .solo-confirm[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){body.solo-active .solo-outcome strong{animation:none}}
+body.solo-active .solo-confirm-box{width:min(480px,96vw);background:#162438;border:1px solid #6c8aa5;border-radius:12px;padding:20px;box-shadow:0 20px 80px #0009;color:#eef4ff}
+body.solo-active .solo-confirm-box h2{margin:0 0 12px;font-size:19px}
+body.solo-active .solo-confirm-box p{margin:0 0 15px;font-size:13px;color:#c3cfdf}
+body.solo-active .solo-confirm-box>div{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+body.solo-active .solo-confirm-box button{border:1px solid #8a9bad;background:#25364a;color:#fff;border-radius:7px;padding:10px;font-size:12px;cursor:pointer}
+body.solo-active .solo-confirm-box .online-surrender{background:#b51c36;border-color:#ff728c}

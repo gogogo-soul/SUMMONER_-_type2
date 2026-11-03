@@ -1,5 +1,5 @@
 /*
- * SUMMONER Solo AI v1
+ * SUMMONER Solo AI v1.1
  * Free, browser-local AI. No API key, external service, or paid model required.
  * Planning: beam-search over the AI's visible hand/resources + tactical minimax
  * for attacks/blocks. Hidden opponent hand/deck contents are never read.
@@ -22,7 +22,10 @@
     busy: false,
     lastActionAt: 0,
     lastStateKey: '',
-    status: ''
+    status: '',
+    style: 'balanced',
+    recentCards: [],
+    opponentModel: {aggression:0,control:0,lastCpuHp:20,lastCpuField:0,lastYouGrave:0,lastAttacks:0}
   };
 
   const api = () => window.SUMMONER_AI_BRIDGE;
@@ -139,8 +142,11 @@
     if (k === 'auraAtk1') v += 0.7 + field.length * 0.3;
     if (k === 'untapOnKill') v += 0.55;
     if (k === 'returnOnDeath' || c.returnOnDeath) v += 0.55;
-    if (c.soulNever) v += 0.35;
-    if (c.indestructible) v += 0.45;
+    if (k === 'faceDownLandOnDeath' || c.soulNever) v += 0.42;
+    if (c.indestructible) v += 0.55;
+    if (k === 'untapSelfEnd') v += 0.65;
+    if (k === 'blockHpPlus2') v += 0.6;
+    if (k === 'tapOppOnSummon') v += 0.65;
     if (k === 'cannotAttack') v -= 0.55;
     if (k === 'cannotAttackFace') v -= 0.2;
     if (c.tapped) v -= 0.85;
@@ -156,9 +162,16 @@
     const opLandValue = s.landOpp * 0.72;
     const handThreat = s.oppHandCount * 0.22;
     const readyEnemy=s.fieldOpp.filter(x=>!x.tapped).length;
+    const readyMine=s.fieldMe.filter(x=>!x.tapped&&(!x.summon||x.haste)&&x.effectKey!=='cannotAttack').length;
+    const myPressure=s.fieldMe.reduce((n,c)=>n+(!c.tapped&&(!c.summon||c.haste)&&c.effectKey!=='cannotAttack'?(Number(c.sp)||0)*0.8:0),0);
+    const opPressure=s.fieldOpp.reduce((n,c)=>n+(!c.tapped&&(!c.summon||c.haste)&&c.effectKey!=='cannotAttack'?(Number(c.sp)||0)*0.8:0),0);
     const attackPressure=s.counterMe>0?Math.min(1,s.counterMe)*Math.min(3,readyEnemy)*1.15:0;
     const untapAttackBonus=s.canAttackUntapped?Math.min(3,readyEnemy)*0.75:0;
-    return (s.hpMe - s.hpOpp) * 1.55 + myBoard - opBoard + handValue - handThreat + myLandValue - opLandValue + s.mana.length * 0.12 + s.preventMe * 0.35 + attackPressure + untapAttackBonus;
+    const lethalBonus=s.hpOpp>0&&myPressure>=s.hpOpp?18:0;
+    const dangerPenalty=s.hpMe>0&&opPressure>=s.hpMe?20:0;
+    const survivalBonus=s.hpMe<=5?Math.max(0,6-s.hpMe)*0.9:0;
+    const boardControl=(readyMine-readyEnemy)*0.18;
+    return (s.hpMe - s.hpOpp) * 1.55 + myBoard - opBoard + handValue - handThreat + myLandValue - opLandValue + s.mana.length * 0.12 + s.preventMe * 0.35 + attackPressure + untapAttackBonus + myPressure*0.28 - opPressure*0.32 + lethalBonus - dangerPenalty + survivalBonus + boardControl;
   }
 
   function simPay(s, c) {
@@ -220,7 +233,7 @@
       if(x){simRemove(s.deck,x);s.hand.push(x);}
     }
     else if(k==='searchSpell'){
-      const x=simPick(s.deck.filter(x=>x.t==='spell'),null,(a)=>1+Math.max(0,a.c)*0.05);
+      const x=simPick(s.deck.filter(x=>x.t==='spell'),null,(a)=>cardHandValue(a));
       if(x){simRemove(s.deck,x);s.hand.push(x);}
     }
     else if(k==='search2Land')simAddLandFromDeck(s,2);
@@ -235,19 +248,19 @@
     else if(k==='hpMinus3AllEOT')simDebuffAll(s,3);
     else if(k==='discardRandomOpp')s.oppHandCount=Math.max(0,s.oppHandCount-1);
     else if(k==='graveToFaceDownLand'){
-      const x=simPick(s.grave.filter(x=>x.t==='monster'),null,(a)=>1+Math.max(0,a.power)/1000+Math.max(0,a.sp));
+      const x=simPick(s.grave.filter(x=>x.t==='monster'),null,(a)=>-cardHandValue(a));
       if(x){simRemove(s.grave,x);s.landMe++;}
     }
     else if(k==='handToFaceDownLand'){
-      const x=simPick(s.hand.filter(x=>x.t!=='summoner'&&x.t!=='land'),null,(a)=>1+Math.max(0,a.c)*0.2+Math.max(0,a.power)/1000+Math.max(0,a.sp));
+      const x=simPick(s.hand.filter(x=>x.t!=='summoner'&&x.t!=='land'),null,(a)=>-cardHandValue(a));
       if(x){simRemove(s.hand,x);s.landMe++;}
     }
     else if(k==='sacOwnOnSummon'){
-      const x=simPick(s.fieldMe.filter(x=>x!==s.fieldMe[s.fieldMe.length-1]),null,(a)=>boardValue(a,'cpu',s.fieldMe));
+      const x=simPick(s.fieldMe.filter(x=>x!==s.fieldMe[s.fieldMe.length-1]),null,(a)=>-boardValue(a,'cpu',s.fieldMe));
       if(x){simRemove(s.fieldMe,x);s.grave.push(x);}
     }
     else if(k==='recoverUpTo2'){
-      for(let j=0;j<2;j++){const x=simPick(s.grave.filter(x=>x.t==='monster'),null,(a)=>boardValue(a,'cpu',s.fieldMe));if(!x)break;simRemove(s.grave,x);s.hand.push(x);}
+      for(let j=0;j<2;j++){const x=simPick(s.grave.filter(x=>x.t==='monster'),null,(a)=>cardHandValue(a));if(!x)break;simRemove(s.grave,x);s.hand.push(x);}
     }
     else if(k==='hpMinus3AllEOT')simDebuffAll(s,3);
     else if(k==='freeSummon3'&&depth<2){
@@ -288,7 +301,8 @@
       const x=simPick(enemy);if(x){simRemove(enemy,x);s.landOpp++;}
     }
     else if(k==='bounceAny'){
-      const x=simPick(enemy);if(x){simRemove(enemy,x);s.oppHandCount++;}
+      const x=enemy.length?simPick(enemy):simPick(own,null,(a)=>-boardValue(a,'cpu',own));
+      if(x){if(enemy.includes(x)){simRemove(enemy,x);s.oppHandCount++;}else{simRemove(own,x);s.hand.push(x);}}
     }
     else if(k==='bounceHp3'){
       const gone=enemy.filter(x=>(Number(x.power)||0)<=3000);s.oppHandCount+=gone.length;s.fieldOpp=enemy.filter(x=>(Number(x.power)||0)>3000);
@@ -327,10 +341,22 @@
       enemy.slice().sort((a,b)=>boardValue(b,'you',enemy)-boardValue(a,'you',enemy)).slice(0,2).forEach(x=>x.tapped=true);
     }
     else if(k==='hpMinus2AllEOT')simDebuffAll(s,2);
+    else if(k==='hpMinus3AllEOT')simDebuffAll(s,3);
     else if(k==='hpMinus3UntappedOpp'){
       const x=simPick(enemy.filter(x=>!x.tapped));if(x){x.power-=3000;if(x.power<=0)simRemove(enemy,x);}
     }
     else if(k==='hpMinus1EOT')simDebuff(s,1);
+    else if(k==='ownToFaceDownLand'){
+      const x=simPick(own,null,(a)=>-boardValue(a,'cpu',own));if(x){simRemove(own,x);s.landMe++;}
+    }
+    else if(k==='graveToFaceDownLand'){
+      const x=simPick(s.grave.filter(x=>x.t==='monster'),null,(a)=>-cardHandValue(a));if(x){simRemove(s.grave,x);s.landMe++;}
+    }
+    else if(k==='handToFaceDownLand'){
+      const x=simPick(s.hand.filter(x=>x.t!=='summoner'&&x.t!=='land'),null,(a)=>-cardHandValue(a));if(x){simRemove(s.hand,x);s.landMe++;}
+    }
+    else if(k==='searchLand')simAddLandFromDeck(s,1);
+    else if(k==='counterAttack')s.counterMe+=1;
     else if(k==='destroyAll'){
       s.grave.push(...own,...enemy);s.fieldMe=[];s.fieldOpp=[];
     }
@@ -349,7 +375,7 @@
       weak.forEach(x=>{simRemove(own,x);s.grave.push(x);});s.hpMe=Math.min(20,s.hpMe+weak.length*2);
     }
     else if(k==='destroyOneEach'){
-      const mine=simPick(own,null,(a)=>boardValue(a,'cpu',own));const theirs=simPick(enemy);
+      const mine=simPick(own,null,(a)=>-boardValue(a,'cpu',own));const theirs=simPick(enemy);
       if(mine){simRemove(own,mine);s.grave.push(mine);}if(theirs)simRemove(enemy,theirs);
     }
     else if(k==='heal2')s.hpMe=Math.min(20,s.hpMe+2);
@@ -363,9 +389,95 @@
 
   function cardHandValue(c) {
     if(!c)return 0;
-    if(c.t==='monster')return 1.3+(Number(c.power)||0)/1000*0.85+(Number(c.sp)||0)*1.55+((c.effectKey==='draw1'||c.effectKey==='draw2'||c.effectKey==='draw3')?1.4:0)-Math.max(0,c.c)*0.25;
-    const map={face4:4.2,face2:2.4,destroyOppMonster:4.5,damageAll3:4,bounceAllOpp:4.3,draw3:4.5,draw2:3,draw1:1.8,searchMonster:3,searchSpell:2.6,search2Land:3.2,searchLand:1.8,tapAllOpp:3,teamAtk3:2.5,teamUnblockable:2.6,freeSummon3:3.5,chooseBurn3:3.2,bounceAny:3.1,destroyAll:2.8};
-    return (map[c.effectKey]||1.3)-Math.max(0,c.c)*0.2;
+    if(c.t==='monster'){
+      const k=c.effectKey||'';
+      const ability=(k==='draw1'||k==='draw2'||k==='searchLand'||k==='searchSpell'||k==='recoverUpTo2'?1.2:0)+(k==='haste'||k==='hasteBurn3'||k==='unblockable'?0.8:0)+(k==='destroyOppMonster'||k==='damageAll3'||k==='tapAllOpp'||k==='bounceAllOpp'?1.3:0);
+      return 1.3+(Number(c.power)||0)/1000*0.85+(Number(c.sp)||0)*1.55+ability-Math.max(0,c.c)*0.25;
+    }
+    const map={
+      face4:4.8,face2:2.8,destroyOppMonster:5.1,damageAll3:4.8,bounceAllOpp:4.6,bounceAll:3.9,bounceHp3:4.2,bounceAny:3.7,
+      draw3:4.8,draw2:3.6,draw1:2.1,draw5Bottom4:4.1,searchMonster:3.7,searchSpell:3.1,search2Land:3.6,searchLand:2.2,
+      tapAllOpp:3.8,tapUpTo2:3.4,teamAtk3:3.1,hpPlus3Team:3.2,teamUnblockable:3.5,teamDeathtouch:3.7,freeSummon3:4.3,
+      chooseBurn3:4.1,damageOpp2:3.3,oppToFaceDownLand:4.1,destroyOppLand:2.2,counterPlay:3.5,counterAttack:3.1,
+      heal2:1.8,heal4:2.7,prevent3:2.4,indestructibleOnce:2.8,returnAllOnDeath:2.5,soulNever:2.5,soulDrain:2.6,
+      sixColorless:3.4,attackUntappedEOT:2.6,ownToFaceDownLand:1.5,handToFaceDownLand:1.4,graveToFaceDownLand:1.8,
+      destroyAll:3.1,destroyOneEach:2.4,discardRandomOpp:2.5,recoverOne:2.7,recoverUpTo2:3.8,hpMinus3UntappedOpp:3.2,hpMinus2AllEOT:3.6
+    };
+    return (map[c.effectKey]??1.3)-Math.max(0,c.c)*0.2;
+  }
+
+  const STYLE_KEYS = {
+    aggressive: new Set(['haste','hasteBurn3','unblockable','face4','face2','chooseBurn3','teamUnblockable','teamAtk3','hpPlus3Team','ownSpPlus1','grantHaste','grantUnblockable','grantDeathtouch']),
+    control: new Set(['destroyOppMonster','damageAll3','bounceAny','bounceHp3','bounceAllOpp','bounceAll','oppToFaceDownLand','tapAllOpp','tapUpTo2','counterPlay','hpMinus1EOT','hpMinus2EOT','hpMinus3AllEOT','hpMinus3UntappedOpp','destroyAll','forceAttackTarget']),
+    value: new Set(['draw1','draw2','draw3','draw5Bottom4','searchMonster','searchSpell','searchLand','search2Land','recoverOne','recoverUpTo2','revealTopMonster','reorderTop3','tribeSummonDraw']),
+    defensive: new Set(['heal2','heal4','prevent3','indestructibleOnce','counterAttack','returnAllOnDeath','soulNever','blockHpPlus2','soulDrain','oppSpMinus1NextEnd','oppBlockPowerPlus2NextEnd'])
+  };
+  function determineStyle(g) {
+    const cards=[...(g.cpu.deck||[]),...(g.cpu.hand||[]),...(g.cpu.field||[]),...(g.cpu.grave||[]),...(g.cpu.lands||[])];
+    const score={aggressive:0,control:0,value:0,defensive:0};
+    for(const c of cards){
+      const k=c.effectKey||'';
+      for(const name of Object.keys(STYLE_KEYS))if(STYLE_KEYS[name].has(k))score[name]+=1;
+      if(c.t==='monster'){
+        score.aggressive+=Math.max(0,Number(c.sp)||0)*0.18;
+        if(c.haste)score.aggressive+=0.8;
+        if((Number(c.power)||0)>=5000)score.defensive+=0.12;
+      }
+    }
+    if((g.cpu.hp||20)<=10)score.defensive+=2.2;
+    if((g.you.hp||20)<=8)score.aggressive+=1.5;
+    const max=Math.max(...Object.values(score));
+    const near=Object.keys(score).filter(k=>score[k]>=max-1.25);
+    return near[Math.floor(Math.random()*near.length)]||'balanced';
+  }
+  function styleBonus(c,g) {
+    if(!c)return 0;
+    const k=c.effectKey||'';
+    let bonus=STYLE_KEYS[AI.style]?.has(k)?0.42:0;
+    if(AI.style==='aggressive'){
+      if(c.t==='monster')bonus+=(Number(c.sp)||0)*0.16+(api().cardHasHaste(c)?0.24:0);
+      if(['face4','face2','chooseBurn3','hasteBurn3'].includes(k))bonus+=0.38;
+      if(g.you.hp<=7)bonus+=0.45;
+    }else if(AI.style==='control'){
+      if(['destroyOppMonster','damageAll3','bounceAny','bounceHp3','bounceAllOpp','tapAllOpp','tapUpTo2','counterPlay'].includes(k))bonus+=g.you.field.filter(x=>x.t==='monster').length>0?0.55:0.05;
+      if(g.you.field.filter(x=>x.t==='monster').length>g.cpu.field.filter(x=>x.t==='monster').length)bonus+=0.22;
+    }else if(AI.style==='value'){
+      if(['draw1','draw2','draw3','searchMonster','searchSpell','searchLand','search2Land','recoverOne','recoverUpTo2'].includes(k))bonus+=0.5;
+      if(g.cpu.hand.length<=3)bonus+=0.3;
+    }else if(AI.style==='defensive'){
+      if(['heal2','heal4','prevent3','indestructibleOnce','counterAttack','returnAllOnDeath','soulNever'].includes(k))bonus+=0.45;
+      if(g.cpu.hp<=8)bonus+=0.65;
+    }
+    if(AI.recentCards.slice(-2).includes(c.name))bonus-=0.3;
+    if(c.timing==='instant'&&!g.stack.length&&g.you.hand.length>=2&&['counterPlay','prevent3','counterAttack'].includes(k))bonus-=0.22;
+    if(AI.opponentModel.aggression>=2&&['heal2','heal4','prevent3','counterAttack','indestructibleOnce'].includes(k))bonus+=0.12*Math.min(3,AI.opponentModel.aggression);
+    if(AI.opponentModel.control>=2&&['draw1','draw2','draw3','searchMonster','searchSpell','recoverOne','recoverUpTo2'].includes(k))bonus+=0.12*Math.min(3,AI.opponentModel.control);
+    return bonus;
+  }
+  function observeOpponent(g) {
+    const m=AI.opponentModel;
+    const cpuHp=Number(g.cpu.hp)||0, cpuField=g.cpu.field.length, youGrave=g.you.grave.length, attacks=Number(g.you.attacksThisTurn)||0;
+    if(cpuHp<m.lastCpuHp)m.aggression=Math.min(6,m.aggression+1.1);
+    if(cpuField<m.lastCpuField)m.control=Math.min(6,m.control+0.7);
+    if(youGrave>m.lastYouGrave)m.control=Math.min(6,m.control+0.18);
+    if(attacks>m.lastAttacks)m.aggression=Math.min(6,m.aggression+0.35);
+    m.lastCpuHp=cpuHp;m.lastCpuField=cpuField;m.lastYouGrave=youGrave;m.lastAttacks=attacks;
+  }
+  function rememberPlay(c) {
+    if(!c)return;
+    AI.recentCards.push(c.name);
+    if(AI.recentCards.length>5)AI.recentCards.shift();
+  }
+  function weightedNearBest(items,scoreOf,tolerance=0.85) {
+    if(!items.length)return null;
+    const scored=items.map(item=>({item,score:scoreOf(item)})).sort((a,b)=>b.score-a.score);
+    const best=scored[0].score;
+    const pool=scored.filter(x=>x.score>=best-tolerance);
+    const weights=pool.map(x=>Math.exp((x.score-best)/0.55));
+    const total=weights.reduce((a,b)=>a+b,0);
+    let roll=Math.random()*total;
+    for(let i=0;i<pool.length;i++){roll-=weights[i];if(roll<=0)return pool[i].item;}
+    return pool[0].item;
   }
 
   function validTargetsFor(c,g) {
@@ -396,7 +508,7 @@
     const initial=snapshotForSearch(g);
     const baseScore=evaluateSim(initial);
     let beam=[{sim:initial,firstId:null,score:baseScore,seq:[]}];
-    let best=beam[0];
+    const firstScores=new Map();
     for(let depth=0;depth<config.depth;depth++){
       const candidates=[];
       for(const node of beam){
@@ -411,27 +523,29 @@
           if(!simPay(next,played))continue;
           next.hand.splice(idx,1);
           if(played.lpCost>0)next.hpMe-=played.lpCost;
-          if(played.t==='monster'){
-            simApplyMonster(next,played);
-          }else if(played.t==='spell'){
-            simApplySpell(next,played);
-            next.grave.push(played);
-          }
-          next.hpMe=clamp(next.hpMe,0,20);
-          next.hpOpp=clamp(next.hpOpp,0,20);
+          if(played.t==='monster')simApplyMonster(next,played);
+          else if(played.t==='spell'){simApplySpell(next,played);next.grave.push(played);}
+          next.hpMe=clamp(next.hpMe,0,20);next.hpOpp=clamp(next.hpOpp,0,20);
           const seq=node.seq.concat(played.name);
           const score=evaluateSim(next)+seq.length*0.025;
-          const item={sim:next,firstId:node.firstId||played.id,score,seq};
-          candidates.push(item);
-          if(score>best.score)best=item;
+          const firstId=node.firstId||played.id;
+          const old=firstScores.get(firstId);
+          if(!old||score>old.score)firstScores.set(firstId,{score,sequence:seq});
+          candidates.push({sim:next,firstId,score,seq});
         }
       }
       if(!candidates.length)break;
       candidates.sort((a,b)=>b.score-a.score);
       beam=candidates.slice(0,config.width);
     }
-    if(!best.firstId||best.score<baseScore+0.08)return null;
-    return {id:best.firstId,sequence:best.seq,score:best.score-baseScore};
+    if(!firstScores.size)return null;
+    const options=[...firstScores.entries()].map(([id,v])=>({id,score:v.score,sequence:v.sequence,card:g.cpu.hand.find(c=>c.id===id)})).filter(x=>x.card);
+    const best=Math.max(...options.map(x=>x.score));
+    if(best<baseScore+0.08)return null;
+    const tolerance=AI.level==='expert'?0.95:AI.level==='strong'?1.15:1.35;
+    const viable=options.filter(x=>x.score>=best-tolerance);
+    const selected=weightedNearBest(viable,x=>x.score+styleBonus(x.card,g),tolerance);
+    return selected?{id:selected.id,sequence:selected.sequence,score:selected.score-baseScore,style:AI.style}:null;
   }
 
   function chooseLandDrop(g) {
@@ -484,9 +598,11 @@
       case 'oppSpMinus1NextEnd': return enemy.some(x=>api().attackSP(x)>0);
       case 'hpMinus1NextEnd': return enemy.some(x=>api().attackPower(x,'you')<=1000);
       case 'forceAttackTarget': return enemy.some(x=>!x.tapped)&&own.some(x=>api().attackPower(x,'cpu')>=3000);
-      case 'revealTopMonster': return g.cpu.deck.length>0&&(g.cpu.deck[g.cpu.deck.length-1]?.t==='monster'||g.cpu.hand.length<3);
-      case 'reorderTop3': return g.cpu.deck.length>=2;
-      case 'draw1SelfDamage2': return g.cpu.hp>2&&g.cpu.hand.length<5;
+      case 'revealTopMonster': return g.cpu.deck.length>0&&(g.cpu.deck[g.cpu.deck.length-1]?.t==='monster'||g.cpu.hand.length<4);
+      case 'reorderTop3': return g.cpu.deck.length>=2&&(g.cpu.hand.length<5||g.cpu.field.length<2);
+      case 'draw1SelfDamage2': return g.cpu.hp>2&&g.cpu.hand.length<6;
+      case 'oppBlockPowerPlus2NextEnd': return enemy.some(x=>api().canAttackMonsterNow(x,'you'))&&own.some(x=>api().canBlock(enemy[0],x,'you','cpu'));
+      case 'grantDeathtouch': return attackers.some(a=>enemy.some(e=>api().attackPower(e,'you')>=api().attackPower(a,'cpu')));
       case 'untapOwnSummoner': return g.cpu.lands.some(x=>x.tapped&&x.usedThisTurn);
       default:return false;
     }
@@ -688,7 +804,7 @@
       const source=g.cpu.summoners.find(x=>title.includes(x.name));
       let activate=true;
       if(source?.summonerAbilityKey==='endUntapAll')activate=g.cpu.field.some(x=>x.t==='monster'&&x.tapped);
-      if(['endDrawIf2Attacks','endDrawSummonerOnly'].includes(source?.summonerAbilityKey))activate=g.cpu.deck.length>0;
+      if(['endDrawIf2Attacks','endDrawSummonerOnly','tribeSummonDraw'].includes(source?.summonerAbilityKey))activate=g.cpu.deck.length>0;
       const choice=buttons.find(b=>b.textContent.includes(activate?'発動する':'発動しない'));
       if(choice){choice.click();return true;}
     }
@@ -746,10 +862,13 @@
       const attackerDies=ap<=bpw||!!attacker.burst||!!g.you.teamDeathtouch;
       const blockerDies=bpw<=ap||!!blocker.burst||!!g.cpu.teamDeathtouch;
       const savedDamage=direct?incoming*1.9:0;
-      const value=(attackerDies?attackValue*1.25:0)-(blockerDies?cardThreat(blocker,'cpu')*1.25:0)+savedDamage;
+      const protectedTarget=bp.attackTarget?a.findById(bp.attackTarget):null;
+      const savedTargetValue=protectedTarget?cardThreat(protectedTarget,'cpu')*0.9:0;
+      const survivalUrgency=g.cpu.hp<=5?1.35:g.cpu.hp<=9?0.65:0;
+      const value=(attackerDies?attackValue*1.25:0)-(blockerDies?cardThreat(blocker,'cpu')*1.25:0)+savedDamage+savedTargetValue+survivalUrgency;
       if(!best||value>best.value)best={blocker,value,attackerDies,blockerDies};
     }
-    const shouldBlock=lethal||best.value>0.55;
+    const shouldBlock=lethal||best.value>(g.cpu.hp<=6?-0.2:g.cpu.hp<=10?0.3:0.55);
     if(shouldBlock){a.chooseBlocker(best.blocker);return true;}
     a.noBlock();return true;
   }
@@ -794,25 +913,28 @@
     g.you.field.filter(x=>x.t==='monster').forEach(x=>choices.push({target:x,score:evaluateAttack(attacker,x,g)}));
     choices.sort((x,y)=>y.score-x.score);
     if(!choices.length||choices[0].score<-0.2)return null;
-    return choices[0].target;
+    const pick=weightedNearBest(choices.filter(x=>x.score>=choices[0].score-0.45),x=>x.score,0.45);
+    return pick?.target||choices[0].target;
   }
 
   function performAttack(g) {
     const a=api();
     if(g.blockPending)return false;
     const forced=a.forcedAttackers('cpu');
-    const attackers=(forced.length?forced:g.cpu.field.filter(x=>a.canAttackMonsterNow(x,'cpu')))
-      .slice().sort((x,y)=>cardThreat(y,'cpu')-cardThreat(x,'cpu'));
-    for(const attacker of attackers){
-      if(!a.canAttackMonsterNow(attacker,'cpu'))continue;
-      const target=chooseAttackTarget(attacker,g);
-      if(!target)continue;
-      a.selectAttacker(attacker);
-      if(target==='face')a.declareDirectAttack();
-      else a.selectTarget(target);
-      return true;
-    }
-    return false;
+    const attackers=(forced.length?forced:g.cpu.field.filter(x=>a.canAttackMonsterNow(x,'cpu'))).filter(x=>a.canAttackMonsterNow(x,'cpu'));
+    const plans=attackers.map(attacker=>{
+      const choices=[];
+      if(attacker.effectKey!=='cannotAttackFace')choices.push({target:'face',score:evaluateAttack(attacker,'face',g)});
+      g.you.field.filter(x=>x.t==='monster').forEach(target=>choices.push({target,score:evaluateAttack(attacker,target,g)}));
+      choices.sort((x,y)=>y.score-x.score);
+      return {attacker,target:choices[0]?.target,score:(choices[0]?.score??-100)+styleBonus(attacker,g)*0.18};
+    }).filter(x=>x.target&&x.score>-0.2).sort((x,y)=>y.score-x.score);
+    const plan=weightedNearBest(plans,x=>x.score,0.35);
+    if(!plan)return false;
+    a.selectAttacker(plan.attacker);
+    if(plan.target==='face')a.declareDirectAttack();
+    else a.selectTarget(plan.target);
+    return true;
   }
 
   function mainPhase(g) {
@@ -828,12 +950,14 @@
       const c=p.hand.find(x=>x.id===plan.id);
       if(c&&validTargetsFor(c,g)&&a.canPayAllPlayCosts(p,c)){
         AI.currentCard=c;
+        rememberPlay(c);
         const index=p.hand.indexOf(c);
         a.playCard(index,'cpu');
         return true;
       }
       if(c&&validTargetsFor(c,g)&&ensureMana(c,'cpu',true)){
         AI.currentCard=c;
+        rememberPlay(c);
         a.playCard(p.hand.indexOf(c),'cpu');
         return true;
       }
@@ -879,7 +1003,7 @@
       }
 
       if(g.turn!=='cpu') {setStatus('');return;}
-      setStatus('AI思考中');
+      setStatus('AI思考中・'+({aggressive:'攻撃型',control:'制圧型',value:'展開型',defensive:'防御型',balanced:'万能型'}[AI.style]||'戦略型'));
       if(g.phase==='MAIN PHASE'){mainPhase(g);return;}
       if(g.phase==='BATTLE PHASE'){
         if(performAttack(g))return;
@@ -901,7 +1025,10 @@
   }
 
   function startGame() {
-    AI.lastActionAt=0;AI.lastStateKey='';
+    AI.lastActionAt=0;AI.lastStateKey='';AI.recentCards=[];
+    AI.style=determineStyle(state()||{cpu:{deck:[],hand:[],field:[],grave:[],lands:[],hp:20},you:{field:[],hp:20}});
+    const g=state();
+    AI.opponentModel={aggression:0,control:0,lastCpuHp:g?.cpu?.hp??20,lastCpuField:g?.cpu?.field?.length??0,lastYouGrave:g?.you?.grave?.length??0,lastAttacks:g?.you?.attacksThisTurn??0};
     updateLabels();
     if(AI.enabled)schedule(450);
     else setStatus('');

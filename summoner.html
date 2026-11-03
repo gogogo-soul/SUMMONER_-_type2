@@ -1126,7 +1126,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 <div id="app">
 <header class="topbar">
   <div class="brand">SUMMONER — BATTLE</div>
-  <div class="online-top-actions"><button type="button" id="soloSurrenderBtn" class="nav-btn online-surrender" onclick="showSoloSurrender()">投了</button></div>
+  <div class="online-top-actions"><button type="button" id="soloSurrenderBtn" class="nav-btn online-surrender">投了</button></div>
   <div class="top-info"><span>PLAYTEST</span><span id="topDeck">MAX 50 CARDS</span><span id="topTurn">TURN 1</span></div>
 </header>
 
@@ -1229,8 +1229,9 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 
 
 <div id="soloCardPopup" class="online-card-popup solo-card-popup" hidden></div>
-<div id="soloSurrenderConfirm" class="solo-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="soloSurrenderTitle"><div class="solo-confirm-box"><h2 id="soloSurrenderTitle">本当に投了しますか？</h2><p>現在のターンのプレイヤーが投了します。</p><div><button type="button" onclick="hideSoloSurrender()">YES：バトルに戻る</button><button type="button" class="online-surrender" onclick="confirmSoloSurrender()">NO：投了して敗北</button></div></div></div>
-<div class="solo-outcome online-outcome" id="soloOutcome" hidden role="status" aria-live="assertive"><strong id="soloOutcomeText">WIN</strong><span id="soloOutcomeDetails">試合終了</span><button type="button" id="soloRematchBtn" onclick="openDeckSetup()">続けて遊ぶ（新しいゲーム）</button><a href="index.html" class="solo-back-title">タイトルへ戻る</a></div>
+<div id="soloSurrenderConfirm" class="solo-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="soloSurrenderTitle"><div class="solo-confirm-box"><h2 id="soloSurrenderTitle">本当に投了しますか？</h2><p id="soloSurrenderMessage">PLAYER 1が投了し、この対戦は敗北となります。</p><div><button type="button" id="soloSurrenderCancelBtn">YES：バトルに戻る</button><button type="button" id="soloSurrenderAcceptBtn" class="online-surrender">NO：投了して敗北</button></div></div></div>
+<div class="solo-outcome" id="soloOutcome" hidden role="status" aria-live="assertive"><strong id="soloOutcomeText">WIN</strong><span>試合終了</span></div>
+<div class="solo-match-end" id="soloMatchEndPanel" hidden role="dialog" aria-modal="true" aria-labelledby="soloMatchEndTitle"><div class="solo-match-end-card"><div class="solo-match-end-eyebrow">SOLO MATCH RESULT</div><h2 id="soloMatchEndTitle">試合終了</h2><p id="soloMatchEndDetails">対戦が終了しました。</p><div class="solo-match-end-actions"><button type="button" class="primary" id="soloRematchBtn">続けて遊ぶ（新しいゲーム）</button><a href="index.html" class="solo-back-title">タイトルへ戻る</a></div></div></div>
 <div class="deck-setup" id="deckSetup">
   <div class="deck-setup-box">
     <div class="deck-setup-title">SUMMONER — DECK SELECT</div>
@@ -1298,6 +1299,7 @@ body.hands-compact .opponent-hand-wrap::before{bottom:-17px}
 
 <script>
 let G;
+let soloOutcomeTimer=null;
 const SOLO_AUTO_PASS_STORE="summoner_solo_auto_pass_v43";
 let soloAutoPassEnabled=localStorage.getItem(SOLO_AUTO_PASS_STORE)!=="false";
 const names = Object.keys(DB);
@@ -1469,7 +1471,9 @@ function updateDeckSelectInfo(){
   }
 }
 function startBattleWithSelectedDecks(){
+  if(soloOutcomeTimer){clearTimeout(soloOutcomeTimer);soloOutcomeTimer=null;}
   const soloOutcome=el('soloOutcome');if(soloOutcome){soloOutcome.hidden=true;soloOutcome.classList.remove('outcome-win','outcome-lose','outcome-draw');}
+  const soloMatchEnd=el('soloMatchEndPanel');if(soloMatchEnd)soloMatchEnd.hidden=true;
   const soloConfirm=el('soloSurrenderConfirm');if(soloConfirm)soloConfirm.hidden=true;
   const soloPopup=el('soloCardPopup');if(soloPopup)soloPopup.hidden=true;
   const p1=selectedDeckNames("p1DeckSelect");
@@ -1484,6 +1488,9 @@ function startBattleWithSelectedDecks(){
   init(p1,p2,firstSide);
 }
 function openDeckSetup(){
+  if(soloOutcomeTimer){clearTimeout(soloOutcomeTimer);soloOutcomeTimer=null;}
+  const intro=el('soloOutcome');if(intro)intro.hidden=true;
+  const result=el('soloMatchEndPanel');if(result)result.hidden=true;
   fillDeckSelectors();
   el("deckSetup").classList.remove("hidden");
 }
@@ -1725,7 +1732,8 @@ function render(){
   const drawOwner=G[G.turn].drawPending>0?G.turn:opponentSide(G.turn);
   el("drawBtn").textContent="DRAW "+sideLabel(drawOwner)+(G[drawOwner].drawEffect?" (残"+G[drawOwner].drawEffect.remaining+")":"");
   el("drawBtn").disabled=G.over||G[drawOwner].drawPending<=0;
-  el("topTurn").textContent="TURN "+G.turnNo;el("turnPill").textContent=G.over?(G.you.hp>0?"PLAYER 1 WINS":"PLAYER 2 WINS"):sideLabel(G.turn)+" TURN";el("phase").textContent=G.phase;
+  el("topTurn").textContent="TURN "+G.turnNo;el("turnPill").textContent=G.over?(G.winner==="DRAW"?"DRAW":G.winner+" WINS"):sideLabel(G.turn)+" TURN";el("phase").textContent=G.phase;
+  const surrenderButton=el("soloSurrenderBtn");if(surrenderButton)surrenderButton.disabled=!!G.over;
   fill("hand",G.you.hand,"hand");fill("cpuHandCards",G.cpu.hand,"cpuHand");fill("youField",G.you.field,"youField");fill("cpuField",G.cpu.field,"cpuField");appendPendingFieldCards("you");appendPendingFieldCards("cpu");fill("youLands",G.you.lands,"youLand");fill("cpuLands",G.cpu.lands,"cpuLand");fill("youSummoner",G.you.summoners,"youSummoner");fill("cpuSummoner",G.cpu.summoners,"cpuSummoner");
   if(G.selected){const s=findById(G.selected);if(s)showInspector(s);}
   el("endBtn").disabled=G.over||G.stack.length>0||G.resolvingStack||!!G.endingTurnSide;el("battleBtn").disabled=G.over||G.phase!=="MAIN PHASE"||G.stack.length>0||!!G.endingTurnSide;el("noBlockBtn").disabled=G.over||!G.blockPending;
@@ -3232,33 +3240,56 @@ function resetTurnEndEffects(endingSide){
 
 function showSoloSurrender(){
  if(!G||G.over||G.preparing)return;
- el('soloSurrenderConfirm').hidden=false;
+ const surrenderingSide=window.SUMMONER_AI?.enabled?'you':G.turn;
+ const message=el('soloSurrenderMessage');
+ if(message)message.textContent=sideLabel(surrenderingSide)+'が投了し、この対戦は敗北となります。';
+ const dialog=el('soloSurrenderConfirm');
+ if(dialog)dialog.hidden=false;
 }
-function hideSoloSurrender(){el('soloSurrenderConfirm').hidden=true;}
+function hideSoloSurrender(){const dialog=el('soloSurrenderConfirm');if(dialog)dialog.hidden=true;}
 function confirmSoloSurrender(){
  hideSoloSurrender();
  if(!G||G.over||G.preparing)return;
- G[G.turn].hp=0;
- log(sideLabel(G.turn)+'が投了しました。');
- check();render();
+ // With AI enabled, PLAYER 1 is the human regardless of whose turn it is.
+ // In two-human hotseat mode, the current player can surrender as before.
+ const surrenderingSide=window.SUMMONER_AI?.enabled?'you':G.turn;
+ G[surrenderingSide].hp=0;
+ G.resultReason=sideLabel(surrenderingSide)+'投了';
+ log(G.resultReason+'しました。');
+ check();
+ render();
 }
 function check(){
   if(!G)return;
   const p1Dead=G.you.hp<=0,p2Dead=G.cpu.hp<=0;
   if(p1Dead)G.you.hp=0;
   if(p2Dead)G.cpu.hp=0;
-  if(p1Dead||p2Dead)G.over=true;
+  if(!p1Dead&&!p2Dead)return;
+  G.over=true;
+  const winner=p1Dead&&p2Dead?'DRAW':p1Dead?'PLAYER 2':'PLAYER 1';
+  G.winner=winner;
   const overlay=el('soloOutcome');
-  if(G.over&&overlay&&!G.outcomeShown){
+  const resultPanel=el('soloMatchEndPanel');
+  if(!G.outcomeShown&&overlay){
     G.outcomeShown=true;
-    const winner=p1Dead&&p2Dead?'DRAW':p1Dead?'PLAYER 2':'PLAYER 1';
-    G.winner=winner;
     const kind=winner==='DRAW'?'draw':winner==='PLAYER 1'?'win':'lose';
     overlay.classList.remove('outcome-win','outcome-lose','outcome-draw');
     overlay.classList.add('outcome-'+kind);
     el('soloOutcomeText').textContent=winner==='DRAW'?'DRAW':kind==='win'?'WIN':'LOSE';
-    el('soloOutcomeDetails').textContent=winner==='DRAW'?'引き分け':winner+' の勝利';
+    if(resultPanel){
+      el('soloMatchEndTitle').textContent=winner==='DRAW'?'引き分け':winner==='PLAYER 1'?'勝利！':'敗北';
+      el('soloMatchEndDetails').textContent=G.resultReason?G.resultReason+'により対戦が終了しました。':winner==='DRAW'?'両プレイヤーのLPが0になりました。':winner==='PLAYER 1'?'PLAYER 2のLPが0になりました。':'PLAYER 1のLPが0になりました。';
+      resultPanel.hidden=true;
+    }
     overlay.hidden=false;
+    if(soloOutcomeTimer)clearTimeout(soloOutcomeTimer);
+    // Match the online result flow: reveal WIN / LOSE first, then show result actions.
+    soloOutcomeTimer=setTimeout(()=>{
+      soloOutcomeTimer=null;
+      if(!G||!G.over||G.winner!==winner)return;
+      overlay.hidden=true;
+      if(resultPanel)resultPanel.hidden=false;
+    },2900);
   }
 }
 
@@ -3428,6 +3459,11 @@ if(fieldSettings){
 restoreCustomFieldImage();
 
 fillDeckSelectors();
+
+el("soloSurrenderBtn")?.addEventListener("click",showSoloSurrender);
+el("soloSurrenderCancelBtn")?.addEventListener("click",hideSoloSurrender);
+el("soloSurrenderAcceptBtn")?.addEventListener("click",confirmSoloSurrender);
+el("soloRematchBtn")?.addEventListener("click",openDeckSetup);
 
 window.SUMMONER_AI_BRIDGE={
   getState:()=>G, getDB:()=>DB,
